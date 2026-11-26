@@ -17,4 +17,9 @@
     <string name="cancel">Cancel</string>
     <string name="delete">Delete</string>
     <string name="delete_confirm">Delete \"%1$s\"?</string>
+    <string name="import_txt">Import TXT</string>
+    <string name="import_failed">Could not import this file. Use a UTF-8 text file (.txt) under 5 MB that is not empty.</string>
+    <string name="ok">OK</string>
+    <string name="lecture_details">Lecture</string>
+    <string name="no_content">No content yet.</string>
 </resources>

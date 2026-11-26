@@ -15,4 +15,9 @@
     <string name="cancel">إلغاء</string>
     <string name="delete">حذف</string>
     <string name="delete_confirm">حذف \"%1$s\"؟</string>
+    <string name="import_txt">استيراد TXT</string>
+    <string name="import_failed">تعذّر استيراد الملف. استخدم ملف نصي (.txt) بترميز UTF-8 وغير فارغ وأصغر من 5 ميجا.</string>
+    <string name="ok">حسناً</string>
+    <string name="lecture_details">المحاضرة</string>
+    <string name="no_content">لا يوجد محتوى بعد.</string>
 </resources>

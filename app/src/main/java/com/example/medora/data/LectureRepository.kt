@@ -6,8 +6,10 @@ import kotlinx.coroutines.flow.Flow
 class LectureRepository(private val dao: LectureDao) {
     val lectures: Flow<List<Lecture>> = dao.observeAll()
 
-    suspend fun add(title: String, subject: String) {
-        dao.insert(Lecture(title = title.trim(), subject = subject.trim()))
+    fun observe(id: Long): Flow<Lecture?> = dao.observe(id)
+
+    suspend fun add(title: String, subject: String, content: String = "") {
+        dao.insert(Lecture(title = title.trim(), subject = subject.trim(), content = content))
     }
 
     suspend fun delete(lecture: Lecture) = dao.delete(lecture)

@@ -11,6 +11,9 @@ interface LectureDao {
     @Query("SELECT * FROM lectures ORDER BY createdAt DESC")
     fun observeAll(): Flow<List<Lecture>>
 
+    @Query("SELECT * FROM lectures WHERE id = :id")
+    fun observe(id: Long): Flow<Lecture?>
+
     @Insert
     suspend fun insert(lecture: Lecture): Long
 

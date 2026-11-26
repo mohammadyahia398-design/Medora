@@ -21,6 +21,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -28,12 +30,14 @@ import androidx.navigation.compose.rememberNavController
 import com.example.medora.R
 import com.example.medora.ui.icons.MedoraIcons
 import com.example.medora.ui.screens.HomeScreen
+import com.example.medora.ui.screens.LectureDetailScreen
 import com.example.medora.ui.screens.LibraryScreen
 import com.example.medora.ui.screens.ProgressScreen
 import com.example.medora.ui.screens.SettingsScreen
 import com.example.medora.ui.screens.StudyScreen
 
 private const val ROUTE_SETTINGS = "settings"
+private const val ROUTE_LECTURE = "lecture/{id}"
 
 private enum class Tab(val route: String, @StringRes val label: Int, val icon: ImageVector) {
     Home("home", R.string.tab_home, MedoraIcons.Home),
@@ -50,6 +54,7 @@ fun MedoraApp() {
     val route = backStackEntry?.destination?.route
     val tab = Tab.values().firstOrNull { it.route == route }
     val isSettings = route == ROUTE_SETTINGS
+    val isLecture = route == ROUTE_LECTURE
 
     Scaffold(
         topBar = {
@@ -59,6 +64,7 @@ fun MedoraApp() {
                         stringResource(
                             when {
                                 isSettings -> R.string.settings
+                                isLecture -> R.string.lecture_details
                                 tab != null -> tab.label
                                 else -> R.string.app_name
                             }
@@ -66,7 +72,7 @@ fun MedoraApp() {
                     )
                 },
                 navigationIcon = {
-                    if (isSettings) {
+                    if (isSettings || isLecture) {
                         IconButton(onClick = { navController.popBackStack() }) {
                             Image(
                                 imageVector = MedoraIcons.Back,
@@ -77,7 +83,7 @@ fun MedoraApp() {
                     }
                 },
                 actions = {
-                    if (!isSettings) {
+                    if (!isSettings && !isLecture) {
                         IconButton(onClick = { navController.navigate(ROUTE_SETTINGS) }) {
                             Image(
                                 imageVector = MedoraIcons.Settings,
@@ -126,10 +132,18 @@ fun MedoraApp() {
             modifier = Modifier.padding(padding),
         ) {
             composable(Tab.Home.route) { HomeScreen() }
-            composable(Tab.Library.route) { LibraryScreen() }
+            composable(Tab.Library.route) {
+                LibraryScreen(onOpenLecture = { navController.navigate("lecture/$it") })
+            }
             composable(Tab.Study.route) { StudyScreen() }
             composable(Tab.Progress.route) { ProgressScreen() }
             composable(ROUTE_SETTINGS) { SettingsScreen() }
+            composable(
+                ROUTE_LECTURE,
+                arguments = listOf(navArgument("id") { type = NavType.LongType }),
+            ) { entry ->
+                LectureDetailScreen(id = entry.arguments?.getLong("id") ?: 0L)
+            }
         }
     }
 }

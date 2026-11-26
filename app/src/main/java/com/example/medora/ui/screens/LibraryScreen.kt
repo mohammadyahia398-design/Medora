@@ -1,5 +1,8 @@
 package com.example.medora.ui.screens
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -37,8 +41,12 @@ import java.text.DateFormat
 import java.util.Date
 
 @Composable
-fun LibraryScreen(vm: LibraryViewModel = viewModel()) {
+fun LibraryScreen(onOpenLecture: (Long) -> Unit, vm: LibraryViewModel = viewModel()) {
     val lectures by vm.lectures.collectAsState()
+    val importFailed by vm.importFailed.collectAsState()
+    val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) vm.importText(uri)
+    }
     var showAdd by remember { mutableStateOf(false) }
     var toDelete by remember { mutableStateOf<Lecture?>(null) }
 
@@ -56,17 +64,33 @@ fun LibraryScreen(vm: LibraryViewModel = viewModel()) {
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 items(lectures, key = { it.id }) { lecture ->
-                    LectureItem(lecture, onDelete = { toDelete = lecture })
+                    LectureItem(lecture, onOpen = { onOpenLecture(lecture.id) }, onDelete = { toDelete = lecture })
                 }
             }
         }
 
-        FloatingActionButton(
-            onClick = { showAdd = true },
+        Column(
             modifier = Modifier.align(Alignment.BottomEnd).padding(24.dp),
+            horizontalAlignment = Alignment.End,
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text("+", style = MaterialTheme.typography.headlineMedium)
+            ExtendedFloatingActionButton(onClick = { picker.launch(arrayOf("text/*")) }) {
+                Text(stringResource(R.string.import_txt))
+            }
+            FloatingActionButton(onClick = { showAdd = true }) {
+                Text("+", style = MaterialTheme.typography.headlineMedium)
+            }
         }
+    }
+
+    if (importFailed) {
+        AlertDialog(
+            onDismissRequest = { vm.dismissImportError() },
+            text = { Text(stringResource(R.string.import_failed)) },
+            confirmButton = {
+                TextButton(onClick = { vm.dismissImportError() }) { Text(stringResource(R.string.ok)) }
+            },
+        )
     }
 
     if (showAdd) {
@@ -98,8 +122,8 @@ fun LibraryScreen(vm: LibraryViewModel = viewModel()) {
 }
 
 @Composable
-private fun LectureItem(lecture: Lecture, onDelete: () -> Unit) {
-    MedoraCard(modifier = Modifier.fillMaxWidth()) {
+private fun LectureItem(lecture: Lecture, onOpen: () -> Unit, onDelete: () -> Unit) {
+    MedoraCard(modifier = Modifier.fillMaxWidth().clickable(onClick = onOpen)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
