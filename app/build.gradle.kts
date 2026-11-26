@@ -13,11 +13,26 @@ android {
         applicationId = "com.example.medora"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
+        versionCode = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 1
         versionName = "0.1.0"
     }
 
+    // Fixed DEV key (public on purpose): lets new builds update the installed app.
+    // NOT for Google Play. The real release key must stay secret.
+    signingConfigs {
+        create("dev") {
+            storeFile = file("medora-dev.p12")
+            storeType = "PKCS12"
+            storePassword = "medora-dev"
+            keyAlias = "medoradev"
+            keyPassword = "medora-dev"
+        }
+    }
+
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("dev")
+        }
         release {
             isMinifyEnabled = false
         }
