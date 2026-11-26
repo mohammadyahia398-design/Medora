@@ -7,4 +7,12 @@
     <string name="settings">الإعدادات</string>
     <string name="back">رجوع</string>
     <string name="coming_soon">قريباً</string>
+    <string name="library_empty">لا توجد محاضرات بعد. اضغط + لإضافة واحدة.</string>
+    <string name="add_lecture">إضافة محاضرة</string>
+    <string name="lecture_title">العنوان</string>
+    <string name="lecture_subject">المادة (اختياري)</string>
+    <string name="add">إضافة</string>
+    <string name="cancel">إلغاء</string>
+    <string name="delete">حذف</string>
+    <string name="delete_confirm">حذف \"%1$s\"؟</string>
 </resources>

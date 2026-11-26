@@ -56,9 +56,6 @@ private fun PlaceholderScreen(titleRes: Int, icon: ImageVector) {
 fun HomeScreen() = PlaceholderScreen(R.string.tab_home, MedoraIcons.Home)
 
 @Composable
-fun LibraryScreen() = PlaceholderScreen(R.string.tab_library, MedoraIcons.Library)
-
-@Composable
 fun StudyScreen() = PlaceholderScreen(R.string.tab_study, MedoraIcons.Study)
 
 @Composable
