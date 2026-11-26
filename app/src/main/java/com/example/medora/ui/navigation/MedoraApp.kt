@@ -1,0 +1,135 @@
+package com.example.medora.ui.navigation
+
+import androidx.annotation.StringRes
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.example.medora.R
+import com.example.medora.ui.icons.MedoraIcons
+import com.example.medora.ui.screens.HomeScreen
+import com.example.medora.ui.screens.LibraryScreen
+import com.example.medora.ui.screens.ProgressScreen
+import com.example.medora.ui.screens.SettingsScreen
+import com.example.medora.ui.screens.StudyScreen
+
+private const val ROUTE_SETTINGS = "settings"
+
+private enum class Tab(val route: String, @StringRes val label: Int, val icon: ImageVector) {
+    Home("home", R.string.tab_home, MedoraIcons.Home),
+    Library("library", R.string.tab_library, MedoraIcons.Library),
+    Study("study", R.string.tab_study, MedoraIcons.Study),
+    Progress("progress", R.string.tab_progress, MedoraIcons.Progress),
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MedoraApp() {
+    val navController = rememberNavController()
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    val route = backStackEntry?.destination?.route
+    val tab = Tab.values().firstOrNull { it.route == route }
+    val isSettings = route == ROUTE_SETTINGS
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        stringResource(
+                            when {
+                                isSettings -> R.string.settings
+                                tab != null -> tab.label
+                                else -> R.string.app_name
+                            }
+                        )
+                    )
+                },
+                navigationIcon = {
+                    if (isSettings) {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Image(
+                                imageVector = MedoraIcons.Back,
+                                contentDescription = stringResource(R.string.back),
+                                modifier = Modifier.size(24.dp),
+                            )
+                        }
+                    }
+                },
+                actions = {
+                    if (!isSettings) {
+                        IconButton(onClick = { navController.navigate(ROUTE_SETTINGS) }) {
+                            Image(
+                                imageVector = MedoraIcons.Settings,
+                                contentDescription = stringResource(R.string.settings),
+                                modifier = Modifier.size(28.dp),
+                            )
+                        }
+                    }
+                },
+            )
+        },
+        bottomBar = {
+            if (tab != null) {
+                NavigationBar {
+                    Tab.values().forEach { item ->
+                        val selected = item == tab
+                        NavigationBarItem(
+                            selected = selected,
+                            onClick = {
+                                navController.navigate(item.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            },
+                            icon = {
+                                Image(
+                                    imageVector = item.icon,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(28.dp).alpha(if (selected) 1f else 0.5f),
+                                )
+                            },
+                            label = { Text(stringResource(item.label)) },
+                            colors = NavigationBarItemDefaults.colors(indicatorColor = Color.Transparent),
+                        )
+                    }
+                }
+            }
+        },
+    ) { padding ->
+        NavHost(
+            navController = navController,
+            startDestination = Tab.Home.route,
+            modifier = Modifier.padding(padding),
+        ) {
+            composable(Tab.Home.route) { HomeScreen() }
+            composable(Tab.Library.route) { LibraryScreen() }
+            composable(Tab.Study.route) { StudyScreen() }
+            composable(Tab.Progress.route) { ProgressScreen() }
+            composable(ROUTE_SETTINGS) { SettingsScreen() }
+        }
+    }
+}

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tab_home">الرئيسية</string>
+    <string name="tab_library">المكتبة</string>
+    <string name="tab_study">الدراسة</string>
+    <string name="tab_progress">التقدم</string>
+    <string name="settings">الإعدادات</string>
+    <string name="back">رجوع</string>
+    <string name="coming_soon">قريباً</string>
+</resources>
