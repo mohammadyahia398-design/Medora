@@ -54,9 +54,3 @@ private fun PlaceholderScreen(titleRes: Int, icon: ImageVector) {
 
 @Composable
 fun HomeScreen() = PlaceholderScreen(R.string.tab_home, MedoraIcons.Home)
-
-@Composable
-fun ProgressScreen() = PlaceholderScreen(R.string.tab_progress, MedoraIcons.Progress)
-
-@Composable
-fun SettingsScreen() = PlaceholderScreen(R.string.settings, MedoraIcons.Settings)

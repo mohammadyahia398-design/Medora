@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.medora.R
+import com.example.medora.domain.Fsrs
 import com.example.medora.ui.components.MedoraButton
 import com.example.medora.ui.components.MedoraCard
 
@@ -29,7 +30,7 @@ fun ReviewScreen(onOpenLecture: (Long) -> Unit, vm: ReviewViewModel = viewModel(
     val deck = vm.deck
     when {
         !vm.loaded -> Unit
-        deck.isEmpty() -> CenterText(stringResource(R.string.study_empty))
+        deck.isEmpty() -> CenterText(stringResource(R.string.no_due_cards))
         vm.index >= deck.size -> Column(
             modifier = Modifier.fillMaxSize().padding(24.dp),
             verticalArrangement = Arrangement.Center,
@@ -87,15 +88,28 @@ fun ReviewScreen(onOpenLecture: (Long) -> Unit, vm: ReviewViewModel = viewModel(
                         modifier = Modifier.fillMaxWidth(),
                     )
                 } else {
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         MedoraButton(
-                            text = stringResource(R.string.did_not_know),
-                            onClick = { vm.answer(false) },
+                            text = stringResource(R.string.rate_again),
+                            onClick = { vm.answer(Fsrs.Rating.Again) },
                             modifier = Modifier.weight(1f),
                         )
                         MedoraButton(
-                            text = stringResource(R.string.knew_it),
-                            onClick = { vm.answer(true) },
+                            text = stringResource(R.string.rate_hard),
+                            onClick = { vm.answer(Fsrs.Rating.Hard) },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        MedoraButton(
+                            text = stringResource(R.string.rate_good),
+                            onClick = { vm.answer(Fsrs.Rating.Good) },
+                            modifier = Modifier.weight(1f),
+                        )
+                        MedoraButton(
+                            text = stringResource(R.string.rate_easy),
+                            onClick = { vm.answer(Fsrs.Rating.Easy) },
                             modifier = Modifier.weight(1f),
                         )
                     }

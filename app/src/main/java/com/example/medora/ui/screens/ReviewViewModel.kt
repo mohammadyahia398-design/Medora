@@ -10,11 +10,16 @@ import androidx.lifecycle.viewModelScope
 import com.example.medora.data.Card
 import com.example.medora.data.CardRepository
 import com.example.medora.data.MedoraDatabase
+import com.example.medora.data.ReviewLog
+import com.example.medora.domain.Fsrs
 import kotlinx.coroutines.launch
 
-// One review session over all cards. Lives in the ViewModel so rotation does not reset it.
+// One review session over the cards that are due now. Each answer is saved
+// (new FSRS schedule + a review log). Lives in the ViewModel so rotation does not reset it.
 class ReviewViewModel(app: Application) : AndroidViewModel(app) {
-    private val repo = CardRepository(MedoraDatabase.get(app).cardDao())
+    private val db = MedoraDatabase.get(app)
+    private val repo = CardRepository(db.cardDao())
+    private val stats = db.statsDao()
 
     var loaded by mutableStateOf(false)
         private set
@@ -33,7 +38,7 @@ class ReviewViewModel(app: Application) : AndroidViewModel(app) {
 
     private fun load() {
         viewModelScope.launch {
-            deck = repo.getAll().shuffled()
+            deck = repo.getDue()
             index = 0
             knew = 0
             revealed = false
@@ -45,10 +50,15 @@ class ReviewViewModel(app: Application) : AndroidViewModel(app) {
         revealed = true
     }
 
-    fun answer(knewIt: Boolean) {
-        if (knewIt) knew += 1
+    fun answer(rating: Fsrs.Rating) {
+        val card = deck.getOrNull(index) ?: return
+        if (rating != Fsrs.Rating.Again) knew += 1
         revealed = false
         index += 1
+        viewModelScope.launch {
+            repo.update(Fsrs.schedule(card, rating))
+            stats.insertLog(ReviewLog(cardId = card.id, rating = rating.value))
+        }
     }
 
     fun restart() {

@@ -14,10 +14,17 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class CardsViewModel(app: Application) : AndroidViewModel(app) {
-    private val repo = CardRepository(MedoraDatabase.get(app).cardDao())
+    private val db = MedoraDatabase.get(app)
+    private val repo = CardRepository(db.cardDao())
 
     val cards: StateFlow<List<Card>> =
         repo.cards.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val dueCount: StateFlow<Int> =
+        repo.observeDueCount().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+
+    val aiQuestionCount: StateFlow<Int> =
+        db.aiQuestionDao().observeCount().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
     fun cardsOf(lectureId: Long): Flow<List<Card>> = repo.observeByLecture(lectureId)
 

@@ -12,5 +12,7 @@ class LectureRepository(private val dao: LectureDao) {
         dao.insert(Lecture(title = title.trim(), subject = subject.trim(), content = content))
     }
 
+    suspend fun saveAi(id: Long, summary: String, slidesJson: String) = dao.saveAi(id, summary, slidesJson)
+
     suspend fun delete(lecture: Lecture) = dao.delete(lecture)
 }

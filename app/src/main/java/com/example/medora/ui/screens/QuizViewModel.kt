@@ -7,19 +7,30 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.medora.data.AiQuestion
 import com.example.medora.data.Card
 import com.example.medora.data.CardRepository
 import com.example.medora.data.MedoraDatabase
+import com.example.medora.data.QuizResult
 import kotlinx.coroutines.launch
 
-class QuizQuestion(val card: Card, val options: List<String>, val correctIndex: Int)
+class QuizQuestion(
+    val prompt: String,
+    val options: List<String>,
+    val correctIndex: Int,
+    val source: String,
+    val lectureId: Long,
+)
 
 private const val MAX_QUESTIONS = 10
 
-// Multiple-choice quiz built from the user's own cards. The wrong options are
-// the answers of other cards. No AI.
+// Multiple-choice quiz from the user's own cards (wrong options = other cards' answers)
+// plus any AI questions. The final score is saved.
 class QuizViewModel(app: Application) : AndroidViewModel(app) {
-    private val repo = CardRepository(MedoraDatabase.get(app).cardDao())
+    private val db = MedoraDatabase.get(app)
+    private val repo = CardRepository(db.cardDao())
+    private val aiDao = db.aiQuestionDao()
+    private val stats = db.statsDao()
 
     var loaded by mutableStateOf(false)
         private set
@@ -38,7 +49,9 @@ class QuizViewModel(app: Application) : AndroidViewModel(app) {
 
     private fun load() {
         viewModelScope.launch {
-            questions = build(repo.getAll())
+            val fromCards = fromCards(repo.getAll())
+            val fromAi = aiDao.getAll().mapNotNull(::fromAi)
+            questions = (fromCards + fromAi).shuffled().take(MAX_QUESTIONS)
             index = 0
             score = 0
             selected = null
@@ -46,7 +59,7 @@ class QuizViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    private fun build(cards: List<Card>): List<QuizQuestion> {
+    private fun fromCards(cards: List<Card>): List<QuizQuestion> {
         return cards.shuffled().take(MAX_QUESTIONS).mapNotNull { card ->
             val wrong = cards
                 .filter { it.id != card.id && it.back != card.back }
@@ -58,9 +71,18 @@ class QuizViewModel(app: Application) : AndroidViewModel(app) {
                 null
             } else {
                 val options = (wrong + card.back).shuffled()
-                QuizQuestion(card, options, options.indexOf(card.back))
+                val source = if (card.source != card.back) card.source else ""
+                QuizQuestion(card.front, options, options.indexOf(card.back), source, card.lectureId)
             }
         }
+    }
+
+    private fun fromAi(q: AiQuestion): QuizQuestion? {
+        val options = q.options.split("\n").filter { it.isNotBlank() }
+        if (options.size < 2 || q.correctIndex !in options.indices) return null
+        val correct = options[q.correctIndex]
+        val shuffled = options.shuffled()
+        return QuizQuestion(q.question, shuffled, shuffled.indexOf(correct), q.source, q.lectureId)
     }
 
     fun select(option: Int) {
@@ -72,6 +94,10 @@ class QuizViewModel(app: Application) : AndroidViewModel(app) {
     fun next() {
         selected = null
         index += 1
+        if (index == questions.size) {
+            val result = QuizResult(score = score, total = questions.size)
+            viewModelScope.launch { stats.insertQuiz(result) }
+        }
     }
 
     fun restart() {

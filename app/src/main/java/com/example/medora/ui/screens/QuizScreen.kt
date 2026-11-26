@@ -58,7 +58,7 @@ fun QuizScreen(onOpenLecture: (Long) -> Unit, vm: QuizViewModel = viewModel()) {
                 Spacer(Modifier.height(12.dp))
                 MedoraCard(modifier = Modifier.fillMaxWidth()) {
                     Text(
-                        text = q.card.front,
+                        text = q.prompt,
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                     )
@@ -98,13 +98,13 @@ fun QuizScreen(onOpenLecture: (Long) -> Unit, vm: QuizViewModel = viewModel()) {
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                     )
-                    if (q.card.source.isNotBlank() && q.card.source != q.card.back) {
+                    if (q.source.isNotBlank()) {
                         Text(
-                            text = stringResource(R.string.source_label) + ": " + q.card.source,
+                            text = stringResource(R.string.source_label) + ": " + q.source,
                             style = MaterialTheme.typography.bodySmall,
                         )
                     }
-                    TextButton(onClick = { onOpenLecture(q.card.lectureId) }) {
+                    TextButton(onClick = { onOpenLecture(q.lectureId) }) {
                         Text(stringResource(R.string.open_lecture))
                     }
                     Spacer(Modifier.height(8.dp))

@@ -17,6 +17,9 @@ interface LectureDao {
     @Insert
     suspend fun insert(lecture: Lecture): Long
 
+    @Query("UPDATE lectures SET summary = :summary, slidesJson = :slidesJson WHERE id = :id")
+    suspend fun saveAi(id: Long, summary: String, slidesJson: String)
+
     @Delete
     suspend fun delete(lecture: Lecture)
 }

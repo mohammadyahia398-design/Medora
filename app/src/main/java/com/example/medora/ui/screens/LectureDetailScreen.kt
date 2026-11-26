@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,6 +18,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -49,6 +51,7 @@ fun LectureDetailScreen(
     id: Long,
     vm: LibraryViewModel = viewModel(),
     cardsVm: CardsViewModel = viewModel(),
+    aiVm: AiViewModel = viewModel(),
 ) {
     val lecture by remember(id) { vm.lecture(id) }.collectAsState(initial = null)
     val cards by remember(id) { cardsVm.cardsOf(id) }.collectAsState(initial = emptyList())
@@ -87,7 +90,47 @@ fun LectureDetailScreen(
                         modifier = Modifier.weight(1f),
                     )
                 }
+                if (current.content.isNotBlank()) {
+                    Spacer(Modifier.height(12.dp))
+                    if (aiVm.busy) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                            Spacer(Modifier.width(12.dp))
+                            Text(stringResource(R.string.ai_working))
+                        }
+                    } else {
+                        MedoraButton(
+                            text = stringResource(R.string.ai_generate),
+                            onClick = {
+                                aiVm.generate(
+                                    current.id,
+                                    current.title,
+                                    current.content,
+                                    cards.map { it.front }.toSet(),
+                                )
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
+                }
                 Spacer(Modifier.height(16.dp))
+                if (current.summary.isNotBlank()) {
+                    MedoraCard(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = stringResource(R.string.summary),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text(text = current.summary, style = MaterialTheme.typography.bodyMedium)
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = stringResource(R.string.ai_disclaimer),
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                    Spacer(Modifier.height(16.dp))
+                }
             }
         }
 
@@ -139,6 +182,30 @@ fun LectureDetailScreen(
             onSave = { front, back ->
                 cardsVm.add(id, front, back, d.source)
                 draft = null
+            },
+        )
+    }
+
+    aiVm.newCards?.let { list ->
+        SuggestionsDialog(
+            items = list,
+            onDismiss = { aiVm.clearCards() },
+            onAdd = { chosen ->
+                cardsVm.addSuggestions(id, chosen)
+                aiVm.clearCards()
+            },
+        )
+    }
+
+    if (aiVm.noKey || aiVm.error != null) {
+        AlertDialog(
+            onDismissRequest = { aiVm.clearError() },
+            title = { Text(stringResource(R.string.ai_failed)) },
+            text = {
+                Text(if (aiVm.noKey) stringResource(R.string.ai_no_key) else aiVm.error.orEmpty())
+            },
+            confirmButton = {
+                TextButton(onClick = { aiVm.clearError() }) { Text(stringResource(R.string.ok)) }
             },
         )
     }
