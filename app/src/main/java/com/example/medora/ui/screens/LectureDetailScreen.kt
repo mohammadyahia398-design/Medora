@@ -45,6 +45,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import com.example.medora.export.PdfExporter
 import com.example.medora.export.PdfLabels
+import com.example.medora.export.PptxExporter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -90,6 +91,27 @@ fun LectureDetailScreen(
                 Toast.makeText(
                     context,
                     if (ok) R.string.pdf_saved else R.string.pdf_failed,
+                    Toast.LENGTH_SHORT,
+                ).show()
+            }
+        }
+    }
+    val pptxLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument(
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+        )
+    ) { uri ->
+        val l = lecture
+        if (uri != null && l != null) {
+            scope.launch {
+                val ok = withContext(Dispatchers.IO) {
+                    runCatching {
+                        PptxExporter.write(context, uri, l.title, l.subject, l.slidesJson)
+                    }.isSuccess
+                }
+                Toast.makeText(
+                    context,
+                    if (ok) R.string.pptx_saved else R.string.pptx_failed,
                     Toast.LENGTH_SHORT,
                 ).show()
             }
@@ -159,6 +181,17 @@ fun LectureDetailScreen(
                     },
                     modifier = Modifier.fillMaxWidth(),
                 )
+                if (current.slidesJson.isNotBlank()) {
+                    Spacer(Modifier.height(12.dp))
+                    MedoraButton(
+                        text = stringResource(R.string.export_pptx),
+                        onClick = {
+                            val name = current.title.replace(Regex("[\\\\/:*?\"<>|]"), "_").take(40).ifBlank { "lecture" }
+                            pptxLauncher.launch("$name.pptx")
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
                 Spacer(Modifier.height(16.dp))
                 if (current.summary.isNotBlank()) {
                     MedoraCard(modifier = Modifier.fillMaxWidth()) {

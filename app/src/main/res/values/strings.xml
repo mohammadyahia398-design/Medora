@@ -81,4 +81,7 @@
     <string name="export_pdf">Export as PDF</string>
     <string name="pdf_saved">PDF saved</string>
     <string name="pdf_failed">Could not save the PDF</string>
+    <string name="export_pptx">Export as PowerPoint</string>
+    <string name="pptx_saved">PowerPoint saved</string>
+    <string name="pptx_failed">Could not save the PowerPoint</string>
 </resources>
