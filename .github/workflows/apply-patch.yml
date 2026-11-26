@@ -1,0 +1,104 @@
+name: Apply patch
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'patch.zip'
+  workflow_dispatch:
+
+concurrency:
+  group: apply-patch-main
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.ref == 'refs/heads/main' && github.actor == github.repository_owner
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Validate, backup, apply
+        shell: bash
+        env:
+          BEFORE: ${{ github.event.before }}
+          RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          set -euo pipefail
+          PATCH="patch.zip"
+
+          if [ ! -f "$PATCH" ]; then
+            echo "No patch.zip found. Nothing to apply."
+            echo "No patch.zip found. Nothing to apply." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          bad() { echo "::error::$1"; exit 1; }
+
+          is_bad_path() {
+            case "$1" in
+              /*|*\\*|.git|.git/*|.github|.github/*|patch.zip) return 0 ;;
+            esac
+            if printf '%s' "$1" | grep -Eq '(^|/)\.\.(/|$)'; then return 0; fi
+            return 1
+          }
+
+          unzip -tq "$PATCH" >/dev/null || bad "patch.zip is corrupted"
+
+          if unzip -Z "$PATCH" | grep -Eq '^l'; then
+            bad "Symlinks are not allowed in the patch"
+          fi
+
+          while IFS= read -r name; do
+            if is_bad_path "$name"; then
+              bad "Unsafe path in patch: $name"
+            fi
+          done < <(unzip -Z1 "$PATCH")
+
+          BASE="${BEFORE:-}"
+          if [ -z "$BASE" ] || echo "$BASE" | grep -Eq '^0+$' || ! git cat-file -e "${BASE}^{commit}" 2>/dev/null; then
+            BASE="$(git rev-parse HEAD)"
+          fi
+          BACKUP="backup-${RUN_NUMBER}"
+          git push origin "${BASE}:refs/heads/${BACKUP}"
+          echo "Backup branch created: ${BACKUP}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Backup branch created: ${BACKUP}"
+
+          TMP="$(mktemp -d)"
+          unzip -q "$PATCH" -d "$TMP"
+
+          if [ -f "$TMP/delete.txt" ]; then
+            while IFS= read -r line || [ -n "$line" ]; do
+              line="${line%$'\r'}"
+              [ -z "$line" ] && continue
+              if is_bad_path "$line"; then
+                bad "Unsafe path in delete.txt: $line"
+              fi
+              if [ -f "$line" ]; then
+                git rm -q -- "$line"
+                echo "Deleted: $line"
+              else
+                echo "Skipped (not a file): $line"
+              fi
+            done < "$TMP/delete.txt"
+            rm "$TMP/delete.txt"
+          fi
+
+          cp -a "$TMP"/. .
+
+          git rm -q -- "$PATCH"
+          git config user.name "patch-bot"
+          git config user.email "patch-bot@users.noreply.github.com"
+          git add -A
+          git commit -m "Apply patch (backup: ${BACKUP})"
+          git push origin HEAD:main
+          echo "Patch applied. The Build APK workflow starts next." >> "$GITHUB_STEP_SUMMARY"
