@@ -2,13 +2,13 @@ name: Apply patch and build
 
 on:
   push:
-    branches: [dev]
+    branches: [main]
     paths:
-      - 'patches/patch.zip'
+      - 'patch.zip'
   workflow_dispatch:
 
 concurrency:
-  group: patch-build-dev
+  group: patch-build-main
   cancel-in-progress: false
 
 permissions:
@@ -16,23 +16,25 @@ permissions:
 
 jobs:
   patch-and-build:
-    # Runs only on dev and only for the repository owner
-    if: github.ref == 'refs/heads/dev' && github.actor == github.repository_owner
+    if: github.ref == 'refs/heads/main' && github.actor == github.repository_owner
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
     steps:
-      - name: Checkout dev
+      - name: Checkout main
         uses: actions/checkout@v4
         with:
-          ref: dev
+          ref: main
           fetch-depth: 0
 
-      - name: Apply patch
+      - name: Backup, apply patch
         shell: bash
+        env:
+          BEFORE: ${{ github.event.before }}
+          RUN_NUMBER: ${{ github.run_number }}
         run: |
           set -euo pipefail
-          PATCH="patches/patch.zip"
+          PATCH="patch.zip"
 
           if [ ! -f "$PATCH" ]; then
             echo "No patch file found. Building current code only."
@@ -41,10 +43,9 @@ jobs:
 
           bad() { echo "::error::$1"; exit 1; }
 
-          # Returns 0 (true) if the path is unsafe
           is_bad_path() {
             case "$1" in
-              /*|*\\*|.git|.git/*|.github|.github/*|patches|patches/*) return 0 ;;
+              /*|*\\*|.git|.git/*|.github|.github/*|patch.zip) return 0 ;;
             esac
             if printf '%s' "$1" | grep -Eq '(^|/)\.\.(/|$)'; then return 0; fi
             return 1
@@ -62,10 +63,18 @@ jobs:
             fi
           done < <(unzip -Z1 "$PATCH")
 
+          BASE="${BEFORE:-}"
+          if [ -z "$BASE" ] || echo "$BASE" | grep -Eq '^0+$' || ! git cat-file -e "${BASE}^{commit}" 2>/dev/null; then
+            BASE="$(git rev-parse HEAD)"
+          fi
+          BACKUP="backup-${RUN_NUMBER}"
+          git push origin "${BASE}:refs/heads/${BACKUP}"
+          echo "Backup branch created: ${BACKUP}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Backup branch created: ${BACKUP}"
+
           TMP="$(mktemp -d)"
           unzip -q "$PATCH" -d "$TMP"
 
-          # Optional deletions: one file path per line in delete.txt
           if [ -f "$TMP/delete.txt" ]; then
             while IFS= read -r line || [ -n "$line" ]; do
               line="${line%$'\r'}"
@@ -83,16 +92,14 @@ jobs:
             rm "$TMP/delete.txt"
           fi
 
-          # Place files at their paths inside the zip
           cp -a "$TMP"/. .
 
-          # Remove the patch file and save everything
           git rm -q -- "$PATCH"
           git config user.name "patch-bot"
           git config user.email "patch-bot@users.noreply.github.com"
           git add -A
-          git commit -m "Apply patch"
-          git push origin HEAD:dev
+          git commit -m "Apply patch (backup: ${BACKUP})"
+          git push origin HEAD:main
 
       - name: Check for Gradle project
         id: gradle
