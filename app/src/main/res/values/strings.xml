@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App name lives here only, so renaming later is a one-line change -->
+    <string name="app_name">Medora</string>
+    <string name="foundation_ok">Foundation ready</string>
+</resources>
