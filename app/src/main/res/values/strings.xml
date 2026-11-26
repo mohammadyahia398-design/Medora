@@ -78,4 +78,7 @@
     <string name="ai_disclaimer">Made by AI. Check it against your lecture before you study it.</string>
     <string name="ai_failed">AI did not work</string>
     <string name="ai_no_key">Add a Gemini or OpenRouter key in Settings first.</string>
+    <string name="export_pdf">Export as PDF</string>
+    <string name="pdf_saved">PDF saved</string>
+    <string name="pdf_failed">Could not save the PDF</string>
 </resources>

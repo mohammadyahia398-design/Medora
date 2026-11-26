@@ -38,6 +38,16 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.medora.R
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import com.example.medora.export.PdfExporter
+import com.example.medora.export.PdfLabels
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import com.example.medora.data.Card
 import com.example.medora.domain.CardSuggester
 import com.example.medora.ui.components.MedoraButton
@@ -58,6 +68,33 @@ fun LectureDetailScreen(
     val lines = remember(lecture?.content) { lecture?.content.orEmpty().split("\n") }
     var draft by remember { mutableStateOf<CardDraft?>(null) }
     var suggestions by remember { mutableStateOf<List<CardSuggester.Suggestion>?>(null) }
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val pdfLabels = PdfLabels(
+        summary = stringResource(R.string.summary),
+        cards = stringResource(R.string.cards_count, cards.size),
+        disclaimer = stringResource(R.string.ai_disclaimer),
+    )
+    val pdfLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/pdf")
+    ) { uri ->
+        val l = lecture
+        if (uri != null && l != null) {
+            val snapshot = cards
+            scope.launch {
+                val ok = withContext(Dispatchers.IO) {
+                    runCatching {
+                        PdfExporter.write(context, uri, l.title, l.subject, l.summary, l.content, snapshot, pdfLabels)
+                    }.isSuccess
+                }
+                Toast.makeText(
+                    context,
+                    if (ok) R.string.pdf_saved else R.string.pdf_failed,
+                    Toast.LENGTH_SHORT,
+                ).show()
+            }
+        }
+    }
     val current = lecture ?: return
 
     LazyColumn(
@@ -113,6 +150,15 @@ fun LectureDetailScreen(
                         )
                     }
                 }
+                Spacer(Modifier.height(12.dp))
+                MedoraButton(
+                    text = stringResource(R.string.export_pdf),
+                    onClick = {
+                        val name = current.title.replace(Regex("[\\\\/:*?\"<>|]"), "_").take(40).ifBlank { "lecture" }
+                        pdfLauncher.launch("$name.pdf")
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                )
                 Spacer(Modifier.height(16.dp))
                 if (current.summary.isNotBlank()) {
                     MedoraCard(modifier = Modifier.fillMaxWidth()) {

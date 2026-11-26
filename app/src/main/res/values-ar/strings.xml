@@ -76,4 +76,7 @@
     <string name="ai_disclaimer">من إنتاج الذكاء الاصطناعي. راجعه مع محاضرتك قبل المذاكرة.</string>
     <string name="ai_failed">تعذّر عمل الذكاء الاصطناعي</string>
     <string name="ai_no_key">أضف مفتاح Gemini أو OpenRouter في الإعدادات أولاً.</string>
+    <string name="export_pdf">تصدير PDF</string>
+    <string name="pdf_saved">تم حفظ ملف PDF</string>
+    <string name="pdf_failed">تعذّر حفظ ملف PDF</string>
 </resources>
