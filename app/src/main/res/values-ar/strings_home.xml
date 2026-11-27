@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_today">اليوم</string>
+    <string name="home_reviews_today">مراجعات اليوم: %1$d</string>
+    <string name="home_progress">تقدمك</string>
+    <string name="home_cards_studied">بطاقات تمت مذاكرتها: %1$d / %2$d</string>
+    <string name="home_completion">معدل الإكمال: %1$s</string>
+    <string name="home_completion_hint">نسبة بطاقاتك التي ذاكرتها مرة على الأقل.</string>
+    <string name="home_recent">آخر المحاضرات</string>
+    <string name="home_recent_empty">لا توجد محاضرات بعد. أضف واحدة من تبويب المكتبة.</string>
+    <string name="home_lecture_progress">ذوكر %1$d / %2$d بطاقة</string>
+    <string name="home_no_cards">لا توجد بطاقات بعد</string>
+</resources>

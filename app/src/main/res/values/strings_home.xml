@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_today">Today</string>
+    <string name="home_reviews_today">Reviews today: %1$d</string>
+    <string name="home_progress">Your progress</string>
+    <string name="home_cards_studied">Cards studied: %1$d / %2$d</string>
+    <string name="home_completion">Completion rate: %1$s</string>
+    <string name="home_completion_hint">Share of your cards studied at least once.</string>
+    <string name="home_recent">Recent lectures</string>
+    <string name="home_recent_empty">No lectures yet. Add one in the Library tab.</string>
+    <string name="home_lecture_progress">Studied %1$d / %2$d cards</string>
+    <string name="home_no_cards">No cards yet</string>
+</resources>

@@ -88,6 +88,8 @@ fun SettingsScreen() {
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        AppearanceSettingsCard()
+
         Text(
             text = stringResource(R.string.ai_section),
             style = MaterialTheme.typography.titleLarge,
@@ -173,5 +175,7 @@ fun SettingsScreen() {
                 Text(stringResource(it), style = MaterialTheme.typography.bodyMedium)
             }
         }
+
+        DeleteDataCard()
     }
 }

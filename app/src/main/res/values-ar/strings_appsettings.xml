@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="appearance_title">اللغة والمظهر</string>
+    <string name="language_label">اللغة</string>
+    <string name="theme_label">المظهر</string>
+    <string name="option_system">النظام</string>
+    <string name="theme_light">فاتح</string>
+    <string name="theme_dark">داكن</string>
+    <string name="data_title">بياناتك</string>
+    <string name="data_delete_hint">يحذف كل المحاضرات والبطاقات وسجل المراجعة ونتائج الاختبارات ومفاتيح الذكاء الاصطناعي من هذا الهاتف. صدّر نسخة احتياطية أولاً إن أردت الاحتفاظ بشيء. لا يمكن التراجع.</string>
+    <string name="data_delete">حذف كل بياناتي</string>
+    <string name="data_confirm_title">حذف كل البيانات؟</string>
+    <string name="data_confirm_text">سيُمسح كل ما ذُكر أعلاه وسيُعاد تشغيل التطبيق.</string>
+    <string name="data_delete_failed">تعذّر حذف البيانات</string>
+</resources>

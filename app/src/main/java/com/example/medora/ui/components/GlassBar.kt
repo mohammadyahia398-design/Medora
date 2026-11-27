@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.example.medora.ui.theme.LocalMedoraDark
 import com.kyant.backdrop.backdrops.LayerBackdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
@@ -30,6 +31,7 @@ fun GlassBar(
     content: @Composable RowScope.() -> Unit,
 ) {
     val shape = RoundedCornerShape(32.dp)
+    val dark = LocalMedoraDark.current
     val look = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         Modifier.drawBackdrop(
             backdrop = backdrop,
@@ -39,12 +41,14 @@ fun GlassBar(
                 blur(8.dp.toPx())
                 lens(12.dp.toPx(), 24.dp.toPx())
             },
-            onDrawSurface = { drawRect(Color.White.copy(alpha = 0.35f)) },
+            onDrawSurface = {
+                drawRect(if (dark) Color(0xFF15101F).copy(alpha = 0.45f) else Color.White.copy(alpha = 0.35f))
+            },
         )
     } else {
         Modifier
-            .background(Color.White.copy(alpha = 0.96f), shape)
-            .border(1.dp, Color(0x1A2B1650), shape)
+            .background(if (dark) Color(0xFF211A30).copy(alpha = 0.96f) else Color.White.copy(alpha = 0.96f), shape)
+            .border(1.dp, if (dark) Color(0x33FFFFFF) else Color(0x1A2B1650), shape)
     }
     Row(
         modifier = modifier.fillMaxWidth().height(height).then(look),

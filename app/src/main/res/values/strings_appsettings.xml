@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="appearance_title">Language and theme</string>
+    <string name="language_label">Language</string>
+    <string name="theme_label">Theme</string>
+    <string name="option_system">System</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="data_title">Your data</string>
+    <string name="data_delete_hint">Deletes all lectures, cards, review history, quiz results and AI keys from this phone. Export a backup first if you want to keep anything. This cannot be undone.</string>
+    <string name="data_delete">Delete all my data</string>
+    <string name="data_confirm_title">Delete all data?</string>
+    <string name="data_confirm_text">Everything listed above will be erased and the app will restart.</string>
+    <string name="data_delete_failed">Could not delete the data</string>
+</resources>

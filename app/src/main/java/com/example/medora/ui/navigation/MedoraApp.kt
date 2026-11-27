@@ -42,7 +42,9 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.medora.R
 import com.example.medora.ui.components.GlassBar
+import com.example.medora.ui.theme.LocalMedoraDark
 import com.example.medora.ui.theme.MedoraColors
+import com.example.medora.ui.theme.iconTint
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.example.medora.ui.icons.MedoraIcons
@@ -102,12 +104,18 @@ fun MedoraApp() {
     }
 
     val backdrop = rememberLayerBackdrop()
+    val dark = LocalMedoraDark.current
 
     Box(modifier = Modifier.fillMaxSize()) {
         Box(modifier = Modifier.fillMaxSize().layerBackdrop(backdrop)) {
             Box(
                 modifier = Modifier.fillMaxSize().background(
-                    Brush.verticalGradient(listOf(MedoraColors.Background, Color(0xFFF1E6FB))),
+                    Brush.verticalGradient(
+                        listOf(
+                            MaterialTheme.colorScheme.background,
+                            if (dark) Color(0xFF1D1530) else Color(0xFFF1E6FB),
+                        ),
+                    ),
                 ),
             )
             Scaffold(
@@ -120,7 +128,12 @@ fun MedoraApp() {
                         .padding(padding)
                         .padding(top = 64.dp, bottom = if (tab != null) 88.dp else 0.dp),
                 ) {
-                    composable(Tab.Home.route) { HomeScreen() }
+                    composable(Tab.Home.route) {
+                        HomeScreen(
+                            onReview = { navController.navigate(ROUTE_REVIEW) },
+                            onOpenLecture = { navController.navigate("lecture/$it") },
+                        )
+                    }
                     composable(Tab.Library.route) {
                         LibraryScreen(onOpenLecture = { navController.navigate("lecture/$it") })
                     }
@@ -179,6 +192,7 @@ fun MedoraApp() {
                         Image(
                             imageVector = MedoraIcons.Back,
                             contentDescription = stringResource(R.string.back),
+                            colorFilter = iconTint(),
                             modifier = Modifier.size(24.dp),
                         )
                     }
@@ -198,6 +212,7 @@ fun MedoraApp() {
                         Image(
                             imageVector = MedoraIcons.Settings,
                             contentDescription = stringResource(R.string.settings),
+                            colorFilter = iconTint(),
                             modifier = Modifier.size(28.dp),
                         )
                     }
@@ -250,6 +265,7 @@ private fun RowScope.GlassTabItem(tab: Tab, selected: Boolean, onClick: () -> Un
         Image(
             imageVector = tab.icon,
             contentDescription = null,
+            colorFilter = iconTint(),
             modifier = Modifier.size(28.dp).alpha(if (selected) 1f else 0.5f),
         )
         Text(
