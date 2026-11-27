@@ -9,7 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
 
 // Single place for the whole look. Change here, the app changes everywhere.
@@ -19,8 +18,11 @@ object MedoraColors {
     val Sky = Color(0xFF90E0EF)
     val Blue = Color(0xFF0077B6)
     val Navy = Color(0xFF03045E)
-    // Blue mixed with white: a softer fill for icons.
+    // Blue mixed with white.
     val BlueSoft = Color(0xFF73B4D7)
+
+    // Soft fills for the icons. Details on them are drawn in Ink.
+    val Teal = Color(0xFF7ADCCB)
 
     // Meaning colors. Keep them: right answer, wrong answer, AI marker.
     val Orange = Color(0xFFFFB84D)
@@ -114,11 +116,6 @@ private val MedoraShapes = Shapes(
     medium = RoundedCornerShape(20.dp),
     large = RoundedCornerShape(28.dp),
 )
-
-// Our icons are drawn in dark ink. In the dark theme they are tinted Sky.
-@Composable
-fun iconTint(): ColorFilter? =
-    if (LocalMedoraDark.current) ColorFilter.tint(MedoraColors.Sky) else null
 
 @Composable
 fun MedoraTheme(darkTheme: Boolean = false, content: @Composable () -> Unit) {

@@ -56,10 +56,10 @@ import com.example.medora.ui.glass.LiquidBottomTab
 import com.example.medora.ui.glass.LiquidBottomTabs
 import com.example.medora.ui.theme.LocalMedoraDark
 import com.example.medora.ui.theme.MedoraColors
-import com.example.medora.ui.theme.iconTint
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.example.medora.ui.icons.MedoraIcons
+import com.example.medora.ui.icons.themed
 import com.example.medora.ui.screens.ExamScreen
 import com.example.medora.ui.screens.HomeScreen
 import com.example.medora.ui.screens.LectureDetailScreen
@@ -224,9 +224,8 @@ fun MedoraApp() {
                 if (isSub) {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Image(
-                            imageVector = MedoraIcons.Back,
+                            imageVector = MedoraIcons.Back.themed(),
                             contentDescription = stringResource(R.string.back),
-                            colorFilter = iconTint(),
                             modifier = Modifier.size(24.dp),
                         )
                     }
@@ -244,9 +243,8 @@ fun MedoraApp() {
                 if (!isSub) {
                     IconButton(onClick = { navController.navigate(ROUTE_SETTINGS) }) {
                         Image(
-                            imageVector = MedoraIcons.Settings,
+                            imageVector = MedoraIcons.Settings.themed(),
                             contentDescription = stringResource(R.string.settings),
-                            colorFilter = iconTint(),
                             modifier = Modifier.size(28.dp),
                         )
                     }
@@ -280,9 +278,8 @@ fun MedoraApp() {
                     tabs.forEach { item ->
                         LiquidBottomTab(onClick = { goTab(item) }) {
                             Image(
-                                imageVector = item.icon,
+                                imageVector = item.icon.themed(),
                                 contentDescription = null,
-                                colorFilter = iconTint(),
                                 modifier = Modifier.size(28.dp),
                             )
                             Text(
@@ -377,9 +374,8 @@ private fun RowScope.GlassTabItem(tab: Tab, selected: Boolean, onClick: () -> Un
                     .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.22f), RoundedCornerShape(16.dp)),
             )
             Image(
-                imageVector = tab.icon,
+                imageVector = tab.icon.themed(),
                 contentDescription = null,
-                colorFilter = iconTint(),
                 modifier = Modifier
                     .size(28.dp)
                     .graphicsLayer {
