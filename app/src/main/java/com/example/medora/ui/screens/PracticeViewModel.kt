@@ -9,6 +9,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.medora.data.Card
 import com.example.medora.data.MedoraDatabase
+import com.example.medora.data.Mistake
 import com.example.medora.data.QuizResult
 import com.example.medora.domain.PageFinder
 import kotlinx.coroutines.launch
@@ -52,6 +53,9 @@ class PracticeViewModel(app: Application) : AndroidViewModel(app) {
     var score by mutableIntStateOf(0)
         private set
 
+    // A wrong typed answer waits here, because the user can still count it as correct.
+    private var pending: Mistake? = null
+
     fun start(newMode: String) {
         if (newMode == mode && loaded) return
         mode = newMode
@@ -68,6 +72,7 @@ class PracticeViewModel(app: Application) : AndroidViewModel(app) {
                 PRACTICE_SHORT -> cards.shuffled().take(MAX_ITEMS).map { PracticeItem(it, page = pageOf(it, contents)) }
                 else -> weak(cards, contents)
             }
+            pending = null
             index = 0
             score = 0
             answered = false
@@ -105,19 +110,48 @@ class PracticeViewModel(app: Application) : AndroidViewModel(app) {
 
     fun answerTrueFalse(saidTrue: Boolean) {
         if (answered) return
-        mark(saidTrue == items[index].isTrue)
+        val item = items[index]
+        val ok = saidTrue == item.isTrue
+        mark(ok)
         chosen = if (saidTrue) 0 else 1
+        if (!ok) save(item, if (saidTrue) item.statement else "")
     }
 
     fun answerChoice(i: Int) {
         if (answered) return
         chosen = i
-        mark(i == items[index].correctIndex)
+        val item = items[index]
+        val ok = i == item.correctIndex
+        mark(ok)
+        if (!ok) save(item, item.options.getOrElse(i) { "" })
     }
 
     fun answerShort(text: String) {
         if (answered || text.isBlank()) return
-        mark(matches(text, items[index].card.back))
+        val item = items[index]
+        mark(matches(text, item.card.back))
+        if (!lastCorrect) {
+            pending = Mistake(
+                lectureId = item.card.lectureId,
+                kind = "practice",
+                question = item.card.front,
+                chosen = text.trim(),
+                correct = item.card.back,
+                source = item.card.source,
+            )
+        }
+    }
+
+    private fun save(item: PracticeItem, chosenText: String) {
+        val m = Mistake(
+            lectureId = item.card.lectureId,
+            kind = "practice",
+            question = item.card.front,
+            chosen = chosenText,
+            correct = item.card.back,
+            source = item.card.source,
+        )
+        viewModelScope.launch { db.mistakeDao().insertAll(listOf(m)) }
     }
 
     // The user can overrule the automatic check of a typed answer.
@@ -125,6 +159,7 @@ class PracticeViewModel(app: Application) : AndroidViewModel(app) {
         if (!answered || lastCorrect) return
         lastCorrect = true
         score += 1
+        pending = null
     }
 
     private fun mark(ok: Boolean) {
@@ -134,6 +169,8 @@ class PracticeViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun next() {
+        pending?.let { m -> viewModelScope.launch { db.mistakeDao().insertAll(listOf(m)) } }
+        pending = null
         answered = false
         chosen = null
         index += 1

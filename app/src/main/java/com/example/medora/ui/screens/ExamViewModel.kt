@@ -12,6 +12,7 @@ import com.example.medora.data.AiQuestion
 import com.example.medora.data.Card
 import com.example.medora.data.CardRepository
 import com.example.medora.data.MedoraDatabase
+import com.example.medora.data.Mistake
 import com.example.medora.data.QuizResult
 import com.example.medora.domain.PageFinder
 import kotlinx.coroutines.Job
@@ -166,7 +167,26 @@ class ExamViewModel(app: Application) : AndroidViewModel(app) {
         score = questions.indices.count { answers[it] == questions[it].correctIndex }
         phase = ExamPhase.Result
         val result = QuizResult(score = score, total = questions.size)
-        viewModelScope.launch { stats.insertQuiz(result) }
+        val wrong = questions.indices.mapNotNull { i ->
+            val q = questions[i]
+            val a = answers[i]
+            if (a == null || a == q.correctIndex) {
+                null
+            } else {
+                Mistake(
+                    lectureId = q.lectureId,
+                    kind = "exam",
+                    question = q.prompt,
+                    chosen = q.options.getOrElse(a) { "" },
+                    correct = q.options.getOrElse(q.correctIndex) { "" },
+                    source = q.source,
+                )
+            }
+        }
+        viewModelScope.launch {
+            stats.insertQuiz(result)
+            if (wrong.isNotEmpty()) db.mistakeDao().insertAll(wrong)
+        }
     }
 
     fun retry() {

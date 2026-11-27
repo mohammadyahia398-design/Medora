@@ -69,9 +69,29 @@ private val MIGRATION_2_3 = object : Migration(2, 3) {
     }
 }
 
+// Version 4: saved mistakes (wrong answers from quiz, exam and practice).
+private val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `mistakes` (" +
+                "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                "`lectureId` INTEGER NOT NULL, " +
+                "`kind` TEXT NOT NULL, " +
+                "`question` TEXT NOT NULL, " +
+                "`chosen` TEXT NOT NULL, " +
+                "`correct` TEXT NOT NULL, " +
+                "`source` TEXT NOT NULL, " +
+                "`at` INTEGER NOT NULL, " +
+                "FOREIGN KEY(`lectureId`) REFERENCES `lectures`(`id`) " +
+                "ON UPDATE NO ACTION ON DELETE CASCADE)"
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_mistakes_lectureId` ON `mistakes` (`lectureId`)")
+    }
+}
+
 @Database(
-    entities = [Lecture::class, Card::class, ReviewLog::class, QuizResult::class, AiQuestion::class],
-    version = 3,
+    entities = [Lecture::class, Card::class, ReviewLog::class, QuizResult::class, AiQuestion::class, Mistake::class],
+    version = 4,
     exportSchema = false,
 )
 abstract class MedoraDatabase : RoomDatabase() {
@@ -79,6 +99,7 @@ abstract class MedoraDatabase : RoomDatabase() {
     abstract fun cardDao(): CardDao
     abstract fun statsDao(): StatsDao
     abstract fun aiQuestionDao(): AiQuestionDao
+    abstract fun mistakeDao(): MistakeDao
 
     companion object {
         @Volatile private var instance: MedoraDatabase? = null
@@ -97,7 +118,7 @@ abstract class MedoraDatabase : RoomDatabase() {
                     context.applicationContext,
                     MedoraDatabase::class.java,
                     "medora.db",
-                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build().also { instance = it }
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build().also { instance = it }
             }
     }
 }

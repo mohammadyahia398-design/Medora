@@ -11,6 +11,7 @@ import com.example.medora.data.AiQuestion
 import com.example.medora.data.Card
 import com.example.medora.data.CardRepository
 import com.example.medora.data.MedoraDatabase
+import com.example.medora.data.Mistake
 import com.example.medora.data.QuizResult
 import com.example.medora.domain.PageFinder
 import kotlinx.coroutines.launch
@@ -94,7 +95,20 @@ class QuizViewModel(app: Application) : AndroidViewModel(app) {
     fun select(option: Int) {
         if (selected != null) return
         selected = option
-        if (option == questions[index].correctIndex) score += 1
+        val q = questions[index]
+        if (option == q.correctIndex) {
+            score += 1
+        } else {
+            val m = Mistake(
+                lectureId = q.lectureId,
+                kind = "quiz",
+                question = q.prompt,
+                chosen = q.options.getOrElse(option) { "" },
+                correct = q.options.getOrElse(q.correctIndex) { "" },
+                source = q.source,
+            )
+            viewModelScope.launch { db.mistakeDao().insertAll(listOf(m)) }
+        }
     }
 
     fun next() {
