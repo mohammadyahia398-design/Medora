@@ -14,6 +14,9 @@ interface LectureDao {
     @Query("SELECT * FROM lectures WHERE id = :id")
     fun observe(id: Long): Flow<Lecture?>
 
+    @Query("SELECT * FROM lectures")
+    suspend fun getAll(): List<Lecture>
+
     @Insert
     suspend fun insert(lecture: Lecture): Long
 

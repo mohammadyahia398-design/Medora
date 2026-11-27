@@ -12,6 +12,7 @@ import com.example.medora.data.Card
 import com.example.medora.data.CardRepository
 import com.example.medora.data.MedoraDatabase
 import com.example.medora.data.QuizResult
+import com.example.medora.domain.PageFinder
 import kotlinx.coroutines.launch
 
 class QuizQuestion(
@@ -20,6 +21,7 @@ class QuizQuestion(
     val correctIndex: Int,
     val source: String,
     val lectureId: Long,
+    val page: Int? = null,
 )
 
 private const val MAX_QUESTIONS = 10
@@ -49,8 +51,9 @@ class QuizViewModel(app: Application) : AndroidViewModel(app) {
 
     private fun load() {
         viewModelScope.launch {
-            val fromCards = fromCards(repo.getAll())
-            val fromAi = aiDao.getAll().mapNotNull(::fromAi)
+            val contents = db.lectureDao().getAll().associate { it.id to it.content }
+            val fromCards = fromCards(repo.getAll(), contents)
+            val fromAi = aiDao.getAll().mapNotNull { fromAi(it, contents) }
             questions = (fromCards + fromAi).shuffled().take(MAX_QUESTIONS)
             index = 0
             score = 0
@@ -59,7 +62,7 @@ class QuizViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    private fun fromCards(cards: List<Card>): List<QuizQuestion> {
+    private fun fromCards(cards: List<Card>, contents: Map<Long, String>): List<QuizQuestion> {
         return cards.shuffled().take(MAX_QUESTIONS).mapNotNull { card ->
             val wrong = cards
                 .filter { it.id != card.id && it.back != card.back }
@@ -72,17 +75,19 @@ class QuizViewModel(app: Application) : AndroidViewModel(app) {
             } else {
                 val options = (wrong + card.back).shuffled()
                 val source = if (card.source != card.back) card.source else ""
-                QuizQuestion(card.front, options, options.indexOf(card.back), source, card.lectureId)
+                val page = PageFinder.pageOf(contents[card.lectureId], card.source, card.back, card.front)
+                QuizQuestion(card.front, options, options.indexOf(card.back), source, card.lectureId, page)
             }
         }
     }
 
-    private fun fromAi(q: AiQuestion): QuizQuestion? {
+    private fun fromAi(q: AiQuestion, contents: Map<Long, String>): QuizQuestion? {
         val options = q.options.split("\n").filter { it.isNotBlank() }
         if (options.size < 2 || q.correctIndex !in options.indices) return null
         val correct = options[q.correctIndex]
         val shuffled = options.shuffled()
-        return QuizQuestion(q.question, shuffled, shuffled.indexOf(correct), q.source, q.lectureId)
+        val page = PageFinder.pageOf(contents[q.lectureId], q.source)
+        return QuizQuestion(q.question, shuffled, shuffled.indexOf(correct), q.source, q.lectureId, page)
     }
 
     fun select(option: Int) {

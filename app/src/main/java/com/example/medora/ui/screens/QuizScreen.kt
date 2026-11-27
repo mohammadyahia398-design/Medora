@@ -104,6 +104,12 @@ fun QuizScreen(onOpenLecture: (Long) -> Unit, vm: QuizViewModel = viewModel()) {
                             style = MaterialTheme.typography.bodySmall,
                         )
                     }
+                    q.page?.let { page ->
+                        Text(
+                            text = stringResource(R.string.page_label, page),
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
                     TextButton(onClick = { onOpenLecture(q.lectureId) }) {
                         Text(stringResource(R.string.open_lecture))
                     }

@@ -75,6 +75,12 @@ fun ReviewScreen(onOpenLecture: (Long) -> Unit, vm: ReviewViewModel = viewModel(
                                 style = MaterialTheme.typography.bodySmall,
                             )
                         }
+                        vm.pages[card.id]?.let { page ->
+                            Text(
+                                text = stringResource(R.string.page_label, page),
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
                         TextButton(onClick = { onOpenLecture(card.lectureId) }) {
                             Text(stringResource(R.string.open_lecture))
                         }
