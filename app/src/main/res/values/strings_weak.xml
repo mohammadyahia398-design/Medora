@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="weak_title">Weak points</string>
+    <string name="weak_empty">No weak points yet. They appear after you review some cards.</string>
+    <string name="weak_lectures">Lectures to study first</string>
+    <string name="weak_cards">Cards you forget most</string>
+    <string name="weak_forgot">Forgotten %1$d of %2$d reviews</string>
+</resources>

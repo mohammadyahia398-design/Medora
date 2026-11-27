@@ -25,7 +25,13 @@ import com.example.medora.ui.components.MedoraCard
 private const val MIN_CARDS_FOR_QUIZ = 4
 
 @Composable
-fun StudyScreen(onReview: () -> Unit, onQuiz: () -> Unit, vm: CardsViewModel = viewModel()) {
+fun StudyScreen(
+    onReview: () -> Unit,
+    onQuiz: () -> Unit,
+    onExam: () -> Unit = {},
+    onSources: () -> Unit = {},
+    vm: CardsViewModel = viewModel(),
+) {
     val cards by vm.cards.collectAsState()
     val due by vm.dueCount.collectAsState()
     val aiQuestions by vm.aiQuestionCount.collectAsState()
@@ -72,6 +78,12 @@ fun StudyScreen(onReview: () -> Unit, onQuiz: () -> Unit, vm: CardsViewModel = v
                             onClick = onQuiz,
                             modifier = Modifier.fillMaxWidth(),
                         )
+                        Spacer(Modifier.height(12.dp))
+                        MedoraButton(
+                            text = stringResource(R.string.start_exam),
+                            onClick = onExam,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
                     } else {
                         Text(
                             text = stringResource(R.string.quiz_need_cards),
@@ -81,5 +93,11 @@ fun StudyScreen(onReview: () -> Unit, onQuiz: () -> Unit, vm: CardsViewModel = v
                 }
             }
         }
+        Spacer(Modifier.height(12.dp))
+        MedoraButton(
+            text = stringResource(R.string.start_sources),
+            onClick = onSources,
+            modifier = Modifier.fillMaxWidth(),
+        )
     }
 }

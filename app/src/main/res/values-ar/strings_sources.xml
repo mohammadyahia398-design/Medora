@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="start_sources">مصادر طبية</string>
+    <string name="sources_title">مصادر طبية</string>
+    <string name="sources_hint">يبحث في PubMed عبر Europe PMC. الكلمات الإنجليزية أفضل. النتائج مراجع فقط: اقرأ المصدر كاملاً قبل الاعتماد عليه. هذا ليس نصيحة طبية.</string>
+    <string name="sources_query">بحث (مثال: type 2 diabetes treatment)</string>
+    <string name="sources_search">بحث</string>
+    <string name="sources_empty">لا توجد نتائج.</string>
+    <string name="sources_error">تعذّر البحث: %1$s</string>
+    <string name="sources_by">المصدر: PubMed (عبر Europe PMC)</string>
+    <string name="sources_pmid">PMID: %1$s</string>
+    <string name="sources_accessed">تاريخ الوصول: %1$s</string>
+    <string name="sources_open">فتح المصدر</string>
+    <string name="sources_open_failed">تعذّر فتح الرابط</string>
+    <string name="sources_copy">نسخ المرجع</string>
+    <string name="sources_copied">تم نسخ المرجع</string>
+</resources>

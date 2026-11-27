@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="start_sources">Medical sources</string>
+    <string name="sources_title">Medical sources</string>
+    <string name="sources_hint">Searches PubMed through Europe PMC. English keywords work best. Results are references only: read the full source before relying on it. This is not medical advice.</string>
+    <string name="sources_query">Search (for example: type 2 diabetes treatment)</string>
+    <string name="sources_search">Search</string>
+    <string name="sources_empty">No results.</string>
+    <string name="sources_error">Could not search: %1$s</string>
+    <string name="sources_by">Source: PubMed (via Europe PMC)</string>
+    <string name="sources_pmid">PMID: %1$s</string>
+    <string name="sources_accessed">Accessed: %1$s</string>
+    <string name="sources_open">Open source</string>
+    <string name="sources_open_failed">Could not open the link</string>
+    <string name="sources_copy">Copy citation</string>
+    <string name="sources_copied">Citation copied</string>
+</resources>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="start_exam">محاكي الامتحان</string>
+    <string name="exam_title">الامتحان</string>
+    <string name="exam_setup_title">امتحان بوقت محدد</string>
+    <string name="exam_setup_hint">الأسئلة من بطاقاتك ومن أسئلة الذكاء الاصطناعي. لا تظهر الإجابات حتى تنتهي. الأسئلة غير المجاب عنها تُحسب خطأ.</string>
+    <string name="exam_questions_count">عدد الأسئلة</string>
+    <string name="exam_time_info">الوقت المتاح: %1$d دقيقة (دقيقة لكل سؤال)</string>
+    <string name="exam_start">ابدأ الامتحان</string>
+    <string name="exam_answered">تمت الإجابة: %1$d / %2$d</string>
+    <string name="exam_prev">السابق</string>
+    <string name="exam_finish">إنهاء</string>
+    <string name="exam_finish_title">إنهاء الامتحان؟</string>
+    <string name="exam_finish_text">أسئلة بلا إجابة: %1$d. ستُحسب خطأ.</string>
+    <string name="exam_time_used">الوقت المستغرق: %1$s</string>
+    <string name="exam_time_up">انتهى الوقت.</string>
+    <string name="exam_all_correct">كل الإجابات صحيحة.</string>
+    <string name="exam_mistakes">الأخطاء (%1$d)</string>
+    <string name="exam_your_answer">إجابتك: %1$s</string>
+    <string name="exam_no_answer">بلا إجابة</string>
+    <string name="exam_correct_answer">الإجابة الصحيحة: %1$s</string>
+    <string name="exam_retry">امتحان جديد</string>
+</resources>

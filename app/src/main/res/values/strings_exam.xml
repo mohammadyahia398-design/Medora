@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="start_exam">Exam simulator</string>
+    <string name="exam_title">Exam</string>
+    <string name="exam_setup_title">Timed exam</string>
+    <string name="exam_setup_hint">Questions come from your cards and AI questions. You see no answers until you finish. Unanswered questions count as wrong.</string>
+    <string name="exam_questions_count">Number of questions</string>
+    <string name="exam_time_info">Time allowed: %1$d minutes (1 minute per question)</string>
+    <string name="exam_start">Start exam</string>
+    <string name="exam_answered">Answered: %1$d / %2$d</string>
+    <string name="exam_prev">Previous</string>
+    <string name="exam_finish">Finish</string>
+    <string name="exam_finish_title">Finish the exam?</string>
+    <string name="exam_finish_text">Unanswered questions: %1$d. They will count as wrong.</string>
+    <string name="exam_time_used">Time used: %1$s</string>
+    <string name="exam_time_up">Time is up.</string>
+    <string name="exam_all_correct">All answers correct.</string>
+    <string name="exam_mistakes">Mistakes (%1$d)</string>
+    <string name="exam_your_answer">Your answer: %1$s</string>
+    <string name="exam_no_answer">No answer</string>
+    <string name="exam_correct_answer">Correct answer: %1$s</string>
+    <string name="exam_retry">New exam</string>
+</resources>

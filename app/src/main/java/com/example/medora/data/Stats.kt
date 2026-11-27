@@ -46,6 +46,9 @@ interface StatsDao {
     @Insert
     suspend fun insertQuiz(result: QuizResult)
 
+    @Query("SELECT * FROM review_logs")
+    suspend fun getAllLogs(): List<ReviewLog>
+
     @Query("SELECT COUNT(*) FROM review_logs WHERE reviewedAt >= :since")
     fun observeReviewsSince(since: Long): Flow<Int>
 

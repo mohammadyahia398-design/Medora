@@ -83,7 +83,7 @@ class ProgressViewModel(app: Application) : AndroidViewModel(app) {
 }
 
 @Composable
-fun ProgressScreen(vm: ProgressViewModel = viewModel()) {
+fun ProgressScreen(onOpenLecture: (Long) -> Unit = {}, vm: ProgressViewModel = viewModel()) {
     val s by vm.state.collectAsState()
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
@@ -96,6 +96,7 @@ fun ProgressScreen(vm: ProgressViewModel = viewModel()) {
         StatRow(stringResource(R.string.stat_reviews_week), s.reviewsWeek.toString())
         StatRow(stringResource(R.string.stat_last_quiz), s.lastQuiz)
         StatRow(stringResource(R.string.stat_quiz_average), s.quizAverage)
+        WeakPointsSection(onOpenLecture = onOpenLecture)
     }
 }
 

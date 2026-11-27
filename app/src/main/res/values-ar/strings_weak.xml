@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="weak_title">نقاط الضعف</string>
+    <string name="weak_empty">لا توجد نقاط ضعف بعد. تظهر بعد أن تراجع بعض البطاقات.</string>
+    <string name="weak_lectures">محاضرات تحتاج مذاكرة أولاً</string>
+    <string name="weak_cards">البطاقات التي تنساها أكثر</string>
+    <string name="weak_forgot">نُسيت %1$d من %2$d مراجعات</string>
+</resources>

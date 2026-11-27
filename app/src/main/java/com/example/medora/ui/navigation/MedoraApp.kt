@@ -46,6 +46,7 @@ import com.example.medora.ui.theme.MedoraColors
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.example.medora.ui.icons.MedoraIcons
+import com.example.medora.ui.screens.ExamScreen
 import com.example.medora.ui.screens.HomeScreen
 import com.example.medora.ui.screens.LectureDetailScreen
 import com.example.medora.ui.screens.LibraryScreen
@@ -54,6 +55,7 @@ import com.example.medora.ui.screens.ProgressScreen
 import com.example.medora.ui.screens.QuizScreen
 import com.example.medora.ui.screens.ReviewScreen
 import com.example.medora.ui.screens.SettingsScreen
+import com.example.medora.ui.screens.SourcesScreen
 import com.example.medora.ui.screens.StudyScreen
 
 private const val ROUTE_SETTINGS = "settings"
@@ -61,6 +63,8 @@ private const val ROUTE_LECTURE = "lecture/{id}"
 private const val ROUTE_REVIEW = "review"
 private const val ROUTE_QUIZ = "quiz"
 private const val ROUTE_NOTE = "note/{id}"
+private const val ROUTE_EXAM = "exam"
+private const val ROUTE_SOURCES = "sources"
 
 private enum class Tab(val route: String, @StringRes val label: Int, val icon: ImageVector) {
     Home("home", R.string.tab_home, MedoraIcons.Home),
@@ -81,7 +85,9 @@ fun MedoraApp() {
     val isReview = route == ROUTE_REVIEW
     val isQuiz = route == ROUTE_QUIZ
     val isNote = route == ROUTE_NOTE
-    val isSub = isSettings || isLecture || isReview || isQuiz || isNote
+    val isExam = route == ROUTE_EXAM
+    val isSources = route == ROUTE_SOURCES
+    val isSub = isSettings || isLecture || isReview || isQuiz || isNote || isExam || isSources
 
     val titleRes = when {
         isSettings -> R.string.settings
@@ -89,6 +95,8 @@ fun MedoraApp() {
         isReview -> R.string.review_title
         isQuiz -> R.string.quiz_title
         isNote -> R.string.edit_note
+        isExam -> R.string.exam_title
+        isSources -> R.string.sources_title
         tab != null -> tab.label
         else -> R.string.app_name
     }
@@ -120,13 +128,21 @@ fun MedoraApp() {
                         StudyScreen(
                             onReview = { navController.navigate(ROUTE_REVIEW) },
                             onQuiz = { navController.navigate(ROUTE_QUIZ) },
+                            onExam = { navController.navigate(ROUTE_EXAM) },
+                            onSources = { navController.navigate(ROUTE_SOURCES) },
                         )
                     }
-                    composable(Tab.Progress.route) { ProgressScreen() }
+                    composable(Tab.Progress.route) {
+                        ProgressScreen(onOpenLecture = { navController.navigate("lecture/$it") })
+                    }
                     composable(ROUTE_SETTINGS) { SettingsScreen() }
                     composable(ROUTE_REVIEW) {
                         ReviewScreen(onOpenLecture = { navController.navigate("lecture/$it") })
                     }
+                    composable(ROUTE_EXAM) {
+                        ExamScreen(onOpenLecture = { navController.navigate("lecture/$it") })
+                    }
+                    composable(ROUTE_SOURCES) { SourcesScreen() }
                     composable(ROUTE_QUIZ) {
                         QuizScreen(onOpenLecture = { navController.navigate("lecture/$it") })
                     }
