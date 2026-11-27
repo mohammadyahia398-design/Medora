@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="start_mistakes">Saved mistakes (%1$d)</string>
+    <string name="mistakes_title">Saved mistakes</string>
+    <string name="mistakes_empty">No saved mistakes. Questions you get wrong will appear here.</string>
+    <string name="mistakes_filter_all">All</string>
+    <string name="mistakes_kind_quiz">Quiz</string>
+    <string name="mistakes_kind_exam">Exam</string>
+    <string name="mistakes_kind_practice">Practice</string>
+    <string name="mistakes_your_answer">Your answer: %1$s</string>
+    <string name="mistakes_correct_answer">Correct: %1$s</string>
+    <string name="mistakes_got_it">Got it</string>
+</resources>

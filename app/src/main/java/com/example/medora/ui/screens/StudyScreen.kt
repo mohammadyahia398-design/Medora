@@ -36,11 +36,13 @@ fun StudyScreen(
     onExam: () -> Unit = {},
     onSources: () -> Unit = {},
     onPractice: (String) -> Unit = {},
+    onMistakes: () -> Unit = {},
     vm: CardsViewModel = viewModel(),
 ) {
     val cards by vm.cards.collectAsState()
     val due by vm.dueCount.collectAsState()
     val aiQuestions by vm.aiQuestionCount.collectAsState()
+    val mistakes by vm.mistakeCount.collectAsState()
 
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(Spacing.l),
@@ -119,6 +121,14 @@ fun StudyScreen(
                     }
                 }
             }
+        }
+        if (mistakes > 0) {
+            Spacer(Modifier.height(Spacing.m))
+            MedoraButton(
+                text = stringResource(R.string.start_mistakes, mistakes),
+                onClick = onMistakes,
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
         Spacer(Modifier.height(12.dp))
         MedoraButton(

@@ -42,6 +42,12 @@ interface MistakeDao {
     @Query("SELECT * FROM mistakes ORDER BY at DESC")
     suspend fun getAll(): List<Mistake>
 
+    @Query("SELECT * FROM mistakes ORDER BY at DESC")
+    fun observeAll(): Flow<List<Mistake>>
+
+    @Query("DELETE FROM mistakes WHERE id = :id")
+    suspend fun delete(id: Long)
+
     @Query("SELECT COUNT(*) FROM mistakes")
     fun observeCount(): Flow<Int>
 }

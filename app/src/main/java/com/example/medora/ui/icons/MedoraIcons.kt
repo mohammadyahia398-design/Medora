@@ -63,7 +63,7 @@ private fun ImageVector.Builder.outline(
 object MedoraIcons {
     val Home: ImageVector by lazy {
         icon("Home") {
-            outline(MedoraColors.Teal) {
+            outline(MedoraColors.Sky) {
                 moveTo(4f, 10.5f); lineTo(12f, 4f); lineTo(20f, 10.5f)
                 lineTo(20f, 18.5f); quadTo(20f, 20f, 18.5f, 20f)
                 lineTo(5.5f, 20f); quadTo(4f, 20f, 4f, 18.5f); close()
@@ -78,7 +78,7 @@ object MedoraIcons {
 
     val Library: ImageVector by lazy {
         icon("Library") {
-            outline(MedoraColors.Orange) { rrect(5f, 3.5f, 14f, 17f, 2.5f) }
+            outline(MedoraColors.BlueSoft) { rrect(5f, 3.5f, 14f, 17f, 2.5f) }
             outline(null) { moveTo(9.5f, 3.5f); lineTo(9.5f, 20.5f) }
             outline(null) {
                 moveTo(12.5f, 8f); lineTo(16f, 8f)
@@ -89,7 +89,7 @@ object MedoraIcons {
 
     val Study: ImageVector by lazy {
         icon("Study") {
-            outline(MedoraColors.Green) {
+            outline(MedoraColors.Sky) {
                 moveTo(12f, 5f); lineTo(21f, 9.5f); lineTo(12f, 14f); lineTo(3f, 9.5f); close()
             }
             outline(null) {
@@ -102,18 +102,18 @@ object MedoraIcons {
 
     val Progress: ImageVector by lazy {
         icon("Progress") {
-            outline(MedoraColors.Teal) { rrect(4f, 12f, 4.5f, 8f, 1.5f) }
-            outline(MedoraColors.Teal) { rrect(9.75f, 8f, 4.5f, 12f, 1.5f) }
-            outline(MedoraColors.Orange) { rrect(15.5f, 4f, 4.5f, 16f, 1.5f) }
+            outline(MedoraColors.Sky) { rrect(4f, 12f, 4.5f, 8f, 1.5f) }
+            outline(MedoraColors.BlueSoft) { rrect(9.75f, 8f, 4.5f, 12f, 1.5f) }
+            outline(MedoraColors.Blue) { rrect(15.5f, 4f, 4.5f, 16f, 1.5f) }
         }
     }
 
     val Settings: ImageVector by lazy {
         icon("Settings") {
             outline(null) { moveTo(4f, 8f); lineTo(20f, 8f) }
-            outline(MedoraColors.Coral) { circle(15f, 8f, 2.6f) }
+            outline(MedoraColors.Blue) { circle(15f, 8f, 2.6f) }
             outline(null) { moveTo(4f, 16f); lineTo(20f, 16f) }
-            outline(MedoraColors.Coral) { circle(9f, 16f, 2.6f) }
+            outline(MedoraColors.Sky) { circle(9f, 16f, 2.6f) }
         }
     }
 

@@ -26,6 +26,9 @@ class CardsViewModel(app: Application) : AndroidViewModel(app) {
     val aiQuestionCount: StateFlow<Int> =
         db.aiQuestionDao().observeCount().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
+    val mistakeCount: StateFlow<Int> =
+        db.mistakeDao().observeCount().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+
     fun cardsOf(lectureId: Long): Flow<List<Card>> = repo.observeByLecture(lectureId)
 
     fun add(lectureId: Long, front: String, back: String, source: String) {
