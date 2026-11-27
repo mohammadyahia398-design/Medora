@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.kyant.backdrop.backdrops.LayerBackdrop
 import com.kyant.backdrop.drawBackdrop
@@ -25,6 +26,7 @@ import com.kyant.backdrop.effects.vibrancy
 fun GlassBar(
     backdrop: LayerBackdrop,
     modifier: Modifier = Modifier,
+    height: Dp = 64.dp,
     content: @Composable RowScope.() -> Unit,
 ) {
     val shape = RoundedCornerShape(32.dp)
@@ -45,7 +47,7 @@ fun GlassBar(
             .border(1.dp, Color(0x1A2B1650), shape)
     }
     Row(
-        modifier = modifier.fillMaxWidth().height(64.dp).then(look),
+        modifier = modifier.fillMaxWidth().height(height).then(look),
         verticalAlignment = Alignment.CenterVertically,
         content = content,
     )

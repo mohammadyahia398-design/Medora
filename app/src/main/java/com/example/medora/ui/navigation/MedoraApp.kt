@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -19,7 +20,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -29,6 +29,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -79,6 +80,15 @@ fun MedoraApp() {
     val isQuiz = route == ROUTE_QUIZ
     val isSub = isSettings || isLecture || isReview || isQuiz
 
+    val titleRes = when {
+        isSettings -> R.string.settings
+        isLecture -> R.string.lecture_details
+        isReview -> R.string.review_title
+        isQuiz -> R.string.quiz_title
+        tab != null -> tab.label
+        else -> R.string.app_name
+    }
+
     val backdrop = rememberLayerBackdrop()
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -90,51 +100,13 @@ fun MedoraApp() {
             )
             Scaffold(
                 containerColor = Color.Transparent,
-                topBar = {
-                    TopAppBar(
-                        title = {
-                            Text(
-                                stringResource(
-                                    when {
-                                        isSettings -> R.string.settings
-                                        isLecture -> R.string.lecture_details
-                                        isReview -> R.string.review_title
-                                        isQuiz -> R.string.quiz_title
-                                        tab != null -> tab.label
-                                        else -> R.string.app_name
-                                    }
-                                )
-                            )
-                        },
-                        navigationIcon = {
-                            if (isSub) {
-                                IconButton(onClick = { navController.popBackStack() }) {
-                                    Image(
-                                        imageVector = MedoraIcons.Back,
-                                        contentDescription = stringResource(R.string.back),
-                                        modifier = Modifier.size(24.dp),
-                                    )
-                                }
-                            }
-                        },
-                        actions = {
-                            if (!isSub) {
-                                IconButton(onClick = { navController.navigate(ROUTE_SETTINGS) }) {
-                                    Image(
-                                        imageVector = MedoraIcons.Settings,
-                                        contentDescription = stringResource(R.string.settings),
-                                        modifier = Modifier.size(28.dp),
-                                    )
-                                }
-                            }
-                        },
-                    )
-                },
             ) { padding ->
                 NavHost(
                     navController = navController,
                     startDestination = Tab.Home.route,
-                    modifier = Modifier.padding(padding).padding(bottom = if (tab != null) 88.dp else 0.dp),
+                    modifier = Modifier
+                        .padding(padding)
+                        .padding(top = 64.dp, bottom = if (tab != null) 88.dp else 0.dp),
                 ) {
                     composable(Tab.Home.route) { HomeScreen() }
                     composable(Tab.Library.route) {
@@ -159,6 +131,45 @@ fun MedoraApp() {
                         arguments = listOf(navArgument("id") { type = NavType.LongType }),
                     ) { entry ->
                         LectureDetailScreen(id = entry.arguments?.getLong("id") ?: 0L)
+                    }
+                }
+            }
+        }
+        GlassBar(
+            backdrop = backdrop,
+            height = 56.dp,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .statusBarsPadding()
+                .padding(start = 16.dp, end = 16.dp, top = 8.dp),
+        ) {
+            Box(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+                if (isSub) {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Image(
+                            imageVector = MedoraIcons.Back,
+                            contentDescription = stringResource(R.string.back),
+                            modifier = Modifier.size(24.dp),
+                        )
+                    }
+                }
+            }
+            Text(
+                text = stringResource(titleRes),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onBackground,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                modifier = Modifier.weight(1f),
+            )
+            Box(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+                if (!isSub) {
+                    IconButton(onClick = { navController.navigate(ROUTE_SETTINGS) }) {
+                        Image(
+                            imageVector = MedoraIcons.Settings,
+                            contentDescription = stringResource(R.string.settings),
+                            modifier = Modifier.size(28.dp),
+                        )
                     }
                 }
             }
