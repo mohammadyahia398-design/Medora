@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.medora.ui.theme.LocalMedoraDark
+import com.example.medora.ui.theme.MedoraColors
 import com.kyant.backdrop.backdrops.LayerBackdrop
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
@@ -82,12 +83,12 @@ private fun glassLook(backdrop: LayerBackdrop, shape: Shape): Modifier {
                 lens(12.dp.toPx(), 24.dp.toPx())
             },
             onDrawSurface = {
-                drawRect(if (dark) Color(0xFF15101F).copy(alpha = 0.45f) else Color.White.copy(alpha = 0.35f))
+                drawRect(if (dark) MedoraColors.GlassDark else MedoraColors.GlassLight)
             },
         )
     } else {
         Modifier
-            .background(if (dark) Color(0xFF211A30).copy(alpha = 0.96f) else Color.White.copy(alpha = 0.96f), shape)
-            .border(1.dp, if (dark) Color(0x33FFFFFF) else Color(0x1A2B1650), shape)
+            .background(if (dark) MedoraColors.GlassSolidDark else MedoraColors.GlassSolidLight, shape)
+            .border(1.dp, if (dark) MedoraColors.GlassBorderDark else MedoraColors.GlassBorderLight, shape)
     }
 }

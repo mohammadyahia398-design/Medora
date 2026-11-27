@@ -19,8 +19,16 @@ object MedoraColors {
     val Orange = Color(0xFFFFB255)
     val Green = Color(0xFF8EF0B4)
     val Coral = Color(0xFFFF8A80)
-    val Background = Color(0xFFFBFAFD)
+    val Background = Color(0xFFF5F1FB)
     val Surface = Color(0xFFFFFFFF)
+
+    // Glass tokens (used by GlassBar.kt).
+    val GlassLight = Color.White.copy(alpha = 0.35f)
+    val GlassDark = Color(0xFF15101F).copy(alpha = 0.45f)
+    val GlassSolidLight = Color.White.copy(alpha = 0.96f)
+    val GlassSolidDark = Color(0xFF211A30).copy(alpha = 0.96f)
+    val GlassBorderLight = Color(0x1A2B1650)
+    val GlassBorderDark = Color(0x33FFFFFF)
 }
 
 // True when the dark theme is on. Read it where a color is fixed in code.
@@ -34,6 +42,14 @@ private val Scheme = lightColorScheme(
     onBackground = MedoraColors.Ink,
     surface = MedoraColors.Surface,
     onSurface = MedoraColors.Ink,
+    surfaceVariant = Color(0xFFF0E9F8),
+    onSurfaceVariant = Color(0xFF5E4C7E),
+    primaryContainer = Color(0xFFE9D7FB),
+    onPrimaryContainer = MedoraColors.Ink,
+    secondaryContainer = Color(0xFFEBDDFB),
+    onSecondaryContainer = MedoraColors.Ink,
+    outline = Color(0xFFD8CCE8),
+    outlineVariant = Color(0xFFE9E1F3),
 )
 
 private val DarkScheme = darkColorScheme(
@@ -46,6 +62,8 @@ private val DarkScheme = darkColorScheme(
     onSurface = Color(0xFFF1E9FB),
     surfaceVariant = Color(0xFF352B49),
     onSurfaceVariant = Color(0xFFD9CEEA),
+    outline = Color(0xFF4A3E63),
+    outlineVariant = Color(0xFF3A2F50),
 )
 
 private val MedoraShapes = Shapes(
@@ -65,6 +83,7 @@ fun MedoraTheme(darkTheme: Boolean = false, content: @Composable () -> Unit) {
         MaterialTheme(
             colorScheme = if (darkTheme) DarkScheme else Scheme,
             shapes = MedoraShapes,
+            typography = MedoraTypography,
             content = content,
         )
     }
