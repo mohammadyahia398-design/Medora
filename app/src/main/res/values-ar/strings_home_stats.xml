@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_stat_due">مستحقة الآن</string>
+    <string name="home_stat_reviews">مراجعات اليوم</string>
+    <string name="home_stat_completion">الإكمال</string>
+    <string name="home_stat_studied">تمت مذاكرتها</string>
+</resources>

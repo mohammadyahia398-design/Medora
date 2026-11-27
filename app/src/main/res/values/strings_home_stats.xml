@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_stat_due">Due now</string>
+    <string name="home_stat_reviews">Reviews today</string>
+    <string name="home_stat_completion">Completion</string>
+    <string name="home_stat_studied">Studied</string>
+</resources>
