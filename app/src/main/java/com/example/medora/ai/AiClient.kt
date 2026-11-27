@@ -5,10 +5,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
+import kotlinx.coroutines.delay
 import java.io.IOException
 import java.net.HttpURLConnection
+import java.net.SocketTimeoutException
 import java.net.URL
 import java.net.URLEncoder
+import java.net.UnknownHostException
 
 class AiQuestionDraft(val question: String, val options: List<String>, val correctIndex: Int, val source: String)
 
@@ -22,33 +25,113 @@ class AiPack(
 
 class NoAiKeyException : Exception("no key")
 
+// Why the AI request failed, so the screen can show a clear message.
+enum class AiFailKind { NO_INTERNET, INVALID_KEY, RATE_LIMIT, DAILY_LIMIT, SERVER, BAD_ANSWER, OTHER }
+
+class AiFailure(val kind: AiFailKind, detail: String) : IOException(detail)
+
+private class HttpError(val code: Int, val retryAfter: Long, msg: String) : IOException(msg)
+
 // One request per lecture: Gemini first, OpenRouter if Gemini fails.
+// Provider routing: a provider that is down or rate-limited is skipped for a while,
+// short failures are retried once, and each provider has a local daily limit.
 // Uses only Android built-ins (HttpURLConnection + org.json). No extra library.
-class AiClient(private val settings: AiSettings) {
+class AiClient(private val settings: AiSettings, private val guard: ProviderGuard? = null) {
+
+    private class Provider(val name: String, val call: (String) -> String)
 
     suspend fun generate(title: String, content: String): AiPack = withContext(Dispatchers.IO) {
         if (!settings.hasAnyKey) throw NoAiKeyException()
         val prompt = buildPrompt(title, content.take(MAX_CHARS))
-        val errors = mutableListOf<String>()
 
+        val all = mutableListOf<Provider>()
         val gKey = settings.geminiKey
-        if (gKey.isNotBlank()) {
-            try {
-                return@withContext parse(callGemini(gKey, settings.geminiModel, prompt))
-            } catch (e: Exception) {
-                errors += "Gemini: " + (e.message ?: e.javaClass.simpleName)
-            }
-        }
+        val gModel = settings.geminiModel
+        if (gKey.isNotBlank()) all += Provider(GEMINI) { callGemini(gKey, gModel, it) }
         val oKey = settings.openRouterKey
-        if (oKey.isNotBlank()) {
+        val oModel = settings.openRouterModel
+        if (oKey.isNotBlank()) all += Provider(OPENROUTER) { callOpenRouter(oKey, oModel, it) }
+
+        // Healthy providers first; a cooling-down provider is only tried as a last resort.
+        val ordered = all.filter { guard?.isCooling(it.name) != true } +
+            all.filter { guard?.isCooling(it.name) == true }
+
+        val errors = mutableListOf<String>()
+        var kind = AiFailKind.OTHER
+        for (p in ordered) {
+            if (guard?.reachedDailyLimit(p.name) == true) {
+                errors += "${p.name}: daily limit ${ProviderGuard.DAILY_LIMIT}"
+                kind = worse(kind, AiFailKind.DAILY_LIMIT)
+                continue
+            }
             try {
-                return@withContext parse(callOpenRouter(oKey, settings.openRouterModel, prompt))
-            } catch (e: Exception) {
-                errors += "OpenRouter: " + (e.message ?: e.javaClass.simpleName)
+                val pack = tryProvider(p, prompt)
+                guard?.markSuccess(p.name)
+                return@withContext pack
+            } catch (e: AiFailure) {
+                errors += "${p.name}: " + (e.message ?: "")
+                kind = worse(kind, e.kind)
+                if (e.kind == AiFailKind.NO_INTERNET) break
             }
         }
-        throw IOException(errors.joinToString("\n"))
+        throw AiFailure(kind, errors.joinToString("\n"))
     }
+
+    // At most two attempts per provider, and only for failures that may pass quickly.
+    private suspend fun tryProvider(p: Provider, prompt: String): AiPack {
+        var attempt = 0
+        while (true) {
+            attempt++
+            guard?.countRequest(p.name)
+            var fail = AiFailure(AiFailKind.OTHER, "")
+            var wait = 0L
+            var cool = 0L
+            try {
+                return parse(p.call(prompt))
+            } catch (e: HttpError) {
+                val msg = "HTTP ${e.code} " + (e.message ?: "")
+                when {
+                    e.code == 401 || e.code == 403 -> fail = AiFailure(AiFailKind.INVALID_KEY, msg)
+                    e.code == 429 -> {
+                        fail = AiFailure(AiFailKind.RATE_LIMIT, msg)
+                        cool = if (e.retryAfter > 0) e.retryAfter else 60L
+                        if (e.retryAfter in 1..10) wait = e.retryAfter * 1000L
+                    }
+                    e.code == 408 || e.code >= 500 -> {
+                        fail = AiFailure(AiFailKind.SERVER, msg)
+                        wait = 2_000L
+                        cool = 120L
+                    }
+                    else -> fail = AiFailure(AiFailKind.OTHER, msg)
+                }
+            } catch (e: UnknownHostException) {
+                throw AiFailure(AiFailKind.NO_INTERNET, "no internet")
+            } catch (e: SocketTimeoutException) {
+                fail = AiFailure(AiFailKind.SERVER, "timeout")
+                wait = 2_000L
+                cool = 120L
+            } catch (e: IOException) {
+                val m = e.message ?: e.javaClass.simpleName
+                if (m.startsWith("bad AI answer") || m.startsWith("empty AI answer")) {
+                    fail = AiFailure(AiFailKind.BAD_ANSWER, m)
+                    wait = 1_000L
+                } else {
+                    fail = AiFailure(AiFailKind.OTHER, m)
+                }
+            } catch (e: Exception) {
+                // JSON shape changed or similar: retry once, the model may answer better.
+                fail = AiFailure(AiFailKind.BAD_ANSWER, e.message ?: e.javaClass.simpleName)
+                wait = 1_000L
+            }
+            if (attempt >= 2 || wait == 0L || guard?.reachedDailyLimit(p.name) == true) {
+                guard?.coolDown(p.name, cool)
+                throw fail
+            }
+            delay(wait)
+        }
+    }
+
+    private fun worse(a: AiFailKind, b: AiFailKind): AiFailKind = if (b.ordinal < a.ordinal) b else a
 
     private fun callGemini(key: String, model: String, prompt: String): String {
         val url = "https://generativelanguage.googleapis.com/v1beta/models/" +
@@ -97,7 +180,10 @@ class AiClient(private val settings: AiSettings) {
             val code = c.responseCode
             val stream = if (code in 200..299) c.inputStream else c.errorStream
             val text = stream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty()
-            if (code !in 200..299) throw IOException("HTTP $code " + errorMessage(text))
+            if (code !in 200..299) {
+                val retry = c.getHeaderField("Retry-After")?.trim()?.toLongOrNull() ?: 0L
+                throw HttpError(code, retry, errorMessage(text))
+            }
             return text
         } finally {
             c.disconnect()
@@ -132,6 +218,8 @@ $content
 
     companion object {
         private const val MAX_CHARS = 30_000
+        private const val GEMINI = "Gemini"
+        private const val OPENROUTER = "OpenRouter"
 
         fun parse(raw: String): AiPack {
             val start = raw.indexOf('{')

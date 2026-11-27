@@ -6,8 +6,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.medora.R
 import com.example.medora.ai.AiClient
+import com.example.medora.ai.AiFailKind
+import com.example.medora.ai.AiFailure
 import com.example.medora.ai.AiSettings
+import com.example.medora.ai.ProviderGuard
 import com.example.medora.ai.NoAiKeyException
 import com.example.medora.data.AiQuestion
 import com.example.medora.data.LectureRepository
@@ -21,7 +25,7 @@ class AiViewModel(app: Application) : AndroidViewModel(app) {
     private val db = MedoraDatabase.get(app)
     private val lectures = LectureRepository(db.lectureDao())
     private val questions = db.aiQuestionDao()
-    private val client = AiClient(AiSettings(app))
+    private val client = AiClient(AiSettings(app), ProviderGuard(app))
 
     var busy by mutableStateOf(false)
         private set
@@ -56,12 +60,24 @@ class AiViewModel(app: Application) : AndroidViewModel(app) {
                 newCards = pack.cards.filter { it.front !in existingFronts }
             } catch (e: NoAiKeyException) {
                 noKey = true
+            } catch (e: AiFailure) {
+                error = getApplication<Application>().getString(failText(e.kind)) + "\n\n" + e.message.orEmpty()
             } catch (e: Exception) {
                 error = e.message ?: e.javaClass.simpleName
             } finally {
                 busy = false
             }
         }
+    }
+
+    private fun failText(kind: AiFailKind): Int = when (kind) {
+        AiFailKind.NO_INTERNET -> R.string.ai_fail_no_internet
+        AiFailKind.INVALID_KEY -> R.string.ai_fail_invalid_key
+        AiFailKind.RATE_LIMIT -> R.string.ai_fail_rate_limit
+        AiFailKind.DAILY_LIMIT -> R.string.ai_fail_daily_limit
+        AiFailKind.SERVER -> R.string.ai_fail_server
+        AiFailKind.BAD_ANSWER -> R.string.ai_fail_bad_answer
+        AiFailKind.OTHER -> R.string.ai_fail_other
     }
 
     fun clearCards() {

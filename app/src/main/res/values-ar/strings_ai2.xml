@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ai_fail_no_internet">لا يوجد اتصال بالإنترنت. اتصل وحاول مجدداً.</string>
+    <string name="ai_fail_invalid_key">رُفض مفتاح الذكاء الاصطناعي. تحقّق منه في الإعدادات.</string>
+    <string name="ai_fail_rate_limit">مزوّد الذكاء الاصطناعي مشغول (حدّ الطلبات). حاول بعد دقائق.</string>
+    <string name="ai_fail_daily_limit">بلغت الحدّ اليومي الآمن على هذا الهاتف. حاول غداً.</string>
+    <string name="ai_fail_server">مزوّد الذكاء الاصطناعي لا يستجيب الآن. حاول لاحقاً.</string>
+    <string name="ai_fail_bad_answer">تعذّرت قراءة إجابة الذكاء الاصطناعي. حاول مجدداً.</string>
+    <string name="ai_fail_other">فشل طلب الذكاء الاصطناعي.</string>
+</resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ai_fail_no_internet">No internet connection. Connect and try again.</string>
+    <string name="ai_fail_invalid_key">The AI key was rejected. Check it in Settings.</string>
+    <string name="ai_fail_rate_limit">The AI provider is busy (rate limit). Try again in a few minutes.</string>
+    <string name="ai_fail_daily_limit">Daily safety limit reached on this phone. Try again tomorrow.</string>
+    <string name="ai_fail_server">The AI provider is not responding right now. Try again later.</string>
+    <string name="ai_fail_bad_answer">The AI answer could not be read. Try again.</string>
+    <string name="ai_fail_other">The AI request failed.</string>
+</resources>
