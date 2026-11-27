@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -42,6 +43,7 @@ import com.example.medora.ui.components.GlassBox
 import com.example.medora.ui.components.MedoraCard
 import com.example.medora.ui.components.glassSource
 import com.example.medora.ui.components.rememberGlassBackdrop
+import com.example.medora.ui.theme.Spacing
 import java.text.DateFormat
 import java.util.Date
 
@@ -99,13 +101,13 @@ fun LibraryScreen(onOpenLecture: (Long) -> Unit, vm: LibraryViewModel = viewMode
             Text(
                 text = stringResource(R.string.library_empty),
                 style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.align(Alignment.Center).padding(32.dp),
+                modifier = Modifier.align(Alignment.Center).padding(Spacing.xxl),
             )
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 84.dp, bottom = 96.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(start = Spacing.l, end = Spacing.l, top = 84.dp, bottom = 96.dp),
+                verticalArrangement = Arrangement.spacedBy(Spacing.m),
             ) {
                 if (groups.isEmpty()) {
                     item(key = "none") {
@@ -122,7 +124,7 @@ fun LibraryScreen(onOpenLecture: (Long) -> Unit, vm: LibraryViewModel = viewMode
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.padding(top = 4.dp),
+                            modifier = Modifier.padding(top = Spacing.xs),
                         )
                     }
                     items(group.items, key = { it.lecture.id }) { hit ->
@@ -148,7 +150,7 @@ fun LibraryScreen(onOpenLecture: (Long) -> Unit, vm: LibraryViewModel = viewMode
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, top = 8.dp),
+                    .padding(start = Spacing.l, end = Spacing.l, top = Spacing.s),
             ) {
                 OutlinedTextField(
                     value = query,
@@ -162,9 +164,9 @@ fun LibraryScreen(onOpenLecture: (Long) -> Unit, vm: LibraryViewModel = viewMode
         }
 
         Column(
-            modifier = Modifier.align(Alignment.BottomEnd).padding(24.dp),
+            modifier = Modifier.align(Alignment.BottomEnd).padding(Spacing.xl),
             horizontalAlignment = Alignment.End,
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(Spacing.m),
         ) {
             GlassBox(
                 backdrop = glass,
@@ -254,13 +256,16 @@ private fun LectureItem(lecture: Lecture, snippet: String?, onOpen: () -> Unit, 
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(Spacing.xs))
                 Text(
                     text = DateFormat.getDateInstance().format(Date(lecture.createdAt)),
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
-            TextButton(onClick = onDelete) { Text(stringResource(R.string.delete)) }
+            TextButton(
+                onClick = onDelete,
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+            ) { Text(stringResource(R.string.delete)) }
         }
     }
 }
@@ -275,7 +280,7 @@ private fun AddLectureDialog(onDismiss: () -> Unit, onAdd: (String, String, Stri
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.add_lecture)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
