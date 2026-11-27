@@ -49,6 +49,7 @@ import com.example.medora.ui.icons.MedoraIcons
 import com.example.medora.ui.screens.HomeScreen
 import com.example.medora.ui.screens.LectureDetailScreen
 import com.example.medora.ui.screens.LibraryScreen
+import com.example.medora.ui.screens.NoteEditorScreen
 import com.example.medora.ui.screens.ProgressScreen
 import com.example.medora.ui.screens.QuizScreen
 import com.example.medora.ui.screens.ReviewScreen
@@ -59,6 +60,7 @@ private const val ROUTE_SETTINGS = "settings"
 private const val ROUTE_LECTURE = "lecture/{id}"
 private const val ROUTE_REVIEW = "review"
 private const val ROUTE_QUIZ = "quiz"
+private const val ROUTE_NOTE = "note/{id}"
 
 private enum class Tab(val route: String, @StringRes val label: Int, val icon: ImageVector) {
     Home("home", R.string.tab_home, MedoraIcons.Home),
@@ -78,13 +80,15 @@ fun MedoraApp() {
     val isLecture = route == ROUTE_LECTURE
     val isReview = route == ROUTE_REVIEW
     val isQuiz = route == ROUTE_QUIZ
-    val isSub = isSettings || isLecture || isReview || isQuiz
+    val isNote = route == ROUTE_NOTE
+    val isSub = isSettings || isLecture || isReview || isQuiz || isNote
 
     val titleRes = when {
         isSettings -> R.string.settings
         isLecture -> R.string.lecture_details
         isReview -> R.string.review_title
         isQuiz -> R.string.quiz_title
+        isNote -> R.string.edit_note
         tab != null -> tab.label
         else -> R.string.app_name
     }
@@ -130,7 +134,17 @@ fun MedoraApp() {
                         ROUTE_LECTURE,
                         arguments = listOf(navArgument("id") { type = NavType.LongType }),
                     ) { entry ->
-                        LectureDetailScreen(id = entry.arguments?.getLong("id") ?: 0L)
+                        val lid = entry.arguments?.getLong("id") ?: 0L
+                        LectureDetailScreen(id = lid, onEdit = { navController.navigate("note/$lid") })
+                    }
+                    composable(
+                        ROUTE_NOTE,
+                        arguments = listOf(navArgument("id") { type = NavType.LongType }),
+                    ) { entry ->
+                        NoteEditorScreen(
+                            id = entry.arguments?.getLong("id") ?: 0L,
+                            onDone = { navController.popBackStack() },
+                        )
                     }
                 }
             }

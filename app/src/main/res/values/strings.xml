@@ -84,4 +84,8 @@
     <string name="export_pptx">Export as PowerPoint</string>
     <string name="pptx_saved">PowerPoint saved</string>
     <string name="pptx_failed">Could not save the PowerPoint</string>
+    <string name="edit_note">Edit note</string>
+    <string name="note_heading">Heading</string>
+    <string name="note_bullet">Bullet</string>
+    <string name="note_numbered">Numbered</string>
 </resources>

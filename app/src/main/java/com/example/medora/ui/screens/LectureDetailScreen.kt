@@ -63,6 +63,7 @@ fun LectureDetailScreen(
     vm: LibraryViewModel = viewModel(),
     cardsVm: CardsViewModel = viewModel(),
     aiVm: AiViewModel = viewModel(),
+    onEdit: () -> Unit = {},
 ) {
     val lecture by remember(id) { vm.lecture(id) }.collectAsState(initial = null)
     val cards by remember(id) { cardsVm.cardsOf(id) }.collectAsState(initial = emptyList())
@@ -134,6 +135,12 @@ fun LectureDetailScreen(
                     Text(text = current.subject, style = MaterialTheme.typography.bodyMedium)
                 }
                 Spacer(Modifier.height(16.dp))
+                MedoraButton(
+                    text = stringResource(R.string.edit_note),
+                    onClick = onEdit,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer(Modifier.height(12.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     MedoraButton(
                         text = stringResource(R.string.suggest_cards),
@@ -240,13 +247,21 @@ fun LectureDetailScreen(
                 Spacer(Modifier.height(8.dp))
             }
             itemsIndexed(lines) { _, line ->
+                val t = line.trimStart()
+                val isHeading = t.startsWith("# ")
+                val shown = when {
+                    isHeading -> t.removePrefix("# ")
+                    t.startsWith("- ") -> "\u2022 " + t.removePrefix("- ")
+                    else -> line
+                }
                 Text(
-                    text = line,
-                    style = MaterialTheme.typography.bodyLarge,
+                    text = shown,
+                    style = if (isHeading) MaterialTheme.typography.titleLarge else MaterialTheme.typography.bodyLarge,
+                    fontWeight = if (isHeading) FontWeight.Bold else null,
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable(enabled = line.isNotBlank()) {
-                            draft = CardDraft("", line.trim(), line.trim())
+                            draft = CardDraft("", shown.trim(), shown.trim())
                         }
                         .padding(vertical = 4.dp),
                 )

@@ -82,4 +82,8 @@
     <string name="export_pptx">تصدير PowerPoint</string>
     <string name="pptx_saved">تم حفظ ملف PowerPoint</string>
     <string name="pptx_failed">تعذّر حفظ ملف PowerPoint</string>
+    <string name="edit_note">تحرير الملاحظة</string>
+    <string name="note_heading">عنوان</string>
+    <string name="note_bullet">نقطة</string>
+    <string name="note_numbered">ترقيم</string>
 </resources>

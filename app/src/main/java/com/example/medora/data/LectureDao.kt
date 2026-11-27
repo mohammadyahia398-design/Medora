@@ -20,6 +20,9 @@ interface LectureDao {
     @Query("UPDATE lectures SET summary = :summary, slidesJson = :slidesJson WHERE id = :id")
     suspend fun saveAi(id: Long, summary: String, slidesJson: String)
 
+    @Query("UPDATE lectures SET title = :title, content = :content WHERE id = :id")
+    suspend fun updateNote(id: Long, title: String, content: String)
+
     @Delete
     suspend fun delete(lecture: Lecture)
 }

@@ -38,6 +38,10 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch { repo.add(title, subject) }
     }
 
+    fun saveNote(id: Long, title: String, content: String) {
+        viewModelScope.launch { repo.updateNote(id, title, content) }
+    }
+
     fun delete(lecture: Lecture) {
         viewModelScope.launch { repo.delete(lecture) }
     }
