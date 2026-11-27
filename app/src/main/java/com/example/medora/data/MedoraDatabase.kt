@@ -83,6 +83,14 @@ abstract class MedoraDatabase : RoomDatabase() {
     companion object {
         @Volatile private var instance: MedoraDatabase? = null
 
+        // Used by restore: closes the database so the file can be replaced.
+        fun closeAndReset() {
+            synchronized(this) {
+                instance?.close()
+                instance = null
+            }
+        }
+
         fun get(context: Context): MedoraDatabase =
             instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(

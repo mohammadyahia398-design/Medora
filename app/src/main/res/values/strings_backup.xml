@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="backup_section">Backup</string>
+    <string name="backup_hint">Saves your lectures, cards, reviews and quiz results to a file. API keys are not included.</string>
+    <string name="backup_export">Export backup</string>
+    <string name="backup_restore">Restore backup</string>
+    <string name="backup_done">Backup saved.</string>
+    <string name="backup_failed">Backup failed.</string>
+    <string name="restore_title">Restore backup</string>
+    <string name="restore_confirm">This replaces all current data with the backup. The app will restart.</string>
+    <string name="restore_failed">Restore failed. Use a Medora backup file.</string>
+</resources>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="backup_section">النسخ الاحتياطي</string>
+    <string name="backup_hint">يحفظ المحاضرات والبطاقات والمراجعات ونتائج الاختبارات في ملف. مفاتيح الذكاء الاصطناعي غير مشمولة.</string>
+    <string name="backup_export">تصدير نسخة احتياطية</string>
+    <string name="backup_restore">استعادة نسخة احتياطية</string>
+    <string name="backup_done">تم حفظ النسخة الاحتياطية.</string>
+    <string name="backup_failed">فشل حفظ النسخة الاحتياطية.</string>
+    <string name="restore_title">استعادة نسخة احتياطية</string>
+    <string name="restore_confirm">سيتم استبدال كل البيانات الحالية بالنسخة الاحتياطية، وسيُعاد تشغيل التطبيق.</string>
+    <string name="restore_failed">فشلت الاستعادة. استخدم ملف نسخة احتياطية من Medora.</string>
+</resources>
