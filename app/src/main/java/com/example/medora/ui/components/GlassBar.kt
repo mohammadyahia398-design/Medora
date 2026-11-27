@@ -3,6 +3,9 @@ package com.example.medora.ui.components
 import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,11 +14,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.medora.ui.theme.LocalMedoraDark
 import com.kyant.backdrop.backdrops.LayerBackdrop
+import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.lens
@@ -31,8 +38,41 @@ fun GlassBar(
     content: @Composable RowScope.() -> Unit,
 ) {
     val shape = RoundedCornerShape(32.dp)
+    Row(
+        modifier = modifier.fillMaxWidth().height(height).then(glassLook(backdrop, shape)),
+        verticalAlignment = Alignment.CenterVertically,
+        content = content,
+    )
+}
+
+// A backdrop for glass inside one screen. Put glassSource on the content that should
+// show through the glass, and keep the glass items outside that content.
+@Composable
+fun rememberGlassBackdrop(): LayerBackdrop = rememberLayerBackdrop()
+
+fun Modifier.glassSource(backdrop: LayerBackdrop): Modifier = this.layerBackdrop(backdrop)
+
+// Glass container for floating items (buttons, search). Clickable when onClick is set.
+@Composable
+fun GlassBox(
+    backdrop: LayerBackdrop,
+    modifier: Modifier = Modifier,
+    shape: Shape = RoundedCornerShape(28.dp),
+    onClick: (() -> Unit)? = null,
+    content: @Composable BoxScope.() -> Unit,
+) {
+    val base = modifier.then(glassLook(backdrop, shape)).clip(shape)
+    Box(
+        modifier = if (onClick != null) base.clickable(onClick = onClick) else base,
+        contentAlignment = Alignment.Center,
+        content = content,
+    )
+}
+
+@Composable
+private fun glassLook(backdrop: LayerBackdrop, shape: Shape): Modifier {
     val dark = LocalMedoraDark.current
-    val look = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         Modifier.drawBackdrop(
             backdrop = backdrop,
             shape = { shape },
@@ -50,9 +90,4 @@ fun GlassBar(
             .background(if (dark) Color(0xFF211A30).copy(alpha = 0.96f) else Color.White.copy(alpha = 0.96f), shape)
             .border(1.dp, if (dark) Color(0x33FFFFFF) else Color(0x1A2B1650), shape)
     }
-    Row(
-        modifier = modifier.fillMaxWidth().height(height).then(look),
-        verticalAlignment = Alignment.CenterVertically,
-        content = content,
-    )
 }

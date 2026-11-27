@@ -13,11 +13,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -37,7 +38,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.medora.R
 import com.example.medora.data.Lecture
+import com.example.medora.ui.components.GlassBox
 import com.example.medora.ui.components.MedoraCard
+import com.example.medora.ui.components.glassSource
+import com.example.medora.ui.components.rememberGlassBackdrop
 import java.text.DateFormat
 import java.util.Date
 
@@ -86,7 +90,11 @@ fun LibraryScreen(onOpenLecture: (Long) -> Unit, vm: LibraryViewModel = viewMode
     val noSubject = stringResource(R.string.library_no_subject)
     val groups = remember(lectures, query, noSubject) { groupLectures(lectures, query.trim(), noSubject) }
 
+    val glass = rememberGlassBackdrop()
+    val pill = RoundedCornerShape(28.dp)
+
     Box(modifier = Modifier.fillMaxSize()) {
+      Box(modifier = Modifier.fillMaxSize().glassSource(glass)) {
         if (lectures.isEmpty()) {
             Text(
                 text = stringResource(R.string.library_empty),
@@ -96,18 +104,9 @@ fun LibraryScreen(onOpenLecture: (Long) -> Unit, vm: LibraryViewModel = viewMode
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 96.dp),
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 84.dp, bottom = 96.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                item(key = "search") {
-                    OutlinedTextField(
-                        value = query,
-                        onValueChange = { query = it },
-                        label = { Text(stringResource(R.string.library_search)) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
                 if (groups.isEmpty()) {
                     item(key = "none") {
                         Text(
@@ -139,16 +138,59 @@ fun LibraryScreen(onOpenLecture: (Long) -> Unit, vm: LibraryViewModel = viewMode
             }
         }
 
+      }
+
+        // Glass items float over the list (outside glassSource, so the list shows through).
+        if (lectures.isNotEmpty()) {
+            GlassBox(
+                backdrop = glass,
+                shape = pill,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp, top = 8.dp),
+            ) {
+                OutlinedTextField(
+                    value = query,
+                    onValueChange = { query = it },
+                    placeholder = { Text(stringResource(R.string.library_search)) },
+                    singleLine = true,
+                    shape = pill,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
+
         Column(
             modifier = Modifier.align(Alignment.BottomEnd).padding(24.dp),
             horizontalAlignment = Alignment.End,
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            ExtendedFloatingActionButton(onClick = { picker.launch(arrayOf("text/*", "application/pdf")) }) {
-                Text(stringResource(R.string.import_file))
+            GlassBox(
+                backdrop = glass,
+                shape = pill,
+                onClick = { picker.launch(arrayOf("text/*", "application/pdf")) },
+                modifier = Modifier.height(56.dp),
+            ) {
+                Text(
+                    text = stringResource(R.string.import_file),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.padding(horizontal = 20.dp),
+                )
             }
-            FloatingActionButton(onClick = { showAdd = true }) {
-                Text("+", style = MaterialTheme.typography.headlineMedium)
+            GlassBox(
+                backdrop = glass,
+                shape = CircleShape,
+                onClick = { showAdd = true },
+                modifier = Modifier.size(56.dp),
+            ) {
+                Text(
+                    text = "+",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
             }
         }
     }
