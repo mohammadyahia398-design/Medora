@@ -1,5 +1,6 @@
 package com.example.medora.ui.navigation
 
+import android.os.Build
 import androidx.annotation.StringRes
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
@@ -51,6 +52,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.medora.R
 import com.example.medora.ui.components.GlassBar
+import com.example.medora.ui.glass.LiquidBottomTab
+import com.example.medora.ui.glass.LiquidBottomTabs
 import com.example.medora.ui.theme.LocalMedoraDark
 import com.example.medora.ui.theme.MedoraColors
 import com.example.medora.ui.theme.iconTint
@@ -243,27 +246,61 @@ fun MedoraApp() {
             }
         }
         if (tab != null) {
-            GlassBar(
-                backdrop = backdrop,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .navigationBarsPadding()
-                    .padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
-            ) {
-                Tab.values().forEach { item ->
-                    GlassTabItem(
-                        tab = item,
-                        selected = item == tab,
-                        onClick = {
-                            navController.navigate(item.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
-                    )
+            val goTab: (Tab) -> Unit = { item ->
+                navController.navigate(item.route) {
+                    popUpTo(navController.graph.findStartDestination().id) {
+                        saveState = true
+                    }
+                    launchSingleTop = true
+                    restoreState = true
+                }
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                // Kyant liquid bottom tabs: drag the bubble, refraction on Android 13+.
+                val tabs = Tab.values()
+                val selectedIndex = tabs.indexOf(tab)
+                LiquidBottomTabs(
+                    selectedTabIndex = { selectedIndex },
+                    onTabSelected = { goTab(tabs[it]) },
+                    backdrop = backdrop,
+                    tabsCount = tabs.size,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .navigationBarsPadding()
+                        .padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
+                ) {
+                    tabs.forEach { item ->
+                        LiquidBottomTab(onClick = { goTab(item) }) {
+                            Image(
+                                imageVector = item.icon,
+                                contentDescription = null,
+                                colorFilter = iconTint(),
+                                modifier = Modifier.size(28.dp),
+                            )
+                            Text(
+                                text = stringResource(item.label),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onBackground,
+                                maxLines = 1,
+                            )
+                        }
+                    }
+                }
+            } else {
+                GlassBar(
+                    backdrop = backdrop,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .navigationBarsPadding()
+                        .padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
+                ) {
+                    Tab.values().forEach { item ->
+                        GlassTabItem(
+                            tab = item,
+                            selected = item == tab,
+                            onClick = { goTab(item) },
+                        )
+                    }
                 }
             }
         }
