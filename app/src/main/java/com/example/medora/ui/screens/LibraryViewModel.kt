@@ -39,8 +39,8 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
 
     fun lecture(id: Long): Flow<Lecture?> = repo.observe(id)
 
-    fun add(title: String, subject: String) {
-        viewModelScope.launch { repo.add(title, subject) }
+    fun add(title: String, subject: String, content: String = "") {
+        viewModelScope.launch { repo.add(title, subject, content) }
     }
 
     fun saveNote(id: Long, title: String, content: String) {

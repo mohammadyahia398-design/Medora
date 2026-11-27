@@ -22,6 +22,7 @@ class QuizQuestion(
     val source: String,
     val lectureId: Long,
     val page: Int? = null,
+    val fromAi: Boolean = false,
 )
 
 private const val MAX_QUESTIONS = 10
@@ -87,7 +88,7 @@ class QuizViewModel(app: Application) : AndroidViewModel(app) {
         val correct = options[q.correctIndex]
         val shuffled = options.shuffled()
         val page = PageFinder.pageOf(contents[q.lectureId], q.source)
-        return QuizQuestion(q.question, shuffled, shuffled.indexOf(correct), q.source, q.lectureId, page)
+        return QuizQuestion(q.question, shuffled, shuffled.indexOf(correct), q.source, q.lectureId, page, fromAi = true)
     }
 
     fun select(option: Int) {

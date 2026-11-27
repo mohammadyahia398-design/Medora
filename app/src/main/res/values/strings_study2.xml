@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ai_badge">✦ AI-generated</string>
+    <string name="library_search">Search lectures (title, subject or text)</string>
+    <string name="library_no_match">No lectures match your search.</string>
+    <string name="library_no_subject">No subject</string>
+    <string name="library_group">%1$s (%2$d)</string>
+    <string name="library_paste">Lecture text (optional: paste here)</string>
+    <string name="practice_title">Practice</string>
+    <string name="practice_tf_title">True / False</string>
+    <string name="practice_short_title">Short answer</string>
+    <string name="practice_weak_title">Retest weak points</string>
+    <string name="practice_empty">Add at least two cards with different answers first.</string>
+    <string name="practice_weak_empty">No weak points yet. Cards you rate \"Again\" in review appear here.</string>
+    <string name="practice_tf_statement">Answer: %1$s</string>
+    <string name="practice_true">True</string>
+    <string name="practice_false">False</string>
+    <string name="practice_type_answer">Type your answer</string>
+    <string name="practice_check">Check</string>
+    <string name="practice_count_correct">My answer was right</string>
+    <string name="practice_explanation">Explanation</string>
+    <string name="sources_cached">Saved results from %1$s (no new download).</string>
+    <string name="sources_trusted_title">Official health sites</string>
+    <string name="sources_trusted_hint">Opens the site\'s own search in your browser.</string>
+</resources>

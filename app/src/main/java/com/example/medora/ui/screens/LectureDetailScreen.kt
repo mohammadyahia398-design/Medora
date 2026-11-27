@@ -56,6 +56,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.example.medora.data.Card
 import com.example.medora.domain.CardSuggester
+import com.example.medora.ui.components.AiBadge
 import com.example.medora.ui.components.MedoraButton
 import com.example.medora.ui.components.MedoraCard
 import com.example.medora.ui.theme.LocalMedoraDark
@@ -213,6 +214,8 @@ fun LectureDetailScreen(
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                         )
+                        Spacer(Modifier.height(8.dp))
+                        AiBadge()
                         Spacer(Modifier.height(8.dp))
                         Text(text = current.summary, style = MaterialTheme.typography.bodyMedium)
                         Spacer(Modifier.height(8.dp))

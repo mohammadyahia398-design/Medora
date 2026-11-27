@@ -32,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.medora.R
@@ -39,6 +40,38 @@ import com.example.medora.data.Lecture
 import com.example.medora.ui.components.MedoraCard
 import java.text.DateFormat
 import java.util.Date
+
+private const val MAX_PASTE_CHARS = 200_000
+private const val SNIPPET_RADIUS = 50
+
+private class LectureHit(val lecture: Lecture, val snippet: String?)
+private class LectureGroup(val name: String, val items: List<LectureHit>)
+
+// Filters by title, subject or lecture text, then groups by subject (A-Z).
+// A match inside the text shows a short snippet around it.
+private fun groupLectures(lectures: List<Lecture>, query: String, noSubject: String): List<LectureGroup> {
+    val hits = lectures.mapNotNull { l ->
+        when {
+            query.isEmpty() -> LectureHit(l, null)
+            l.title.contains(query, true) || l.subject.contains(query, true) -> LectureHit(l, null)
+            else -> {
+                val i = l.content.indexOf(query, ignoreCase = true)
+                if (i < 0) {
+                    null
+                } else {
+                    val start = (i - SNIPPET_RADIUS).coerceAtLeast(0)
+                    val end = (i + query.length + SNIPPET_RADIUS).coerceAtMost(l.content.length)
+                    val text = l.content.substring(start, end).replace('\n', ' ').trim()
+                    LectureHit(l, (if (start > 0) "…" else "") + text + (if (end < l.content.length) "…" else ""))
+                }
+            }
+        }
+    }
+    return hits
+        .groupBy { it.lecture.subject.trim().ifEmpty { noSubject } }
+        .toSortedMap(String.CASE_INSENSITIVE_ORDER)
+        .map { (name, items) -> LectureGroup(name, items) }
+}
 
 @Composable
 fun LibraryScreen(onOpenLecture: (Long) -> Unit, vm: LibraryViewModel = viewModel()) {
@@ -49,6 +82,9 @@ fun LibraryScreen(onOpenLecture: (Long) -> Unit, vm: LibraryViewModel = viewMode
     }
     var showAdd by remember { mutableStateOf(false) }
     var toDelete by remember { mutableStateOf<Lecture?>(null) }
+    var query by remember { mutableStateOf("") }
+    val noSubject = stringResource(R.string.library_no_subject)
+    val groups = remember(lectures, query, noSubject) { groupLectures(lectures, query.trim(), noSubject) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         if (lectures.isEmpty()) {
@@ -63,8 +99,42 @@ fun LibraryScreen(onOpenLecture: (Long) -> Unit, vm: LibraryViewModel = viewMode
                 contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 96.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                items(lectures, key = { it.id }) { lecture ->
-                    LectureItem(lecture, onOpen = { onOpenLecture(lecture.id) }, onDelete = { toDelete = lecture })
+                item(key = "search") {
+                    OutlinedTextField(
+                        value = query,
+                        onValueChange = { query = it },
+                        label = { Text(stringResource(R.string.library_search)) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+                if (groups.isEmpty()) {
+                    item(key = "none") {
+                        Text(
+                            text = stringResource(R.string.library_no_match),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+                }
+                groups.forEach { group ->
+                    item(key = "h_" + group.name) {
+                        Text(
+                            text = stringResource(R.string.library_group, group.name, group.items.size),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.padding(top = 4.dp),
+                        )
+                    }
+                    items(group.items, key = { it.lecture.id }) { hit ->
+                        val lecture = hit.lecture
+                        LectureItem(
+                            lecture,
+                            snippet = hit.snippet,
+                            onOpen = { onOpenLecture(lecture.id) },
+                            onDelete = { toDelete = lecture },
+                        )
+                    }
                 }
             }
         }
@@ -96,8 +166,8 @@ fun LibraryScreen(onOpenLecture: (Long) -> Unit, vm: LibraryViewModel = viewMode
     if (showAdd) {
         AddLectureDialog(
             onDismiss = { showAdd = false },
-            onAdd = { title, subject ->
-                vm.add(title, subject)
+            onAdd = { title, subject, content ->
+                vm.add(title, subject, content)
                 showAdd = false
             },
         )
@@ -122,7 +192,7 @@ fun LibraryScreen(onOpenLecture: (Long) -> Unit, vm: LibraryViewModel = viewMode
 }
 
 @Composable
-private fun LectureItem(lecture: Lecture, onOpen: () -> Unit, onDelete: () -> Unit) {
+private fun LectureItem(lecture: Lecture, snippet: String?, onOpen: () -> Unit, onDelete: () -> Unit) {
     MedoraCard(modifier = Modifier.fillMaxWidth().clickable(onClick = onOpen)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f)) {
@@ -133,6 +203,14 @@ private fun LectureItem(lecture: Lecture, onOpen: () -> Unit, onDelete: () -> Un
                 )
                 if (lecture.subject.isNotBlank()) {
                     Text(text = lecture.subject, style = MaterialTheme.typography.bodyMedium)
+                }
+                if (snippet != null) {
+                    Text(
+                        text = snippet,
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                 }
                 Spacer(Modifier.height(4.dp))
                 Text(
@@ -146,9 +224,10 @@ private fun LectureItem(lecture: Lecture, onOpen: () -> Unit, onDelete: () -> Un
 }
 
 @Composable
-private fun AddLectureDialog(onDismiss: () -> Unit, onAdd: (String, String) -> Unit) {
+private fun AddLectureDialog(onDismiss: () -> Unit, onAdd: (String, String, String) -> Unit) {
     var title by remember { mutableStateOf("") }
     var subject by remember { mutableStateOf("") }
+    var content by remember { mutableStateOf("") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -167,11 +246,18 @@ private fun AddLectureDialog(onDismiss: () -> Unit, onAdd: (String, String) -> U
                     label = { Text(stringResource(R.string.lecture_subject)) },
                     singleLine = true,
                 )
+                OutlinedTextField(
+                    value = content,
+                    onValueChange = { if (it.length <= MAX_PASTE_CHARS) content = it },
+                    label = { Text(stringResource(R.string.library_paste)) },
+                    minLines = 3,
+                    maxLines = 8,
+                )
             }
         },
         confirmButton = {
             TextButton(
-                onClick = { onAdd(title, subject) },
+                onClick = { onAdd(title, subject, content.trim()) },
                 enabled = title.isNotBlank(),
             ) { Text(stringResource(R.string.add)) }
         },

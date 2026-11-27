@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ai_badge">✦ مولَّد بالذكاء الاصطناعي</string>
+    <string name="library_search">ابحث في المحاضرات (العنوان أو المادة أو النص)</string>
+    <string name="library_no_match">لا توجد محاضرات مطابقة.</string>
+    <string name="library_no_subject">بلا مادة</string>
+    <string name="library_group">%1$s (%2$d)</string>
+    <string name="library_paste">نص المحاضرة (اختياري: الصقه هنا)</string>
+    <string name="practice_title">تدريب</string>
+    <string name="practice_tf_title">صح / خطأ</string>
+    <string name="practice_short_title">إجابة قصيرة</string>
+    <string name="practice_weak_title">إعادة اختبار نقاط الضعف</string>
+    <string name="practice_empty">أضف بطاقتين على الأقل بإجابتين مختلفتين أولاً.</string>
+    <string name="practice_weak_empty">لا توجد نقاط ضعف بعد. البطاقات التي تقيّمها \"مرة أخرى\" في المراجعة تظهر هنا.</string>
+    <string name="practice_tf_statement">الإجابة: %1$s</string>
+    <string name="practice_true">صح</string>
+    <string name="practice_false">خطأ</string>
+    <string name="practice_type_answer">اكتب إجابتك</string>
+    <string name="practice_check">تحقق</string>
+    <string name="practice_count_correct">إجابتي كانت صحيحة</string>
+    <string name="practice_explanation">الشرح</string>
+    <string name="sources_cached">نتائج محفوظة من %1$s (بدون تنزيل جديد).</string>
+    <string name="sources_trusted_title">مواقع صحية رسمية</string>
+    <string name="sources_trusted_hint">يفتح بحث الموقع نفسه في المتصفح.</string>
+</resources>

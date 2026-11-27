@@ -37,14 +37,12 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.medora.R
-import com.example.medora.sources.EuropePmcClient
+import com.example.medora.sources.SourceCache
 import com.example.medora.sources.SourceItem
 import com.example.medora.ui.components.MedoraButton
 import com.example.medora.ui.components.MedoraCard
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.net.URLEncoder
 
 private const val MIN_QUERY_LENGTH = 3
 
@@ -62,6 +60,8 @@ class SourcesViewModel(app: Application) : AndroidViewModel(app) {
         private set
     var searched by mutableStateOf(false)
         private set
+    var fromCache by mutableStateOf(false)
+        private set
 
     fun search() {
         val q = query.trim()
@@ -70,9 +70,10 @@ class SourcesViewModel(app: Application) : AndroidViewModel(app) {
         error = null
         viewModelScope.launch {
             try {
-                val found = EuropePmcClient.search(q)
-                accessed = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
-                results = found
+                val found = SourceCache.search(getApplication<Application>(), q)
+                accessed = found.accessed
+                fromCache = found.fromCache
+                results = found.items
                 searched = true
             } catch (e: Exception) {
                 results = emptyList()
@@ -132,8 +133,17 @@ fun SourcesScreen(vm: SourcesViewModel = viewModel()) {
                 modifier = Modifier.fillMaxWidth(),
             )
         }
+        item { TrustedSitesCard(vm.query.trim()) }
         if (loading) {
             item { CircularProgressIndicator() }
+        }
+        if (vm.fromCache && results.isNotEmpty() && !loading) {
+            item {
+                Text(
+                    text = stringResource(R.string.sources_cached, vm.accessed),
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
         }
         if (error != null) {
             item {
@@ -205,6 +215,44 @@ private fun SourceCard(item: SourceItem, accessed: String) {
                 Toast.makeText(context, R.string.sources_copied, Toast.LENGTH_SHORT).show()
             }) {
                 Text(stringResource(R.string.sources_copy))
+            }
+        }
+    }
+}
+
+// Official health sites. We only open their own search page in the browser:
+// no copying of their content into the app.
+private val trustedSites = listOf(
+    "WHO" to "https://www.who.int/home/search-results?indexCatalogue=genericsearchindex1&searchQuery=",
+    "CDC" to "https://search.cdc.gov/search/?query=",
+    "MedlinePlus" to "https://vsearch.nlm.nih.gov/vivisimo/cgi-bin/query-meta?v%3Aproject=medlineplus&query=",
+)
+
+@Composable
+private fun TrustedSitesCard(query: String) {
+    val context = LocalContext.current
+    MedoraCard(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = stringResource(R.string.sources_trusted_title),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+        )
+        Text(
+            text = stringResource(R.string.sources_trusted_hint),
+            style = MaterialTheme.typography.bodySmall,
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            trustedSites.forEach { (name, base) ->
+                TextButton(onClick = {
+                    val url = base + URLEncoder.encode(query, "UTF-8")
+                    try {
+                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                    } catch (e: Exception) {
+                        Toast.makeText(context, R.string.sources_open_failed, Toast.LENGTH_SHORT).show()
+                    }
+                }) {
+                    Text(name)
+                }
             }
         }
     }

@@ -25,10 +25,15 @@ object EuropePmcClient {
     private const val PAGE_SIZE = 10
 
     suspend fun search(query: String): List<SourceItem> = withContext(Dispatchers.IO) {
+        parse(fetchRaw(query))
+    }
+
+    // Raw JSON text, so SourceCache can save it. Call from a background thread.
+    fun fetchRaw(query: String): String {
         val q = "($query) AND SRC:MED"
         val url = BASE + "?query=" + URLEncoder.encode(q, "UTF-8") +
             "&format=json&resultType=lite&pageSize=" + PAGE_SIZE
-        parse(get(url))
+        return get(url)
     }
 
     private fun get(url: String): String {

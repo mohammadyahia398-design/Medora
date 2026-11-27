@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.medora.R
+import com.example.medora.ui.components.AiBadge
 import com.example.medora.ui.components.MedoraButton
 import com.example.medora.ui.components.MedoraCard
 import com.example.medora.ui.theme.MedoraColors
@@ -57,6 +58,10 @@ fun QuizScreen(onOpenLecture: (Long) -> Unit, vm: QuizViewModel = viewModel()) {
                 )
                 Spacer(Modifier.height(12.dp))
                 MedoraCard(modifier = Modifier.fillMaxWidth()) {
+                    if (q.fromAi) {
+                        AiBadge()
+                        Spacer(Modifier.height(8.dp))
+                    }
                     Text(
                         text = q.prompt,
                         style = MaterialTheme.typography.headlineSmall,
@@ -98,6 +103,12 @@ fun QuizScreen(onOpenLecture: (Long) -> Unit, vm: QuizViewModel = viewModel()) {
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                     )
+                    if (selected != q.correctIndex) {
+                        Text(
+                            text = stringResource(R.string.exam_correct_answer, q.options[q.correctIndex]),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
                     if (q.source.isNotBlank()) {
                         Text(
                             text = stringResource(R.string.source_label) + ": " + q.source,

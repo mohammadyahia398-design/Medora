@@ -62,6 +62,7 @@ import com.example.medora.ui.screens.HomeScreen
 import com.example.medora.ui.screens.LectureDetailScreen
 import com.example.medora.ui.screens.LibraryScreen
 import com.example.medora.ui.screens.NoteEditorScreen
+import com.example.medora.ui.screens.PracticeScreen
 import com.example.medora.ui.screens.ProgressScreen
 import com.example.medora.ui.screens.QuizScreen
 import com.example.medora.ui.screens.ReviewScreen
@@ -76,6 +77,7 @@ private const val ROUTE_QUIZ = "quiz"
 private const val ROUTE_NOTE = "note/{id}"
 private const val ROUTE_EXAM = "exam"
 private const val ROUTE_SOURCES = "sources"
+private const val ROUTE_PRACTICE = "practice/{mode}"
 
 private enum class Tab(val route: String, @StringRes val label: Int, val icon: ImageVector) {
     Home("home", R.string.tab_home, MedoraIcons.Home),
@@ -98,7 +100,8 @@ fun MedoraApp() {
     val isNote = route == ROUTE_NOTE
     val isExam = route == ROUTE_EXAM
     val isSources = route == ROUTE_SOURCES
-    val isSub = isSettings || isLecture || isReview || isQuiz || isNote || isExam || isSources
+    val isPractice = route == ROUTE_PRACTICE
+    val isSub = isSettings || isLecture || isReview || isQuiz || isNote || isExam || isSources || isPractice
 
     val titleRes = when {
         isSettings -> R.string.settings
@@ -108,6 +111,7 @@ fun MedoraApp() {
         isNote -> R.string.edit_note
         isExam -> R.string.exam_title
         isSources -> R.string.sources_title
+        isPractice -> R.string.practice_title
         tab != null -> tab.label
         else -> R.string.app_name
     }
@@ -152,6 +156,7 @@ fun MedoraApp() {
                             onQuiz = { navController.navigate(ROUTE_QUIZ) },
                             onExam = { navController.navigate(ROUTE_EXAM) },
                             onSources = { navController.navigate(ROUTE_SOURCES) },
+                            onPractice = { navController.navigate("practice/$it") },
                         )
                     }
                     composable(Tab.Progress.route) {
@@ -165,6 +170,15 @@ fun MedoraApp() {
                         ExamScreen(onOpenLecture = { navController.navigate("lecture/$it") })
                     }
                     composable(ROUTE_SOURCES) { SourcesScreen() }
+                    composable(
+                        ROUTE_PRACTICE,
+                        arguments = listOf(navArgument("mode") { type = NavType.StringType }),
+                    ) { entry ->
+                        PracticeScreen(
+                            mode = entry.arguments?.getString("mode").orEmpty(),
+                            onOpenLecture = { navController.navigate("lecture/$it") },
+                        )
+                    }
                     composable(ROUTE_QUIZ) {
                         QuizScreen(onOpenLecture = { navController.navigate("lecture/$it") })
                     }
