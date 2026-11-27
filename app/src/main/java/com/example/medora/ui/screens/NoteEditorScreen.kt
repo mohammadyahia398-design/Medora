@@ -24,6 +24,20 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.medora.R
 import com.example.medora.ui.components.MedoraButton
 
+private const val TABLE_TEMPLATE = "| A | B |\n|---|---|\n|  |  |\n"
+
+// Puts an empty table at the cursor, on its own lines.
+private fun insertTable(v: TextFieldValue): TextFieldValue {
+    val text = v.text
+    val cursor = v.selection.max.coerceIn(0, text.length)
+    val lead = if (cursor == 0 || text[cursor - 1] == '\n') "" else "\n"
+    val block = lead + TABLE_TEMPLATE
+    return TextFieldValue(
+        text.substring(0, cursor) + block + text.substring(cursor),
+        TextRange(cursor + block.length),
+    )
+}
+
 // Adds (or removes) a prefix such as "# " or "- " at the start of the cursor's line.
 private fun togglePrefix(v: TextFieldValue, prefix: String): TextFieldValue {
     val text = v.text
@@ -82,6 +96,11 @@ fun NoteEditorScreen(
                 modifier = Modifier.weight(1f),
             )
         }
+        MedoraButton(
+            text = stringResource(R.string.note_table),
+            onClick = { body = insertTable(body) },
+            modifier = Modifier.fillMaxWidth(),
+        )
         OutlinedTextField(
             value = body,
             onValueChange = { body = it },

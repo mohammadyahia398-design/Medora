@@ -88,4 +88,5 @@
     <string name="note_heading">Heading</string>
     <string name="note_bullet">Bullet</string>
     <string name="note_numbered">Numbered</string>
+    <string name="note_table">Table</string>
 </resources>
