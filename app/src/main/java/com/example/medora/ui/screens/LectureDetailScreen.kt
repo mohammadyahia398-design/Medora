@@ -60,6 +60,7 @@ import com.example.medora.ui.components.AiBadge
 import com.example.medora.ui.components.MedoraButton
 import com.example.medora.ui.components.MedoraCard
 import com.example.medora.ui.theme.LocalMedoraDark
+import com.example.medora.ui.theme.Spacing
 
 private data class CardDraft(val front: String, val back: String, val source: String)
 
@@ -129,7 +130,7 @@ fun LectureDetailScreen(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
+        contentPadding = PaddingValues(Spacing.l),
     ) {
         item {
             Column {
@@ -139,16 +140,20 @@ fun LectureDetailScreen(
                     fontWeight = FontWeight.Bold,
                 )
                 if (current.subject.isNotBlank()) {
-                    Text(text = current.subject, style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        text = current.subject,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
                 }
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(Spacing.l))
                 MedoraButton(
                     text = stringResource(R.string.edit_note),
                     onClick = onEdit,
                     modifier = Modifier.fillMaxWidth(),
                 )
-                Spacer(Modifier.height(12.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Spacer(Modifier.height(Spacing.m))
+                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.m)) {
                     MedoraButton(
                         text = stringResource(R.string.suggest_cards),
                         onClick = {
@@ -164,11 +169,11 @@ fun LectureDetailScreen(
                     )
                 }
                 if (current.content.isNotBlank()) {
-                    Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.height(Spacing.m))
                     if (aiVm.busy) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             CircularProgressIndicator(modifier = Modifier.size(24.dp))
-                            Spacer(Modifier.width(12.dp))
+                            Spacer(Modifier.width(Spacing.m))
                             Text(stringResource(R.string.ai_working))
                         }
                     } else {
@@ -186,7 +191,7 @@ fun LectureDetailScreen(
                         )
                     }
                 }
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(Spacing.m))
                 MedoraButton(
                     text = stringResource(R.string.export_pdf),
                     onClick = {
@@ -196,7 +201,7 @@ fun LectureDetailScreen(
                     modifier = Modifier.fillMaxWidth(),
                 )
                 if (current.slidesJson.isNotBlank()) {
-                    Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.height(Spacing.m))
                     MedoraButton(
                         text = stringResource(R.string.export_pptx),
                         onClick = {
@@ -206,25 +211,23 @@ fun LectureDetailScreen(
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(Spacing.l))
                 if (current.summary.isNotBlank()) {
-                    MedoraCard(modifier = Modifier.fillMaxWidth(), spaced = false) {
+                    MedoraCard(modifier = Modifier.fillMaxWidth()) {
                         Text(
                             text = stringResource(R.string.summary),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                         )
-                        Spacer(Modifier.height(8.dp))
                         AiBadge()
-                        Spacer(Modifier.height(8.dp))
                         Text(text = current.summary, style = MaterialTheme.typography.bodyMedium)
-                        Spacer(Modifier.height(8.dp))
                         Text(
                             text = stringResource(R.string.ai_disclaimer),
                             style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(Spacing.l))
                 }
             }
         }
@@ -236,13 +239,13 @@ fun LectureDetailScreen(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                 )
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(Spacing.s))
             }
             items(cards, key = { it.id }) { card ->
                 CardRow(card, onDelete = { cardsVm.delete(card) })
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(Spacing.s))
             }
-            item { Spacer(Modifier.height(16.dp)) }
+            item { Spacer(Modifier.height(Spacing.l)) }
         }
 
         if (current.content.isBlank()) {
@@ -252,8 +255,9 @@ fun LectureDetailScreen(
                 Text(
                     text = stringResource(R.string.tap_line_hint),
                     style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(Spacing.s))
             }
             itemsIndexed(lines) { index, line ->
                 val row = line.trim()
@@ -279,7 +283,7 @@ fun LectureDetailScreen(
                         .clickable(enabled = line.isNotBlank()) {
                             draft = CardDraft("", shown.trim(), shown.trim())
                         }
-                        .padding(vertical = 4.dp),
+                        .padding(top = if (isHeading) Spacing.m else Spacing.xs, bottom = Spacing.xs),
                 )
             }
         }
@@ -354,7 +358,7 @@ private fun CardEditDialog(draft: CardDraft, onDismiss: () -> Unit, onSave: (Str
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.add_card)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
                 OutlinedTextField(
                     value = front,
                     onValueChange = { front = it },
@@ -408,7 +412,7 @@ private fun SuggestionsDialog(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Checkbox(checked = i in selected, onCheckedChange = null)
-                            Spacer(Modifier.width(8.dp))
+                            Spacer(Modifier.width(Spacing.s))
                             Column {
                                 Text(s.front, fontWeight = FontWeight.Bold)
                                 Text(
@@ -453,18 +457,19 @@ private fun TableRow(cells: List<String>, header: Boolean) {
         modifier = Modifier
             .fillMaxWidth()
             .height(IntrinsicSize.Min)
-            .background(if (header) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent),
+            .background(if (header) MaterialTheme.colorScheme.primaryContainer else Color.Transparent),
     ) {
         cells.forEach { cell ->
             Text(
                 text = cell,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = if (header) FontWeight.Bold else null,
+                color = if (header) MaterialTheme.colorScheme.onPrimaryContainer else Color.Unspecified,
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
-                    .border(0.5.dp, MaterialTheme.colorScheme.outline)
-                    .padding(8.dp),
+                    .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant)
+                    .padding(Spacing.s),
             )
         }
     }
