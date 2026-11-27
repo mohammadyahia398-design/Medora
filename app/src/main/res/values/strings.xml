@@ -91,4 +91,13 @@
     <string name="note_table">Table</string>
     <string name="note_image">Image</string>
     <string name="note_image_failed">Could not add the image</string>
+    <string name="note_bold">Bold</string>
+    <string name="note_highlight">Highlight</string>
+    <string name="note_preview">Preview</string>
+    <string name="note_edit">Edit</string>
+    <string name="stat_week_title">Last 7 days</string>
+    <string name="stat_streak">Streak</string>
+    <string name="stat_streak_days">%1$d days</string>
+    <string name="stat_goal_today">Today's goal</string>
+    <string name="stat_goal_set">Daily goal: %1$d cards</string>
 </resources>

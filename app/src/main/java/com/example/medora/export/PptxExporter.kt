@@ -1,7 +1,11 @@
 package com.example.medora.export
 
 import android.content.Context
+import android.graphics.BitmapFactory
 import android.net.Uri
+import com.example.medora.data.NoteImages
+import com.example.medora.ui.components.plainNote
+import java.io.File
 import org.json.JSONArray
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
@@ -9,6 +13,7 @@ import java.util.zip.ZipOutputStream
 // Writes a simple .pptx by hand (a PPTX is a ZIP of XML files). No library.
 // Slides come from the lecture's slidesJson: [{"title":"...","bullets":["..."]}].
 // Markdown tables (| a | b |) in the bullets or in the note become real PowerPoint tables.
+// Note images become picture slides.
 object PptxExporter {
     private class SlideData(
         val title: String,
@@ -16,6 +21,7 @@ object PptxExporter {
         val bullets: Boolean,
         val table: List<List<String>>? = null,
         val header: Boolean = false,
+        val image: File? = null,
     )
 
     private const val TABLE_ROWS_PER_SLIDE = 8
@@ -51,14 +57,18 @@ object PptxExporter {
                 addSlides(slides, o.optString("title"), lines.filter { it.isNotBlank() })
             }
         }
-        // Tables written in the note itself, each under its nearest "# " heading.
+        // Tables and images written in the note itself, each under its nearest "# " heading.
         var heading = title
         val noteLines = content.split("\n")
         var i = 0
         while (i < noteLines.size) {
             val t = noteLines[i].trim()
-            if (t.startsWith("# ")) heading = t.removePrefix("# ").trim()
-            if (t.startsWith("|")) {
+            if (t.startsWith("# ")) heading = plainNote(t.removePrefix("# ").trim())
+            val img = NoteImages.pathOf(noteLines[i])?.let { NoteImages.file(context, it) }
+            if (img != null) {
+                if (img.exists()) slides += SlideData(heading, emptyList(), false, image = img)
+                i++
+            } else if (t.startsWith("|")) {
                 val start = i
                 while (i < noteLines.size && noteLines[i].trim().startsWith("|")) i++
                 addTableSlides(slides, heading, noteLines.subList(start, i))
@@ -82,9 +92,16 @@ object PptxExporter {
                 zip.add("ppt/slideLayouts/slideLayout1.xml", layout())
                 zip.add("ppt/slideLayouts/_rels/slideLayout1.xml.rels", layoutRels())
                 zip.add("ppt/theme/theme1.xml", theme())
+                var media = 0
                 slides.forEachIndexed { n, s ->
+                    val name = s.image?.let { "image${++media}.jpg" }
                     zip.add("ppt/slides/slide${n + 1}.xml", slide(s, cover = n == 0))
-                    zip.add("ppt/slides/_rels/slide${n + 1}.xml.rels", slideRels())
+                    zip.add("ppt/slides/_rels/slide${n + 1}.xml.rels", slideRels(name))
+                    if (name != null) {
+                        zip.putNextEntry(ZipEntry("ppt/media/$name"))
+                        s.image!!.inputStream().use { it.copyTo(zip) }
+                        zip.closeEntry()
+                    }
                 }
             }
         }
@@ -146,6 +163,7 @@ object PptxExporter {
         sb.append("<Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\">")
         sb.append("<Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-package.relationships+xml\"/>")
         sb.append("<Default Extension=\"xml\" ContentType=\"application/xml\"/>")
+        sb.append("<Default Extension=\"jpg\" ContentType=\"image/jpeg\"/>")
         sb.append("<Override PartName=\"/ppt/presentation.xml\" ContentType=\"$CT_BASE.presentation.main+xml\"/>")
         sb.append("<Override PartName=\"/ppt/tableStyles.xml\" ContentType=\"$CT_BASE.tableStyles+xml\"/>")
         sb.append("<Override PartName=\"/ppt/slideMasters/slideMaster1.xml\" ContentType=\"$CT_BASE.slideMaster+xml\"/>")
@@ -206,8 +224,9 @@ object PptxExporter {
         "<Relationship Id=\"rId1\" Type=\"$REL_BASE/slideMaster\" Target=\"../slideMasters/slideMaster1.xml\"/>" +
         "</Relationships>"
 
-    private fun slideRels() = XML + "<Relationships xmlns=\"$REL_NS\">" +
+    private fun slideRels(image: String?) = XML + "<Relationships xmlns=\"$REL_NS\">" +
         "<Relationship Id=\"rId1\" Type=\"$REL_BASE/slideLayout\" Target=\"../slideLayouts/slideLayout1.xml\"/>" +
+        (if (image != null) "<Relationship Id=\"rId2\" Type=\"$REL_BASE/image\" Target=\"../media/$image\"/>" else "") +
         "</Relationships>"
 
     private fun slide(s: SlideData, cover: Boolean): String {
@@ -220,7 +239,9 @@ object PptxExporter {
         val sb = StringBuilder(XML)
         sb.append("<p:sld $NS><p:cSld>$EMPTY_TREE")
         sb.append(shape(2, "Title", titleY, titleH, listOf(s.title), titleSize, bold = true, bullets = false, color = "0F172A"))
-        if (s.table != null) {
+        if (s.image != null) {
+            sb.append(picture(3, s.image))
+        } else if (s.table != null) {
             sb.append(table(3, s.table, s.header))
         } else if (s.lines.isNotEmpty()) {
             sb.append(shape(3, "Body", bodyY, bodyH, s.lines, bodySize, bold = false, bullets = s.bullets, color = "334155"))
@@ -241,6 +262,31 @@ object PptxExporter {
         for (line in lines) sb.append(paragraph(line, size, bold, bullets, color))
         sb.append("</p:txBody></p:sp>")
         return sb.toString()
+    }
+
+    // Picture fitted inside the slide body, keeping its shape, centered.
+    private fun picture(id: Int, file: File): String {
+        val o = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeFile(file.path, o)
+        val boxX = 457200L
+        val boxY = 1500000L
+        val boxW = 11277600L
+        val boxH = 5058000L
+        val iw = o.outWidth.coerceAtLeast(1).toLong()
+        val ih = o.outHeight.coerceAtLeast(1).toLong()
+        var w = boxW
+        var h = boxW * ih / iw
+        if (h > boxH) {
+            h = boxH
+            w = boxH * iw / ih
+        }
+        val x = boxX + (boxW - w) / 2
+        val y = boxY + (boxH - h) / 2
+        return "<p:pic><p:nvPicPr><p:cNvPr id=\"$id\" name=\"Picture\"/>" +
+            "<p:cNvPicPr><a:picLocks noChangeAspect=\"1\"/></p:cNvPicPr><p:nvPr/></p:nvPicPr>" +
+            "<p:blipFill><a:blip r:embed=\"rId2\"/><a:stretch><a:fillRect/></a:stretch></p:blipFill>" +
+            "<p:spPr><a:xfrm><a:off x=\"$x\" y=\"$y\"/><a:ext cx=\"$w\" cy=\"$h\"/></a:xfrm>" +
+            "<a:prstGeom prst=\"rect\"><a:avLst/></a:prstGeom></p:spPr></p:pic>"
     }
 
     private fun tableStyles() = XML +
@@ -300,7 +346,7 @@ object PptxExporter {
                 "<a:r><a:rPr lang=\"$lang\" sz=\"$size\" b=\"${if (bold) 1 else 0}\" dirty=\"0\">" +
                 "<a:solidFill><a:srgbClr val=\"$color\"/></a:solidFill>" +
                 "<a:latin typeface=\"Arial\"/><a:cs typeface=\"Arial\"/></a:rPr>" +
-                "<a:t>${esc(text)}</a:t></a:r></a:p>"
+                "<a:t>${esc(plainNote(text))}</a:t></a:r></a:p>"
         }
         val line = { tag: String -> "<a:$tag w=\"9525\"><a:solidFill><a:srgbClr val=\"CBD5E1\"/></a:solidFill></a:$tag>" }
         return "<a:tc><a:txBody><a:bodyPr/><a:lstStyle/>$para</a:txBody>" +
@@ -321,7 +367,7 @@ object PptxExporter {
             "<a:r><a:rPr lang=\"$lang\" sz=\"$size\" b=\"${if (bold) 1 else 0}\" dirty=\"0\">" +
             "<a:solidFill><a:srgbClr val=\"$color\"/></a:solidFill>" +
             "<a:latin typeface=\"Arial\"/><a:cs typeface=\"Arial\"/></a:rPr>" +
-            "<a:t>${esc(text)}</a:t></a:r></a:p>"
+            "<a:t>${esc(plainNote(text))}</a:t></a:r></a:p>"
     }
 
     // Right-to-left if the first letter found is Arabic.

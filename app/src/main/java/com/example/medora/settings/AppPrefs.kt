@@ -18,6 +18,8 @@ object AppPrefs {
     private const val FILE = "medora_app_prefs"
     private const val KEY_THEME = "theme"
     private const val KEY_LANG = "language"
+    private const val KEY_GOAL = "daily_goal"
+    const val DEFAULT_GOAL = 20
 
     val theme: MutableState<String> = mutableStateOf(SYSTEM)
 
@@ -30,6 +32,13 @@ object AppPrefs {
     fun setTheme(context: Context, value: String) {
         prefs(context).edit().putString(KEY_THEME, value).apply()
         theme.value = value
+    }
+
+    // Daily review goal (cards per day).
+    fun dailyGoal(context: Context): Int = prefs(context).getInt(KEY_GOAL, DEFAULT_GOAL)
+
+    fun setDailyGoal(context: Context, value: Int) {
+        prefs(context).edit().putInt(KEY_GOAL, value).apply()
     }
 
     fun language(context: Context): String =

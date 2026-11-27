@@ -65,6 +65,13 @@ import com.example.medora.domain.CardSuggester
 import com.example.medora.ui.components.AiBadge
 import com.example.medora.ui.components.MedoraButton
 import com.example.medora.ui.components.MedoraCard
+import com.example.medora.ui.components.NoteImage
+import com.example.medora.ui.components.NoteTableRow
+import com.example.medora.ui.components.highlightColor
+import com.example.medora.ui.components.isTableSeparator
+import com.example.medora.ui.components.noteStyled
+import com.example.medora.ui.components.parseCells
+import com.example.medora.ui.components.plainNote
 import com.example.medora.ui.theme.LocalMedoraDark
 import com.example.medora.ui.theme.Spacing
 
@@ -206,7 +213,8 @@ fun LectureDetailScreen(
                     },
                     modifier = Modifier.fillMaxWidth(),
                 )
-                if (current.slidesJson.isNotBlank() || PptxExporter.hasTable(current.content)) {
+                if (current.slidesJson.isNotBlank() || PptxExporter.hasTable(current.content) ||
+                    current.content.lineSequence().any { NoteImages.pathOf(it) != null }) {
                     Spacer(Modifier.height(Spacing.m))
                     MedoraButton(
                         text = stringResource(R.string.export_pptx),
@@ -275,7 +283,7 @@ fun LectureDetailScreen(
                 if (row.startsWith("|")) {
                     if (isTableSeparator(row)) return@itemsIndexed
                     val next = lines.getOrNull(index + 1)?.trim().orEmpty()
-                    TableRow(parseCells(row), header = next.startsWith("|") && isTableSeparator(next))
+                    NoteTableRow(parseCells(row), header = next.startsWith("|") && isTableSeparator(next))
                     return@itemsIndexed
                 }
                 val t = line.trimStart()
@@ -286,13 +294,13 @@ fun LectureDetailScreen(
                     else -> line
                 }
                 Text(
-                    text = shown,
+                    text = noteStyled(shown, highlightColor()),
                     style = if (isHeading) MaterialTheme.typography.titleLarge else MaterialTheme.typography.bodyLarge,
                     fontWeight = if (isHeading) FontWeight.Bold else null,
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable(enabled = line.isNotBlank()) {
-                            draft = CardDraft("", shown.trim(), shown.trim())
+                            draft = CardDraft("", plainNote(shown).trim(), plainNote(shown).trim())
                         }
                         .padding(top = if (isHeading) Spacing.m else Spacing.xs, bottom = Spacing.xs),
                 )
@@ -454,57 +462,4 @@ private fun SuggestionsDialog(
             }
         },
     )
-}
-
-private fun parseCells(line: String): List<String> =
-    line.trim().trim('|').split('|').map { it.trim() }
-
-private fun isTableSeparator(line: String): Boolean =
-    parseCells(line).all { c -> c.isNotEmpty() && c.all { it == '-' || it == ':' } }
-
-@Composable
-private fun TableRow(cells: List<String>, header: Boolean) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(IntrinsicSize.Min)
-            .background(if (header) MaterialTheme.colorScheme.primaryContainer else Color.Transparent),
-    ) {
-        cells.forEach { cell ->
-            Text(
-                text = cell,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = if (header) FontWeight.Bold else null,
-                color = if (header) MaterialTheme.colorScheme.onPrimaryContainer else Color.Unspecified,
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant)
-                    .padding(Spacing.s),
-            )
-        }
-    }
-}
-
-// One image from the note, loaded off the main thread.
-@Composable
-private fun NoteImage(path: String) {
-    val context = LocalContext.current
-    val bitmap by produceState<android.graphics.Bitmap?>(null, path) {
-        value = withContext(Dispatchers.IO) { NoteImages.load(context, path, 1200) }
-    }
-    val b = bitmap
-    if (b != null) {
-        Image(
-            bitmap = b.asImageBitmap(),
-            contentDescription = null,
-            contentScale = ContentScale.FillWidth,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = Spacing.s)
-                .clip(MaterialTheme.shapes.medium),
-        )
-    } else {
-        Spacer(Modifier.height(Spacing.s))
-    }
 }

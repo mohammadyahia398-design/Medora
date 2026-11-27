@@ -13,6 +13,7 @@ import android.text.TextDirectionHeuristics
 import android.text.TextPaint
 import com.example.medora.data.Card
 import com.example.medora.data.NoteImages
+import com.example.medora.ui.components.plainNote
 
 data class PdfLabels(val summary: String, val cards: String, val disclaimer: String)
 
@@ -131,7 +132,7 @@ object PdfExporter {
                     gap(gapAfter + 6f)
                 } else {
                     val path = NoteImages.pathOf(all[i])
-                    if (path != null) image(path, gapAfter) else block(all[i], body, gapAfter)
+                    if (path != null) image(path, gapAfter) else block(plainNote(all[i]), body, gapAfter)
                     i++
                 }
             }
@@ -169,7 +170,7 @@ object PdfExporter {
             rows.forEachIndexed { r, row ->
                 val paint = if (hasHeader && r == 0) bold else body
                 val layouts = (0 until cols).map { c ->
-                    val t = row.getOrElse(c) { "" }.ifEmpty { " " }
+                    val t = plainNote(row.getOrElse(c) { "" }).ifEmpty { " " }
                     StaticLayout.Builder.obtain(t, 0, t.length, paint, colW - 2 * pad)
                         .setAlignment(Layout.Alignment.ALIGN_NORMAL)
                         .setTextDirection(TextDirectionHeuristics.FIRSTSTRONG_LTR)

@@ -52,6 +52,10 @@ interface StatsDao {
     @Query("SELECT COUNT(*) FROM review_logs WHERE reviewedAt >= :since")
     fun observeReviewsSince(since: Long): Flow<Int>
 
+    // Review times only (for the weekly chart and the streak). No schema change.
+    @Query("SELECT reviewedAt FROM review_logs WHERE reviewedAt >= :since")
+    fun observeReviewTimesSince(since: Long): Flow<List<Long>>
+
     @Query("SELECT * FROM quiz_results ORDER BY takenAt DESC LIMIT 10")
     fun observeRecentQuizzes(): Flow<List<QuizResult>>
 }

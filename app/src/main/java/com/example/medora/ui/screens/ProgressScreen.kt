@@ -89,6 +89,7 @@ fun ProgressScreen(onOpenLecture: (Long) -> Unit = {}, vm: ProgressViewModel = v
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        StudyWeekCard()
         StatRow(stringResource(R.string.stat_total_cards), s.totalCards.toString())
         StatRow(stringResource(R.string.stat_due_now), s.dueNow.toString())
         StatRow(stringResource(R.string.stat_learned), s.learned.toString())

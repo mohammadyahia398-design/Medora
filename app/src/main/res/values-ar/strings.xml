@@ -90,4 +90,13 @@
     <string name="note_table">جدول</string>
     <string name="note_image">صورة</string>
     <string name="note_image_failed">تعذّرت إضافة الصورة</string>
+    <string name="note_bold">عريض</string>
+    <string name="note_highlight">تمييز</string>
+    <string name="note_preview">معاينة</string>
+    <string name="note_edit">تحرير</string>
+    <string name="stat_week_title">آخر 7 أيام</string>
+    <string name="stat_streak">أيام متتالية</string>
+    <string name="stat_streak_days">%1$d يوم</string>
+    <string name="stat_goal_today">هدف اليوم</string>
+    <string name="stat_goal_set">الهدف اليومي: %1$d بطاقة</string>
 </resources>

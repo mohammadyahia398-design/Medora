@@ -30,6 +30,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.medora.R
 import com.example.medora.data.NoteImages
 import com.example.medora.ui.components.MedoraButton
+import com.example.medora.ui.components.MedoraOutlinedButton
+import com.example.medora.ui.components.NotePreview
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -48,6 +52,20 @@ private fun insertBlock(v: TextFieldValue, blockText: String): TextFieldValue {
     return TextFieldValue(
         text.substring(0, cursor) + block + text.substring(cursor),
         TextRange(cursor + block.length),
+    )
+}
+
+// Wraps the selected text with a mark like ** or ==. No selection: puts the two marks
+// with the cursor between them.
+private fun wrapSelection(v: TextFieldValue, mark: String): TextFieldValue {
+    val text = v.text
+    val a = v.selection.min.coerceIn(0, text.length)
+    val b = v.selection.max.coerceIn(0, text.length)
+    val inner = text.substring(a, b)
+    val out = text.substring(0, a) + mark + inner + mark + text.substring(b)
+    return TextFieldValue(
+        out,
+        if (a == b) TextRange(a + mark.length) else TextRange(a + mark.length, b + mark.length),
     )
 }
 
@@ -80,6 +98,7 @@ fun NoteEditorScreen(
     val loaded = lecture ?: return
     var title by remember(loaded.id) { mutableStateOf(loaded.title) }
     var body by remember(loaded.id) { mutableStateOf(TextFieldValue(loaded.content)) }
+    var preview by remember(loaded.id) { mutableStateOf(false) }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     // System photo picker: no storage permission needed.
@@ -126,6 +145,23 @@ fun NoteEditorScreen(
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             MedoraButton(
+                text = stringResource(R.string.note_bold),
+                onClick = { body = wrapSelection(body, "**") },
+                modifier = Modifier.weight(1f),
+            )
+            MedoraButton(
+                text = stringResource(R.string.note_highlight),
+                onClick = { body = wrapSelection(body, "==") },
+                modifier = Modifier.weight(1f),
+            )
+            MedoraOutlinedButton(
+                text = stringResource(if (preview) R.string.note_edit else R.string.note_preview),
+                onClick = { preview = !preview },
+                modifier = Modifier.weight(1f),
+            )
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            MedoraButton(
                 text = stringResource(R.string.note_table),
                 onClick = { body = insertTable(body) },
                 modifier = Modifier.weight(1f),
@@ -140,11 +176,18 @@ fun NoteEditorScreen(
                 modifier = Modifier.weight(1f),
             )
         }
-        OutlinedTextField(
-            value = body,
-            onValueChange = { body = it },
-            modifier = Modifier.fillMaxWidth().weight(1f),
-        )
+        if (preview) {
+            NotePreview(
+                text = body.text,
+                modifier = Modifier.fillMaxWidth().weight(1f).verticalScroll(rememberScrollState()),
+            )
+        } else {
+            OutlinedTextField(
+                value = body,
+                onValueChange = { body = it },
+                modifier = Modifier.fillMaxWidth().weight(1f),
+            )
+        }
         MedoraButton(
             text = stringResource(R.string.save),
             onClick = {
