@@ -63,7 +63,7 @@ private fun ImageVector.Builder.outline(
 object MedoraIcons {
     val Home: ImageVector by lazy {
         icon("Home") {
-            outline(MedoraColors.Purple) {
+            outline(MedoraColors.Teal) {
                 moveTo(4f, 10.5f); lineTo(12f, 4f); lineTo(20f, 10.5f)
                 lineTo(20f, 18.5f); quadTo(20f, 20f, 18.5f, 20f)
                 lineTo(5.5f, 20f); quadTo(4f, 20f, 4f, 18.5f); close()
@@ -102,8 +102,8 @@ object MedoraIcons {
 
     val Progress: ImageVector by lazy {
         icon("Progress") {
-            outline(MedoraColors.Purple) { rrect(4f, 12f, 4.5f, 8f, 1.5f) }
-            outline(MedoraColors.Purple) { rrect(9.75f, 8f, 4.5f, 12f, 1.5f) }
+            outline(MedoraColors.Teal) { rrect(4f, 12f, 4.5f, 8f, 1.5f) }
+            outline(MedoraColors.Teal) { rrect(9.75f, 8f, 4.5f, 12f, 1.5f) }
             outline(MedoraColors.Orange) { rrect(15.5f, 4f, 4.5f, 16f, 1.5f) }
         }
     }

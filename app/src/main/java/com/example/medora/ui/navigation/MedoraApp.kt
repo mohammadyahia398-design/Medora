@@ -120,7 +120,6 @@ fun MedoraApp() {
     }
 
     val backdrop = rememberLayerBackdrop()
-    val dark = LocalMedoraDark.current
 
     Box(modifier = Modifier.fillMaxSize()) {
         Box(modifier = Modifier.fillMaxSize().layerBackdrop(backdrop)) {
@@ -129,13 +128,14 @@ fun MedoraApp() {
                     Brush.verticalGradient(
                         listOf(
                             MaterialTheme.colorScheme.background,
-                            if (dark) Color(0xFF1D1530) else Color(0xFFF1E6FB),
+                            MaterialTheme.colorScheme.surfaceVariant,
                         ),
                     ),
                 ),
             )
             Scaffold(
                 containerColor = Color.Transparent,
+                contentColor = MaterialTheme.colorScheme.onBackground,
             ) { padding ->
                 NavHost(
                     navController = navController,
@@ -366,7 +366,7 @@ private fun RowScope.GlassTabItem(tab: Tab, selected: Boolean, onClick: () -> Un
                         scaleX = 0.3f + 0.7f * sel
                         alpha = sel.coerceIn(0f, 1f)
                     }
-                    .background(MedoraColors.Purple.copy(alpha = 0.4f), RoundedCornerShape(16.dp)),
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.22f), RoundedCornerShape(16.dp)),
             )
             Image(
                 imageVector = tab.icon,
@@ -387,6 +387,7 @@ private fun RowScope.GlassTabItem(tab: Tab, selected: Boolean, onClick: () -> Un
         Text(
             text = stringResource(tab.label),
             style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.graphicsLayer {
                 alpha = (0.55f + 0.45f * sel).coerceIn(0f, 1f)
             },

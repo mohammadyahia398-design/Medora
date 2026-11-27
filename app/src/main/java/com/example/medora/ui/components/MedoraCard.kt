@@ -24,7 +24,7 @@ fun MedoraCard(
         modifier = modifier,
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = if (containerColor == Color.Unspecified) MaterialTheme.colorScheme.surface else containerColor),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Column(modifier = Modifier.padding(Spacing.card), content = content)
     }

@@ -449,12 +449,11 @@ private fun isTableSeparator(line: String): Boolean =
 
 @Composable
 private fun TableRow(cells: List<String>, header: Boolean) {
-    val dark = LocalMedoraDark.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(IntrinsicSize.Min)
-            .background(if (header) (if (dark) Color(0xFF352B49) else Color(0xFFF1E6FB)) else Color.Transparent),
+            .background(if (header) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent),
     ) {
         cells.forEach { cell ->
             Text(
@@ -464,7 +463,7 @@ private fun TableRow(cells: List<String>, header: Boolean) {
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
-                    .border(0.5.dp, if (dark) Color(0x33FFFFFF) else Color(0x332B1650))
+                    .border(0.5.dp, MaterialTheme.colorScheme.outline)
                     .padding(8.dp),
             )
         }

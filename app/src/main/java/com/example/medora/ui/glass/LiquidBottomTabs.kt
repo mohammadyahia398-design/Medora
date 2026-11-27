@@ -74,8 +74,8 @@ fun LiquidBottomTabs(
 ) {
     val isLightTheme = !LocalMedoraDark.current
     val accentColor =
-        if (isLightTheme) Color(0xFF7B3FC4)
-        else MedoraColors.Purple
+        if (isLightTheme) MedoraColors.TealDeep
+        else MedoraColors.Teal
     val containerColor =
         if (isLightTheme) Color(0xFFFAFAFA).copy(0.4f)
         else Color(0xFF121212).copy(0.4f)
