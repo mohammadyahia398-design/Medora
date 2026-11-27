@@ -23,6 +23,8 @@ object MedoraColors {
 
     // Soft fills for the icons. Details on them are drawn in Ink.
     val Teal = Color(0xFF7ADCCB)
+    // Near-black for icon lines, as before.
+    val IconInk = Color(0xFF14201F)
 
     // Meaning colors. Keep them: right answer, wrong answer, AI marker.
     val Orange = Color(0xFFFFB84D)
