@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="import_file">استيراد ملف</string>
+    <string name="import_failed_file">تعذّر استيراد الملف. استخدم ملفاً نصياً (.txt) بترميز UTF-8 أصغر من 5 ميجا، أو PDF فيه نص قابل للتحديد (غير ممسوح ضوئياً) أصغر من 20 ميجا.</string>
+</resources>

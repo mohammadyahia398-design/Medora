@@ -70,4 +70,5 @@ dependencies {
     implementation("androidx.room:room-ktx:2.8.4")
     ksp("androidx.room:room-compiler:2.8.4")
     implementation("io.github.kyant0:backdrop:1.0.6")
+    implementation("com.tom-roush:pdfbox-android:2.0.27.0")
 }

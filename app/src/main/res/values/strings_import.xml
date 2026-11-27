@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="import_file">Import file</string>
+    <string name="import_failed_file">Could not import this file. Use a UTF-8 text file (.txt) under 5 MB, or a PDF with selectable text (not scanned) under 20 MB.</string>
+</resources>

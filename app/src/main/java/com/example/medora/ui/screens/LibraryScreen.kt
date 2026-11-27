@@ -74,8 +74,8 @@ fun LibraryScreen(onOpenLecture: (Long) -> Unit, vm: LibraryViewModel = viewMode
             horizontalAlignment = Alignment.End,
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            ExtendedFloatingActionButton(onClick = { picker.launch(arrayOf("text/*")) }) {
-                Text(stringResource(R.string.import_txt))
+            ExtendedFloatingActionButton(onClick = { picker.launch(arrayOf("text/*", "application/pdf")) }) {
+                Text(stringResource(R.string.import_file))
             }
             FloatingActionButton(onClick = { showAdd = true }) {
                 Text("+", style = MaterialTheme.typography.headlineMedium)
@@ -86,7 +86,7 @@ fun LibraryScreen(onOpenLecture: (Long) -> Unit, vm: LibraryViewModel = viewMode
     if (importFailed) {
         AlertDialog(
             onDismissRequest = { vm.dismissImportError() },
-            text = { Text(stringResource(R.string.import_failed)) },
+            text = { Text(stringResource(R.string.import_failed_file)) },
             confirmButton = {
                 TextButton(onClick = { vm.dismissImportError() }) { Text(stringResource(R.string.ok)) }
             },
