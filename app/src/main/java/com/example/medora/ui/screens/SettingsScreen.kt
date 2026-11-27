@@ -150,6 +150,8 @@ fun SettingsScreen() {
             Text(stringResource(R.string.saved), style = MaterialTheme.typography.bodyMedium)
         }
 
+        ReminderSettingsCard()
+
         Text(
             text = stringResource(R.string.backup_section),
             style = MaterialTheme.typography.titleLarge,

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="reminder_section">تذكير المراجعة</string>
+    <string name="reminder_hint">إشعار يومي عندما تكون لديك بطاقات مستحقة للمراجعة. لا يُرسل شيء إذا لم توجد بطاقات.</string>
+    <string name="reminder_enable">التذكير اليومي</string>
+    <string name="reminder_time">الوقت</string>
+    <string name="reminder_channel_name">تذكيرات المراجعة</string>
+    <string name="reminder_notif_title">حان وقت المراجعة</string>
+    <string name="reminder_notif_text">لديك %1$d بطاقة مستحقة للمراجعة.</string>
+</resources>
