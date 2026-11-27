@@ -171,7 +171,7 @@ fun SourcesScreen(vm: SourcesViewModel = viewModel()) {
 @Composable
 private fun SourceCard(item: SourceItem, accessed: String) {
     val context = LocalContext.current
-    MedoraCard(modifier = Modifier.fillMaxWidth()) {
+    MedoraCard(modifier = Modifier.fillMaxWidth(), spaced = false) {
         Text(
             text = item.title,
             style = MaterialTheme.typography.titleMedium,

@@ -59,7 +59,7 @@ fun ReviewScreen(onOpenLecture: (Long) -> Unit, vm: ReviewViewModel = viewModel(
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 Spacer(Modifier.height(12.dp))
-                MedoraCard(modifier = Modifier.fillMaxWidth()) {
+                MedoraCard(modifier = Modifier.fillMaxWidth(), spaced = false) {
                     Text(
                         text = card.front,
                         style = MaterialTheme.typography.headlineSmall,

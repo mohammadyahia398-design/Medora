@@ -82,7 +82,7 @@ fun AppearanceSettingsCard() {
         stringResource(R.string.theme_dark),
     )
 
-    MedoraCard(modifier = Modifier.fillMaxWidth()) {
+    MedoraCard(modifier = Modifier.fillMaxWidth(), spaced = false) {
         Text(
             text = stringResource(R.string.appearance_title),
             style = MaterialTheme.typography.titleMedium,
@@ -116,7 +116,7 @@ fun DeleteDataCard() {
     var confirm by remember { mutableStateOf(false) }
     var failed by remember { mutableStateOf(false) }
 
-    MedoraCard(modifier = Modifier.fillMaxWidth()) {
+    MedoraCard(modifier = Modifier.fillMaxWidth(), spaced = false) {
         Text(
             text = stringResource(R.string.data_title),
             style = MaterialTheme.typography.titleMedium,

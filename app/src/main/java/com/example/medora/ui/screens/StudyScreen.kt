@@ -47,7 +47,7 @@ fun StudyScreen(
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        MedoraCard(modifier = Modifier.fillMaxWidth()) {
+        MedoraCard(modifier = Modifier.fillMaxWidth(), spaced = false) {
             Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                 if (cards.isEmpty() && aiQuestions == 0) {
                     Text(

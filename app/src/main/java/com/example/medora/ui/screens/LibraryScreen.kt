@@ -237,7 +237,7 @@ fun LibraryScreen(onOpenLecture: (Long) -> Unit, vm: LibraryViewModel = viewMode
 
 @Composable
 private fun LectureItem(lecture: Lecture, snippet: String?, onOpen: () -> Unit, onDelete: () -> Unit) {
-    MedoraCard(modifier = Modifier.fillMaxWidth().clickable(onClick = onOpen)) {
+    MedoraCard(modifier = Modifier.fillMaxWidth().clickable(onClick = onOpen), spaced = false) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(

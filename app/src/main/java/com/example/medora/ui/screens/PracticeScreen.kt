@@ -94,7 +94,7 @@ private fun PracticeQuestion(vm: PracticeViewModel, mode: String, onOpenLecture:
             style = MaterialTheme.typography.bodyMedium,
         )
         Spacer(Modifier.height(12.dp))
-        MedoraCard(modifier = Modifier.fillMaxWidth()) {
+        MedoraCard(modifier = Modifier.fillMaxWidth(), spaced = false) {
             Text(
                 text = item.card.front,
                 style = MaterialTheme.typography.headlineSmall,
@@ -162,7 +162,7 @@ private fun PracticeQuestion(vm: PracticeViewModel, mode: String, onOpenLecture:
                 }
             }
             Spacer(Modifier.height(8.dp))
-            MedoraCard(modifier = Modifier.fillMaxWidth()) {
+            MedoraCard(modifier = Modifier.fillMaxWidth(), spaced = false) {
                 Text(
                     text = stringResource(R.string.practice_explanation),
                     style = MaterialTheme.typography.titleSmall,

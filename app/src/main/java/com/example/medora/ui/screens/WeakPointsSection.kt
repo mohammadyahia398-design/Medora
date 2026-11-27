@@ -97,7 +97,7 @@ fun WeakPointsSection(onOpenLecture: (Long) -> Unit, vm: WeakPointsViewModel = v
     val weakLectures = vm.lectures
     val weakCards = vm.cards
 
-    MedoraCard(modifier = Modifier.fillMaxWidth()) {
+    MedoraCard(modifier = Modifier.fillMaxWidth(), spaced = false) {
         Text(
             text = stringResource(R.string.weak_title),
             style = MaterialTheme.typography.titleMedium,

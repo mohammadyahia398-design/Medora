@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,6 +19,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -104,94 +106,96 @@ fun HomeScreen(
     vm: HomeViewModel = viewModel(),
 ) {
     val s by vm.state.collectAsState()
+    val itemShape = MaterialTheme.shapes.small
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(Spacing.l),
-        verticalArrangement = Arrangement.spacedBy(Spacing.m),
+        verticalArrangement = Arrangement.spacedBy(Spacing.l),
     ) {
         MedoraCard(
             modifier = Modifier.fillMaxWidth(),
             containerColor = MaterialTheme.colorScheme.primaryContainer,
+            spaced = false,
         ) {
-            Text(
-                text = stringResource(R.string.home_today),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                text = stringResource(R.string.due_now, s.dueNow),
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-            )
-            Text(
-                text = stringResource(R.string.home_reviews_today, s.reviewsToday),
-                style = MaterialTheme.typography.bodyMedium,
-            )
-            Spacer(Modifier.height(12.dp))
+            SectionTitle(stringResource(R.string.home_today))
+            Spacer(Modifier.height(Spacing.m))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.l),
+            ) {
+                StatBlock(
+                    value = s.dueNow.toString(),
+                    label = stringResource(R.string.home_stat_due),
+                    modifier = Modifier.weight(1f),
+                )
+                StatBlock(
+                    value = s.reviewsToday.toString(),
+                    label = stringResource(R.string.home_stat_reviews),
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            Spacer(Modifier.height(Spacing.l))
             if (s.dueNow > 0) {
                 MedoraButton(
                     text = stringResource(R.string.start_review),
                     onClick = onReview,
                     modifier = Modifier.fillMaxWidth(),
                 )
-            } else if (s.totalCards > 0) {
-                Text(
-                    text = stringResource(R.string.no_due_cards),
-                    style = MaterialTheme.typography.bodyMedium,
-                )
             } else {
                 Text(
-                    text = stringResource(R.string.study_empty),
+                    text = stringResource(if (s.totalCards > 0) R.string.no_due_cards else R.string.study_empty),
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }
         }
 
-        MedoraCard(modifier = Modifier.fillMaxWidth()) {
-            Text(
-                text = stringResource(R.string.home_progress),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                text = stringResource(R.string.home_cards_studied, s.studied, s.totalCards),
-                style = MaterialTheme.typography.bodyMedium,
-            )
-            Text(
-                text = stringResource(R.string.home_completion, s.completionPercent.toString() + "%"),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-            )
-            Spacer(Modifier.height(8.dp))
+        MedoraCard(modifier = Modifier.fillMaxWidth(), spaced = false) {
+            SectionTitle(stringResource(R.string.home_progress))
+            Spacer(Modifier.height(Spacing.m))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.l),
+            ) {
+                StatBlock(
+                    value = s.completionPercent.toString() + "%",
+                    label = stringResource(R.string.home_stat_completion),
+                    modifier = Modifier.weight(1f),
+                )
+                StatBlock(
+                    value = s.studied.toString() + " / " + s.totalCards.toString(),
+                    label = stringResource(R.string.home_stat_studied),
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            Spacer(Modifier.height(Spacing.m))
             ProgressBar(s.completionPercent / 100f)
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(Spacing.s))
             Text(
                 text = stringResource(R.string.home_completion_hint),
                 style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
 
-        MedoraCard(modifier = Modifier.fillMaxWidth()) {
-            Text(
-                text = stringResource(R.string.home_recent),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-            )
+        MedoraCard(modifier = Modifier.fillMaxWidth(), spaced = false) {
+            SectionTitle(stringResource(R.string.home_recent))
             if (s.recent.isEmpty()) {
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(Spacing.s))
                 Text(
                     text = stringResource(R.string.home_recent_empty),
                     style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             s.recent.forEachIndexed { index, l ->
-                if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                Spacer(Modifier.height(if (index == 0) Spacing.m else Spacing.s))
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .clip(itemShape)
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
                         .clickable { onOpenLecture(l.id) }
-                        .padding(vertical = 8.dp),
+                        .padding(Spacing.m),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.xs),
                 ) {
                     Text(
                         text = l.title,
@@ -201,7 +205,13 @@ fun HomeScreen(
                         overflow = TextOverflow.Ellipsis,
                     )
                     if (l.subject.isNotBlank()) {
-                        Text(text = l.subject, style = MaterialTheme.typography.bodySmall)
+                        Text(
+                            text = l.subject,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
                     }
                     Text(
                         text = if (l.cardCount > 0) {
@@ -210,10 +220,36 @@ fun HomeScreen(
                             stringResource(R.string.home_no_cards)
                         },
                         style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun SectionTitle(text: String) {
+    Text(text = text, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+}
+
+// A big number with a small label under it.
+@Composable
+private fun StatBlock(value: String, label: String, modifier: Modifier = Modifier) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+        Text(
+            text = value,
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = LocalContentColor.current.copy(alpha = 0.72f),
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 

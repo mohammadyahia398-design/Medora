@@ -208,7 +208,7 @@ fun LectureDetailScreen(
                 }
                 Spacer(Modifier.height(16.dp))
                 if (current.summary.isNotBlank()) {
-                    MedoraCard(modifier = Modifier.fillMaxWidth()) {
+                    MedoraCard(modifier = Modifier.fillMaxWidth(), spaced = false) {
                         Text(
                             text = stringResource(R.string.summary),
                             style = MaterialTheme.typography.titleMedium,

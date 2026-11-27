@@ -1,6 +1,7 @@
 package com.example.medora.ui.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.padding
@@ -14,10 +15,12 @@ import androidx.compose.ui.unit.dp
 import com.example.medora.ui.theme.Spacing
 
 // Our own card. Wraps Material inside, so we can swap the engine later.
+// Children get an even gap. Pass spaced = false when the content sets its own gaps.
 @Composable
 fun MedoraCard(
     modifier: Modifier = Modifier,
     containerColor: Color = Color.Unspecified,
+    spaced: Boolean = true,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Card(
@@ -26,6 +29,10 @@ fun MedoraCard(
         colors = CardDefaults.cardColors(containerColor = if (containerColor == Color.Unspecified) MaterialTheme.colorScheme.surface else containerColor),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
-        Column(modifier = Modifier.padding(Spacing.card), content = content)
+        Column(
+            modifier = Modifier.padding(Spacing.card),
+            verticalArrangement = if (spaced) Arrangement.spacedBy(Spacing.s) else Arrangement.Top,
+            content = content,
+        )
     }
 }

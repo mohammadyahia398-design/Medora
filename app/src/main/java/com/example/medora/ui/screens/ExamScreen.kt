@@ -57,7 +57,7 @@ private fun ExamSetup(vm: ExamViewModel) {
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        MedoraCard(modifier = Modifier.fillMaxWidth()) {
+        MedoraCard(modifier = Modifier.fillMaxWidth(), spaced = false) {
             Text(
                 text = stringResource(R.string.exam_setup_title),
                 style = MaterialTheme.typography.headlineSmall,
@@ -213,7 +213,7 @@ private fun ExamResult(vm: ExamViewModel, onOpenLecture: (Long) -> Unit) {
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        MedoraCard(modifier = Modifier.fillMaxWidth()) {
+        MedoraCard(modifier = Modifier.fillMaxWidth(), spaced = false) {
             Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = stringResource(R.string.score_of, vm.score, total),
@@ -254,7 +254,7 @@ private fun ExamResult(vm: ExamViewModel, onOpenLecture: (Long) -> Unit) {
             wrong.forEach { i ->
                 val q = questions[i]
                 val mine = answers.getOrNull(i)?.let { q.options.getOrNull(it) } ?: noAnswer
-                MedoraCard(modifier = Modifier.fillMaxWidth()) {
+                MedoraCard(modifier = Modifier.fillMaxWidth(), spaced = false) {
                     Text(
                         text = q.prompt,
                         style = MaterialTheme.typography.titleMedium,

@@ -57,7 +57,7 @@ fun QuizScreen(onOpenLecture: (Long) -> Unit, vm: QuizViewModel = viewModel()) {
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 Spacer(Modifier.height(12.dp))
-                MedoraCard(modifier = Modifier.fillMaxWidth()) {
+                MedoraCard(modifier = Modifier.fillMaxWidth(), spaced = false) {
                     if (q.fromAi) {
                         AiBadge()
                         Spacer(Modifier.height(8.dp))
