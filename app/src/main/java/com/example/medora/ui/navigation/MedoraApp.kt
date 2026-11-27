@@ -1,6 +1,15 @@
 package com.example.medora.ui.navigation
 
 import androidx.annotation.StringRes
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -249,12 +258,45 @@ fun MedoraApp() {
 
 @Composable
 private fun RowScope.GlassTabItem(tab: Tab, selected: Boolean, onClick: () -> Unit) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+
+    // 0 -> 1 when selected. The bouncy spring makes the pill and the icon "pop".
+    val sel by animateFloatAsState(
+        targetValue = if (selected) 1f else 0f,
+        animationSpec = spring(dampingRatio = 0.55f, stiffness = Spring.StiffnessMediumLow),
+        label = "tabSelected",
+    )
+    val press by animateFloatAsState(
+        targetValue = if (pressed) 0.86f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+        label = "tabPress",
+    )
+
+    // A short wiggle when the tab becomes selected (not on first start).
+    val wiggle = remember { Animatable(0f) }
+    val firstRun = remember { booleanArrayOf(true) }
+    LaunchedEffect(selected) {
+        if (firstRun[0]) {
+            firstRun[0] = false
+            return@LaunchedEffect
+        }
+        if (selected) {
+            wiggle.animateTo(-14f, tween(90))
+            wiggle.animateTo(10f, tween(110))
+            wiggle.animateTo(
+                0f,
+                spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+            )
+        }
+    }
+
     Column(
         modifier = Modifier
             .weight(1f)
             .fillMaxHeight()
             .clickable(
-                interactionSource = remember { MutableInteractionSource() },
+                interactionSource = interactionSource,
                 indication = null,
                 role = Role.Tab,
                 onClick = onClick,
@@ -262,16 +304,41 @@ private fun RowScope.GlassTabItem(tab: Tab, selected: Boolean, onClick: () -> Un
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Image(
-            imageVector = tab.icon,
-            contentDescription = null,
-            colorFilter = iconTint(),
-            modifier = Modifier.size(28.dp).alpha(if (selected) 1f else 0.5f),
-        )
+        Box(
+            modifier = Modifier.size(width = 56.dp, height = 32.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .graphicsLayer {
+                        scaleX = 0.3f + 0.7f * sel
+                        alpha = sel.coerceIn(0f, 1f)
+                    }
+                    .background(MedoraColors.Purple.copy(alpha = 0.4f), RoundedCornerShape(16.dp)),
+            )
+            Image(
+                imageVector = tab.icon,
+                contentDescription = null,
+                colorFilter = iconTint(),
+                modifier = Modifier
+                    .size(28.dp)
+                    .graphicsLayer {
+                        val scale = (1f + 0.15f * sel) * press
+                        scaleX = scale
+                        scaleY = scale
+                        translationY = -2.dp.toPx() * sel
+                        rotationZ = wiggle.value
+                        alpha = (0.55f + 0.45f * sel).coerceIn(0f, 1f)
+                    },
+            )
+        }
         Text(
             text = stringResource(tab.label),
             style = MaterialTheme.typography.labelSmall,
-            modifier = Modifier.alpha(if (selected) 1f else 0.5f),
+            modifier = Modifier.graphicsLayer {
+                alpha = (0.55f + 0.45f * sel).coerceIn(0f, 1f)
+            },
         )
     }
 }
