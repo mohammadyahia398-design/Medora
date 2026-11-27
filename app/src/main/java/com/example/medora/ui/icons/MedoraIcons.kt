@@ -10,8 +10,10 @@ import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 import com.example.medora.ui.theme.MedoraColors
 
-// Our own icons, drawn in code. Thick rounded shapes + one dark detail each.
-// Grid: 48 x 48.
+// Our own icons, drawn in code. One style for all: a dark rounded outline
+// and a single soft color on the main shape. Grid: 24 x 24, stroke 1.8.
+
+private const val STROKE = 1.8f
 
 private fun PathBuilder.rrect(x: Float, y: Float, w: Float, h: Float, r: Float) {
     moveTo(x + r, y)
@@ -36,100 +38,96 @@ private fun PathBuilder.circle(cx: Float, cy: Float, r: Float) {
 private fun icon(name: String, block: ImageVector.Builder.() -> Unit): ImageVector =
     ImageVector.Builder(
         name = name,
-        defaultWidth = 48.dp,
-        defaultHeight = 48.dp,
-        viewportWidth = 48f,
-        viewportHeight = 48f,
+        defaultWidth = 24.dp,
+        defaultHeight = 24.dp,
+        viewportWidth = 24f,
+        viewportHeight = 24f,
     ).apply(block).build()
 
-private fun ImageVector.Builder.fill(color: Color, block: PathBuilder.() -> Unit) {
-    path(fill = SolidColor(color), pathBuilder = block)
-}
-
-private fun ImageVector.Builder.softFill(color: Color, width: Float, block: PathBuilder.() -> Unit) {
+// A dark outline. If tint is given, the shape is filled with that soft color.
+private fun ImageVector.Builder.outline(
+    tint: Color?,
+    width: Float = STROKE,
+    block: PathBuilder.() -> Unit,
+) {
     path(
-        fill = SolidColor(color),
-        stroke = SolidColor(color),
+        fill = tint?.let { SolidColor(it) },
+        stroke = SolidColor(MedoraColors.Ink),
         strokeLineWidth = width,
+        strokeLineCap = StrokeCap.Round,
         strokeLineJoin = StrokeJoin.Round,
         pathBuilder = block,
     )
 }
 
 object MedoraIcons {
-    private val ink = MedoraColors.Ink
-
     val Home: ImageVector by lazy {
         icon("Home") {
-            softFill(MedoraColors.Purple, 5f) {
-                moveTo(9f, 22f); lineTo(24f, 9f); lineTo(39f, 22f); close()
+            outline(MedoraColors.Purple) {
+                moveTo(4f, 10.5f); lineTo(12f, 4f); lineTo(20f, 10.5f)
+                lineTo(20f, 18.5f); quadTo(20f, 20f, 18.5f, 20f)
+                lineTo(5.5f, 20f); quadTo(4f, 20f, 4f, 18.5f); close()
             }
-            fill(MedoraColors.Purple) { rrect(10f, 21f, 28f, 20f, 6f) }
-            fill(ink) {
-                moveTo(20f, 41f); lineTo(20f, 32f)
-                quadTo(20f, 28f, 24f, 28f)
-                quadTo(28f, 28f, 28f, 32f)
-                lineTo(28f, 41f); close()
+            outline(null) {
+                moveTo(10f, 20f); lineTo(10f, 15f)
+                quadTo(10f, 13f, 12f, 13f); quadTo(14f, 13f, 14f, 15f)
+                lineTo(14f, 20f)
             }
         }
     }
 
     val Library: ImageVector by lazy {
         icon("Library") {
-            fill(MedoraColors.Orange) { rrect(8f, 7f, 32f, 35f, 7f) }
-            fill(ink) { rrect(8f, 7f, 10f, 35f, 5f) }
-            fill(ink) { rrect(23f, 16f, 12f, 4f, 2f) }
+            outline(MedoraColors.Orange) { rrect(5f, 3.5f, 14f, 17f, 2.5f) }
+            outline(null) { moveTo(9.5f, 3.5f); lineTo(9.5f, 20.5f) }
+            outline(null) {
+                moveTo(12.5f, 8f); lineTo(16f, 8f)
+                moveTo(12.5f, 11.5f); lineTo(15f, 11.5f)
+            }
         }
     }
 
     val Study: ImageVector by lazy {
         icon("Study") {
-            softFill(MedoraColors.Green, 5f) {
-                moveTo(24f, 10f); lineTo(41f, 19f); lineTo(24f, 28f); lineTo(7f, 19f); close()
+            outline(MedoraColors.Green) {
+                moveTo(12f, 5f); lineTo(21f, 9.5f); lineTo(12f, 14f); lineTo(3f, 9.5f); close()
             }
-            fill(ink) {
-                moveTo(14f, 28f); lineTo(14f, 34f)
-                quadTo(24f, 42f, 34f, 34f)
-                lineTo(34f, 28f); lineTo(24f, 33f); close()
+            outline(null) {
+                moveTo(7f, 12f); lineTo(7f, 15.5f)
+                quadTo(12f, 19f, 17f, 15.5f); lineTo(17f, 12f)
             }
-            fill(ink) { rrect(39f, 19f, 4f, 15f, 2f) }
+            outline(null) { moveTo(21f, 9.5f); lineTo(21f, 14.5f) }
         }
     }
 
     val Progress: ImageVector by lazy {
         icon("Progress") {
-            fill(MedoraColors.Purple) { rrect(6f, 28f, 11f, 14f, 4f) }
-            fill(MedoraColors.Orange) { rrect(19f, 18f, 11f, 24f, 4f) }
-            fill(ink) { rrect(32f, 6f, 11f, 36f, 4f) }
+            outline(MedoraColors.Purple) { rrect(4f, 12f, 4.5f, 8f, 1.5f) }
+            outline(MedoraColors.Purple) { rrect(9.75f, 8f, 4.5f, 12f, 1.5f) }
+            outline(MedoraColors.Orange) { rrect(15.5f, 4f, 4.5f, 16f, 1.5f) }
         }
     }
 
     val Settings: ImageVector by lazy {
         icon("Settings") {
-            fill(MedoraColors.Coral) { rrect(5f, 8f, 38f, 15f, 7.5f) }
-            fill(ink) { circle(35.5f, 15.5f, 4.5f) }
-            fill(MedoraColors.Purple) { rrect(5f, 26f, 38f, 15f, 7.5f) }
-            fill(ink) { circle(12.5f, 33.5f, 4.5f) }
+            outline(null) { moveTo(4f, 8f); lineTo(20f, 8f) }
+            outline(MedoraColors.Coral) { circle(15f, 8f, 2.6f) }
+            outline(null) { moveTo(4f, 16f); lineTo(20f, 16f) }
+            outline(MedoraColors.Coral) { circle(9f, 16f, 2.6f) }
         }
     }
 
     val Back: ImageVector by lazy {
         ImageVector.Builder(
             name = "Back",
-            defaultWidth = 48.dp,
-            defaultHeight = 48.dp,
-            viewportWidth = 48f,
-            viewportHeight = 48f,
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f,
             autoMirror = true,
         ).apply {
-            path(
-                fill = null,
-                stroke = SolidColor(ink),
-                strokeLineWidth = 6f,
-                strokeLineCap = StrokeCap.Round,
-                strokeLineJoin = StrokeJoin.Round,
-            ) {
-                moveTo(30f, 10f); lineTo(16f, 24f); lineTo(30f, 38f)
+            outline(null, 2.2f) {
+                moveTo(15f, 5f); lineTo(8f, 12f); lineTo(15f, 19f)
             }
         }.build()
     }
