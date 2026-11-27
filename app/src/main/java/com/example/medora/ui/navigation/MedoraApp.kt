@@ -2,21 +2,33 @@ package com.example.medora.ui.navigation
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -28,6 +40,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.medora.R
+import com.example.medora.ui.components.GlassBar
+import com.example.medora.ui.theme.MedoraColors
+import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.example.medora.ui.icons.MedoraIcons
 import com.example.medora.ui.screens.HomeScreen
 import com.example.medora.ui.screens.LectureDetailScreen
@@ -63,107 +79,142 @@ fun MedoraApp() {
     val isQuiz = route == ROUTE_QUIZ
     val isSub = isSettings || isLecture || isReview || isQuiz
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        stringResource(
-                            when {
-                                isSettings -> R.string.settings
-                                isLecture -> R.string.lecture_details
-                                isReview -> R.string.review_title
-                                isQuiz -> R.string.quiz_title
-                                tab != null -> tab.label
-                                else -> R.string.app_name
+    val backdrop = rememberLayerBackdrop()
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = Modifier.fillMaxSize().layerBackdrop(backdrop)) {
+            Box(
+                modifier = Modifier.fillMaxSize().background(
+                    Brush.verticalGradient(listOf(MedoraColors.Background, Color(0xFFF1E6FB))),
+                ),
+            )
+            Scaffold(
+                containerColor = Color.Transparent,
+                topBar = {
+                    TopAppBar(
+                        title = {
+                            Text(
+                                stringResource(
+                                    when {
+                                        isSettings -> R.string.settings
+                                        isLecture -> R.string.lecture_details
+                                        isReview -> R.string.review_title
+                                        isQuiz -> R.string.quiz_title
+                                        tab != null -> tab.label
+                                        else -> R.string.app_name
+                                    }
+                                )
+                            )
+                        },
+                        navigationIcon = {
+                            if (isSub) {
+                                IconButton(onClick = { navController.popBackStack() }) {
+                                    Image(
+                                        imageVector = MedoraIcons.Back,
+                                        contentDescription = stringResource(R.string.back),
+                                        modifier = Modifier.size(24.dp),
+                                    )
+                                }
                             }
-                        )
+                        },
+                        actions = {
+                            if (!isSub) {
+                                IconButton(onClick = { navController.navigate(ROUTE_SETTINGS) }) {
+                                    Image(
+                                        imageVector = MedoraIcons.Settings,
+                                        contentDescription = stringResource(R.string.settings),
+                                        modifier = Modifier.size(28.dp),
+                                    )
+                                }
+                            }
+                        },
                     )
                 },
-                navigationIcon = {
-                    if (isSub) {
-                        IconButton(onClick = { navController.popBackStack() }) {
-                            Image(
-                                imageVector = MedoraIcons.Back,
-                                contentDescription = stringResource(R.string.back),
-                                modifier = Modifier.size(24.dp),
-                            )
-                        }
+            ) { padding ->
+                NavHost(
+                    navController = navController,
+                    startDestination = Tab.Home.route,
+                    modifier = Modifier.padding(padding).padding(bottom = if (tab != null) 88.dp else 0.dp),
+                ) {
+                    composable(Tab.Home.route) { HomeScreen() }
+                    composable(Tab.Library.route) {
+                        LibraryScreen(onOpenLecture = { navController.navigate("lecture/$it") })
                     }
-                },
-                actions = {
-                    if (!isSub) {
-                        IconButton(onClick = { navController.navigate(ROUTE_SETTINGS) }) {
-                            Image(
-                                imageVector = MedoraIcons.Settings,
-                                contentDescription = stringResource(R.string.settings),
-                                modifier = Modifier.size(28.dp),
-                            )
-                        }
-                    }
-                },
-            )
-        },
-        bottomBar = {
-            if (tab != null) {
-                NavigationBar {
-                    Tab.values().forEach { item ->
-                        val selected = item == tab
-                        NavigationBarItem(
-                            selected = selected,
-                            onClick = {
-                                navController.navigate(item.route) {
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
-                                    }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            },
-                            icon = {
-                                Image(
-                                    imageVector = item.icon,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(28.dp).alpha(if (selected) 1f else 0.5f),
-                                )
-                            },
-                            label = { Text(stringResource(item.label)) },
-                            colors = NavigationBarItemDefaults.colors(indicatorColor = Color.Transparent),
+                    composable(Tab.Study.route) {
+                        StudyScreen(
+                            onReview = { navController.navigate(ROUTE_REVIEW) },
+                            onQuiz = { navController.navigate(ROUTE_QUIZ) },
                         )
+                    }
+                    composable(Tab.Progress.route) { ProgressScreen() }
+                    composable(ROUTE_SETTINGS) { SettingsScreen() }
+                    composable(ROUTE_REVIEW) {
+                        ReviewScreen(onOpenLecture = { navController.navigate("lecture/$it") })
+                    }
+                    composable(ROUTE_QUIZ) {
+                        QuizScreen(onOpenLecture = { navController.navigate("lecture/$it") })
+                    }
+                    composable(
+                        ROUTE_LECTURE,
+                        arguments = listOf(navArgument("id") { type = NavType.LongType }),
+                    ) { entry ->
+                        LectureDetailScreen(id = entry.arguments?.getLong("id") ?: 0L)
                     }
                 }
             }
-        },
-    ) { padding ->
-        NavHost(
-            navController = navController,
-            startDestination = Tab.Home.route,
-            modifier = Modifier.padding(padding),
-        ) {
-            composable(Tab.Home.route) { HomeScreen() }
-            composable(Tab.Library.route) {
-                LibraryScreen(onOpenLecture = { navController.navigate("lecture/$it") })
-            }
-            composable(Tab.Study.route) {
-                StudyScreen(
-                    onReview = { navController.navigate(ROUTE_REVIEW) },
-                    onQuiz = { navController.navigate(ROUTE_QUIZ) },
-                )
-            }
-            composable(Tab.Progress.route) { ProgressScreen() }
-            composable(ROUTE_SETTINGS) { SettingsScreen() }
-            composable(ROUTE_REVIEW) {
-                ReviewScreen(onOpenLecture = { navController.navigate("lecture/$it") })
-            }
-            composable(ROUTE_QUIZ) {
-                QuizScreen(onOpenLecture = { navController.navigate("lecture/$it") })
-            }
-            composable(
-                ROUTE_LECTURE,
-                arguments = listOf(navArgument("id") { type = NavType.LongType }),
-            ) { entry ->
-                LectureDetailScreen(id = entry.arguments?.getLong("id") ?: 0L)
+        }
+        if (tab != null) {
+            GlassBar(
+                backdrop = backdrop,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
+                    .padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
+            ) {
+                Tab.values().forEach { item ->
+                    GlassTabItem(
+                        tab = item,
+                        selected = item == tab,
+                        onClick = {
+                            navController.navigate(item.route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                    )
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun RowScope.GlassTabItem(tab: Tab, selected: Boolean, onClick: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .weight(1f)
+            .fillMaxHeight()
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                role = Role.Tab,
+                onClick = onClick,
+            ),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Image(
+            imageVector = tab.icon,
+            contentDescription = null,
+            modifier = Modifier.size(28.dp).alpha(if (selected) 1f else 0.5f),
+        )
+        Text(
+            text = stringResource(tab.label),
+            style = MaterialTheme.typography.labelSmall,
+            modifier = Modifier.alpha(if (selected) 1f else 0.5f),
+        )
     }
 }
