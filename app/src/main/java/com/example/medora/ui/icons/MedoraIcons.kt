@@ -14,9 +14,9 @@ import com.example.medora.ui.theme.MedoraColors
 
 // Our own icons, drawn in code. One style for all: a dark rounded outline
 // and a single soft color on the main shape. Grid: 24 x 24, stroke 1.8.
-// edge = lines that touch the background, detail = lines drawn on top of a
-// soft fill. Light theme: both near-black. Dark theme: edge is light, detail
-// stays dark, and the fills are a little deeper so they do not glare on black.
+// edge = lines that touch the background, detail = the marks drawn on top of
+// a fill. Light theme: near-black marks on soft fills. Dark theme: white marks
+// on deeper fills, so the icon keeps its look on a black background.
 
 private const val STROKE = 1.8f
 
@@ -68,12 +68,12 @@ private val LightPal = Pal(
 )
 
 private val DarkPal = Pal(
-    edge = Color(0xFFEAF6FA),
-    detail = MedoraColors.IconInk,
-    teal = Color(0xFF4FC3B0),
-    orange = Color(0xFFF2A33A),
-    green = Color(0xFF6FCB8C),
-    coral = Color(0xFFF08A7E),
+    edge = Color.White,
+    detail = Color.White,
+    teal = Color(0xFF1F9E8E),
+    orange = Color(0xFFD98A1F),
+    green = Color(0xFF3FA864),
+    coral = Color(0xFFD9625A),
 )
 
 // A rounded outline in ink. If tint is given, the shape is filled with that soft color.
