@@ -11,7 +11,7 @@ import java.util.UUID
 
 // Images inside notes. Each image is copied (made smaller) into the app's own folder,
 // and the note keeps one line like:  ![image](note_images/abc.jpg)
-// Stays on the phone (offline). Not part of the database backup.
+// Stays on the phone (offline). Included in the .zip backup.
 object NoteImages {
     private const val DIR = "note_images"
     private const val MAX_SIDE = 1600
@@ -65,6 +65,20 @@ object NoteImages {
 
     fun deleteAll(context: Context) {
         File(context.filesDir, DIR).deleteRecursively()
+    }
+
+    // Removes images that no note uses any more (frees space).
+    fun deleteUnused(context: Context, used: Set<String>) {
+        File(context.filesDir, DIR).listFiles()?.forEach { f ->
+            if ("$DIR/${f.name}" !in used) f.delete()
+        }
+    }
+
+    // After a restore: the images from the backup replace the old ones (none = empty folder).
+    fun replaceAll(context: Context, from: File?) {
+        val dir = File(context.filesDir, DIR)
+        dir.deleteRecursively()
+        if (from != null && from.exists()) from.copyRecursively(dir, overwrite = true)
     }
 
     private fun sampleFor(w: Int, h: Int, maxSide: Int): Int {

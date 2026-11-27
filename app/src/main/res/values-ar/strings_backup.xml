@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="backup_section">النسخ الاحتياطي</string>
-    <string name="backup_hint">يحفظ المحاضرات والبطاقات والمراجعات ونتائج الاختبارات في ملف. مفاتيح الذكاء الاصطناعي غير مشمولة.</string>
+    <string name="backup_hint">يحفظ المحاضرات والبطاقات والمراجعات ونتائج الاختبارات وصور الملاحظات في ملف .zip واحد. مفاتيح الذكاء الاصطناعي غير مشمولة. للانتقال إلى هاتف جديد: احفظه في Google Drive ثم استعده هناك.</string>
     <string name="backup_export">تصدير نسخة احتياطية</string>
     <string name="backup_restore">استعادة نسخة احتياطية</string>
     <string name="backup_done">تم حفظ النسخة الاحتياطية.</string>

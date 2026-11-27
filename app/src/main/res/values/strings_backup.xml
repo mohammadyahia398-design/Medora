@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="backup_section">Backup</string>
-    <string name="backup_hint">Saves your lectures, cards, reviews and quiz results to a file. API keys are not included.</string>
+    <string name="backup_hint">Saves your lectures, cards, reviews, quiz results and note images in one .zip file. API keys are not included. To move to a new phone: save it to Google Drive, then restore it there.</string>
     <string name="backup_export">Export backup</string>
     <string name="backup_restore">Restore backup</string>
     <string name="backup_done">Backup saved.</string>

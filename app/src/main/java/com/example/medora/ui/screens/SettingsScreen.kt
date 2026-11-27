@@ -52,7 +52,7 @@ fun SettingsScreen() {
     var pendingRestore by remember { mutableStateOf<Uri?>(null) }
 
     val exportLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.CreateDocument("application/octet-stream"),
+        ActivityResultContracts.CreateDocument("application/zip"),
     ) { uri ->
         if (uri != null) {
             scope.launch {
@@ -164,7 +164,7 @@ fun SettingsScreen() {
             Text(stringResource(R.string.backup_hint), style = MaterialTheme.typography.bodySmall)
             MedoraButton(
                 text = stringResource(R.string.backup_export),
-                onClick = { exportLauncher.launch("medora-backup.db") },
+                onClick = { exportLauncher.launch("medora-backup.zip") },
                 modifier = Modifier.fillMaxWidth(),
             )
             MedoraButton(
