@@ -6,10 +6,19 @@ import org.json.JSONArray
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
-// Writes a simple text-only .pptx by hand (a PPTX is a ZIP of XML files). No library.
+// Writes a simple .pptx by hand (a PPTX is a ZIP of XML files). No library.
 // Slides come from the lecture's slidesJson: [{"title":"...","bullets":["..."]}].
+// Markdown tables (| a | b |) in the bullets or in the note become real PowerPoint tables.
 object PptxExporter {
-    private class SlideData(val title: String, val lines: List<String>, val bullets: Boolean)
+    private class SlideData(
+        val title: String,
+        val lines: List<String>,
+        val bullets: Boolean,
+        val table: List<List<String>>? = null,
+        val header: Boolean = false,
+    )
+
+    private const val TABLE_ROWS_PER_SLIDE = 8
 
     private const val NS =
         "xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" " +
@@ -25,16 +34,37 @@ object PptxExporter {
             "<p:grpSpPr><a:xfrm><a:off x=\"0\" y=\"0\"/><a:ext cx=\"0\" cy=\"0\"/>" +
             "<a:chOff x=\"0\" y=\"0\"/><a:chExt cx=\"0\" cy=\"0\"/></a:xfrm></p:grpSpPr>"
 
-    fun write(context: Context, uri: Uri, title: String, subject: String, slidesJson: String) {
+    // True when the note has at least one markdown table (so a PowerPoint can be made from it).
+    fun hasTable(content: String): Boolean =
+        content.lineSequence().any { val t = it.trim(); t.startsWith("|") && !isSeparator(t) }
+
+    fun write(context: Context, uri: Uri, title: String, subject: String, slidesJson: String, content: String = "") {
         val slides = mutableListOf<SlideData>()
         slides += SlideData(title, listOf(subject).filter { it.isNotBlank() }, false)
-        val arr = JSONArray(slidesJson)
-        for (i in 0 until arr.length()) {
-            val o = arr.optJSONObject(i) ?: continue
-            val b = o.optJSONArray("bullets")
-            val lines = mutableListOf<String>()
-            if (b != null) for (j in 0 until b.length()) lines += b.optString(j)
-            slides += SlideData(o.optString("title"), lines.filter { it.isNotBlank() }, true)
+        if (slidesJson.isNotBlank()) {
+            val arr = JSONArray(slidesJson)
+            for (i in 0 until arr.length()) {
+                val o = arr.optJSONObject(i) ?: continue
+                val b = o.optJSONArray("bullets")
+                val lines = mutableListOf<String>()
+                if (b != null) for (j in 0 until b.length()) lines += b.optString(j)
+                addSlides(slides, o.optString("title"), lines.filter { it.isNotBlank() })
+            }
+        }
+        // Tables written in the note itself, each under its nearest "# " heading.
+        var heading = title
+        val noteLines = content.split("\n")
+        var i = 0
+        while (i < noteLines.size) {
+            val t = noteLines[i].trim()
+            if (t.startsWith("# ")) heading = t.removePrefix("# ").trim()
+            if (t.startsWith("|")) {
+                val start = i
+                while (i < noteLines.size && noteLines[i].trim().startsWith("|")) i++
+                addTableSlides(slides, heading, noteLines.subList(start, i))
+            } else {
+                i++
+            }
         }
         if (slides.size < 2) throw IllegalStateException("No slides")
 
@@ -46,18 +76,63 @@ object PptxExporter {
                 zip.add("_rels/.rels", rootRels())
                 zip.add("ppt/presentation.xml", presentation(slides.size))
                 zip.add("ppt/_rels/presentation.xml.rels", presentationRels(slides.size))
+                zip.add("ppt/tableStyles.xml", tableStyles())
                 zip.add("ppt/slideMasters/slideMaster1.xml", master())
                 zip.add("ppt/slideMasters/_rels/slideMaster1.xml.rels", masterRels())
                 zip.add("ppt/slideLayouts/slideLayout1.xml", layout())
                 zip.add("ppt/slideLayouts/_rels/slideLayout1.xml.rels", layoutRels())
                 zip.add("ppt/theme/theme1.xml", theme())
-                slides.forEachIndexed { i, s ->
-                    zip.add("ppt/slides/slide${i + 1}.xml", slide(s, cover = i == 0))
-                    zip.add("ppt/slides/_rels/slide${i + 1}.xml.rels", slideRels())
+                slides.forEachIndexed { n, s ->
+                    zip.add("ppt/slides/slide${n + 1}.xml", slide(s, cover = n == 0))
+                    zip.add("ppt/slides/_rels/slide${n + 1}.xml.rels", slideRels())
                 }
             }
         }
     }
+
+    // One AI slide: its text lines stay together; each table gets its own slide(s).
+    private fun addSlides(slides: MutableList<SlideData>, title: String, lines: List<String>) {
+        val text = mutableListOf<String>()
+        val tables = mutableListOf<List<String>>()
+        var i = 0
+        while (i < lines.size) {
+            if (lines[i].trim().startsWith("|")) {
+                val start = i
+                while (i < lines.size && lines[i].trim().startsWith("|")) i++
+                tables += lines.subList(start, i)
+            } else {
+                text += lines[i]
+                i++
+            }
+        }
+        if (text.isNotEmpty() || tables.isEmpty()) slides += SlideData(title, text, true)
+        tables.forEach { addTableSlides(slides, title, it) }
+    }
+
+    // Long tables are split; the header row repeats on every part.
+    private fun addTableSlides(slides: MutableList<SlideData>, title: String, raw: List<String>) {
+        val trimmed = raw.map { it.trim() }
+        val rows = trimmed.filter { !isSeparator(it) }.map { cells(it) }
+        if (rows.isEmpty()) return
+        val header = trimmed.size > 1 && isSeparator(trimmed[1])
+        val cols = rows.maxOf { it.size }.coerceAtLeast(1)
+        val padded = rows.map { r -> List(cols) { c -> r.getOrElse(c) { "" } } }
+        val head = if (header) padded.first() else null
+        val body = if (header) padded.drop(1) else padded
+        if (body.isEmpty()) {
+            slides += SlideData(title, emptyList(), false, padded, header)
+            return
+        }
+        body.chunked(TABLE_ROWS_PER_SLIDE).forEach { part ->
+            slides += SlideData(title, emptyList(), false, if (head != null) listOf(head) + part else part, header)
+        }
+    }
+
+    private fun cells(line: String): List<String> =
+        line.trim().trim('|').split('|').map { it.trim() }
+
+    private fun isSeparator(line: String): Boolean =
+        cells(line).all { c -> c.isNotEmpty() && c.all { it == '-' || it == ':' } }
 
     private fun ZipOutputStream.add(name: String, text: String) {
         putNextEntry(ZipEntry(name))
@@ -72,6 +147,7 @@ object PptxExporter {
         sb.append("<Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-package.relationships+xml\"/>")
         sb.append("<Default Extension=\"xml\" ContentType=\"application/xml\"/>")
         sb.append("<Override PartName=\"/ppt/presentation.xml\" ContentType=\"$CT_BASE.presentation.main+xml\"/>")
+        sb.append("<Override PartName=\"/ppt/tableStyles.xml\" ContentType=\"$CT_BASE.tableStyles+xml\"/>")
         sb.append("<Override PartName=\"/ppt/slideMasters/slideMaster1.xml\" ContentType=\"$CT_BASE.slideMaster+xml\"/>")
         sb.append("<Override PartName=\"/ppt/slideLayouts/slideLayout1.xml\" ContentType=\"$CT_BASE.slideLayout+xml\"/>")
         sb.append("<Override PartName=\"/ppt/theme/theme1.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.theme+xml\"/>")
@@ -105,6 +181,7 @@ object PptxExporter {
             sb.append("<Relationship Id=\"rId${i + 1}\" Type=\"$REL_BASE/slide\" Target=\"slides/slide$i.xml\"/>")
         }
         sb.append("<Relationship Id=\"rId${n + 2}\" Type=\"$REL_BASE/theme\" Target=\"theme/theme1.xml\"/>")
+        sb.append("<Relationship Id=\"rId${n + 3}\" Type=\"$REL_BASE/tableStyles\" Target=\"tableStyles.xml\"/>")
         sb.append("</Relationships>")
         return sb.toString()
     }
@@ -143,7 +220,9 @@ object PptxExporter {
         val sb = StringBuilder(XML)
         sb.append("<p:sld $NS><p:cSld>$EMPTY_TREE")
         sb.append(shape(2, "Title", titleY, titleH, listOf(s.title), titleSize, bold = true, bullets = false, color = "0F172A"))
-        if (s.lines.isNotEmpty()) {
+        if (s.table != null) {
+            sb.append(table(3, s.table, s.header))
+        } else if (s.lines.isNotEmpty()) {
             sb.append(shape(3, "Body", bodyY, bodyH, s.lines, bodySize, bold = false, bullets = s.bullets, color = "334155"))
         }
         sb.append("</p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sld>")
@@ -162,6 +241,72 @@ object PptxExporter {
         for (line in lines) sb.append(paragraph(line, size, bold, bullets, color))
         sb.append("</p:txBody></p:sp>")
         return sb.toString()
+    }
+
+    private fun tableStyles() = XML +
+        "<a:tblStyleLst xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" " +
+        "def=\"{5C22544A-7EE6-4342-B048-85BDC9FD1C3A}\"/>"
+
+    // A real PowerPoint table: colored header row, light banded rows, thin borders.
+    private fun table(id: Int, rows: List<List<String>>, header: Boolean): String {
+        val cols = rows.first().size
+        val totalW = 11277600
+        val top = 1500000
+        val rowH = minOf(560000, (6858000 - top - 300000) / rows.size)
+        val size = when {
+            cols <= 3 -> 1800
+            cols <= 5 -> 1500
+            else -> 1200
+        }
+        val all = rows.flatten().filter { it.isNotBlank() }
+        val rtl = all.count { isRtl(it) } * 2 > all.size
+        val colW = totalW / cols
+        val sb = StringBuilder()
+        sb.append("<p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id=\"$id\" name=\"Table\"/>")
+        sb.append("<p:cNvGraphicFramePr><a:graphicFrameLocks noGrp=\"1\"/></p:cNvGraphicFramePr><p:nvPr/></p:nvGraphicFramePr>")
+        sb.append("<p:xfrm><a:off x=\"457200\" y=\"$top\"/><a:ext cx=\"$totalW\" cy=\"${rowH * rows.size}\"/></p:xfrm>")
+        sb.append("<a:graphic><a:graphicData uri=\"http://schemas.openxmlformats.org/drawingml/2006/table\"><a:tbl>")
+        sb.append("<a:tblPr firstRow=\"${if (header) 1 else 0}\" bandRow=\"1\"/>")
+        sb.append("<a:tblGrid>")
+        for (c in 0 until cols) {
+            val w = if (c == cols - 1) totalW - colW * (cols - 1) else colW
+            sb.append("<a:gridCol w=\"$w\"/>")
+        }
+        sb.append("</a:tblGrid>")
+        rows.forEachIndexed { r, row ->
+            val isHead = header && r == 0
+            val fill = when {
+                isHead -> "0E7490"
+                (if (header) r - 1 else r) % 2 == 1 -> "F1F5F9"
+                else -> "FFFFFF"
+            }
+            val color = if (isHead) "FFFFFF" else "1E293B"
+            sb.append("<a:tr h=\"$rowH\">")
+            // Arabic tables: first column on the right (reversed here, so every viewer shows it right).
+            (if (rtl) row.asReversed() else row).forEach { cell -> sb.append(tableCell(cell, size, isHead, color, fill)) }
+            sb.append("</a:tr>")
+        }
+        sb.append("</a:tbl></a:graphicData></a:graphic></p:graphicFrame>")
+        return sb.toString()
+    }
+
+    private fun tableCell(text: String, size: Int, bold: Boolean, color: String, fill: String): String {
+        val rtl = isRtl(text)
+        val lang = if (rtl) "ar-SA" else "en-US"
+        val para = if (text.isBlank()) {
+            "<a:p><a:endParaRPr lang=\"$lang\" sz=\"$size\" dirty=\"0\"/></a:p>"
+        } else {
+            "<a:p><a:pPr algn=\"${if (rtl) "r" else "l"}\" rtl=\"${if (rtl) 1 else 0}\"/>" +
+                "<a:r><a:rPr lang=\"$lang\" sz=\"$size\" b=\"${if (bold) 1 else 0}\" dirty=\"0\">" +
+                "<a:solidFill><a:srgbClr val=\"$color\"/></a:solidFill>" +
+                "<a:latin typeface=\"Arial\"/><a:cs typeface=\"Arial\"/></a:rPr>" +
+                "<a:t>${esc(text)}</a:t></a:r></a:p>"
+        }
+        val line = { tag: String -> "<a:$tag w=\"9525\"><a:solidFill><a:srgbClr val=\"CBD5E1\"/></a:solidFill></a:$tag>" }
+        return "<a:tc><a:txBody><a:bodyPr/><a:lstStyle/>$para</a:txBody>" +
+            "<a:tcPr marL=\"91440\" marR=\"91440\" marT=\"45720\" marB=\"45720\" anchor=\"ctr\">" +
+            line("lnL") + line("lnR") + line("lnT") + line("lnB") +
+            "<a:solidFill><a:srgbClr val=\"$fill\"/></a:solidFill></a:tcPr></a:tc>"
     }
 
     private fun paragraph(text: String, size: Int, bold: Boolean, bullet: Boolean, color: String): String {

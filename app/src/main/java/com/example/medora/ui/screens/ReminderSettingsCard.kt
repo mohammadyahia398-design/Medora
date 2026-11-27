@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -27,6 +26,7 @@ import androidx.core.content.ContextCompat
 import com.example.medora.R
 import com.example.medora.reminder.ReminderScheduler
 import com.example.medora.ui.components.MedoraCard
+import com.example.medora.ui.components.MedoraSwitch
 import com.example.medora.ui.theme.Spacing
 
 // Settings card: daily review reminder on/off and hour (0-23).
@@ -72,7 +72,7 @@ fun ReminderSettingsCard() {
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(stringResource(R.string.reminder_enable), style = MaterialTheme.typography.bodyLarge)
-            Switch(
+            MedoraSwitch(
                 checked = enabled,
                 onCheckedChange = { on ->
                     if (on) {

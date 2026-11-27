@@ -35,6 +35,19 @@ android {
     buildTypes {
         debug {
             signingConfig = signingConfigs.getByName("dev")
+            // R8 on the test APK too: smaller and faster app, and release-like shrinking.
+            // Names are not obfuscated, so crash reports stay readable.
+            // Turn off with medora.r8Debug=false in gradle.properties if a build or crash needs it.
+            val r8Debug = (project.findProperty("medora.r8Debug") as String?)?.toBoolean() ?: true
+            isMinifyEnabled = r8Debug
+            isShrinkResources = r8Debug
+            if (r8Debug) {
+                proguardFiles(
+                    getDefaultProguardFile("proguard-android-optimize.txt"),
+                    "proguard-rules.pro",
+                    "proguard-debug.pro",
+                )
+            }
         }
         release {
             isMinifyEnabled = true

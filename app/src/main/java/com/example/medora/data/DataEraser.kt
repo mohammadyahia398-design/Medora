@@ -5,7 +5,7 @@ import com.example.medora.ai.AiSettings
 import com.example.medora.reminder.ReminderScheduler
 
 // "Delete all my data": removes the database (lectures, cards, reviews, quizzes),
-// the saved AI keys and the daily reminder. Language and theme choices are kept.
+// note images, the saved AI keys and the daily reminder. Language and theme choices are kept.
 object DataEraser {
     private const val DB_NAME = "medora.db"
 
@@ -19,6 +19,7 @@ object DataEraser {
             ai.openRouterModel = ""
             MedoraDatabase.closeAndReset()
             context.deleteDatabase(DB_NAME)
+            NoteImages.deleteAll(context)
             !context.getDatabasePath(DB_NAME).exists()
         } catch (e: Exception) {
             false

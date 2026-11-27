@@ -88,4 +88,6 @@
     <string name="note_bullet">نقطة</string>
     <string name="note_numbered">ترقيم</string>
     <string name="note_table">جدول</string>
+    <string name="note_image">صورة</string>
+    <string name="note_image_failed">تعذّرت إضافة الصورة</string>
 </resources>

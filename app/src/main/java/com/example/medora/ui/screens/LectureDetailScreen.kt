@@ -1,5 +1,6 @@
 package com.example.medora.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -32,11 +33,15 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -55,6 +60,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.example.medora.data.Card
+import com.example.medora.data.NoteImages
 import com.example.medora.domain.CardSuggester
 import com.example.medora.ui.components.AiBadge
 import com.example.medora.ui.components.MedoraButton
@@ -115,7 +121,7 @@ fun LectureDetailScreen(
             scope.launch {
                 val ok = withContext(Dispatchers.IO) {
                     runCatching {
-                        PptxExporter.write(context, uri, l.title, l.subject, l.slidesJson)
+                        PptxExporter.write(context, uri, l.title, l.subject, l.slidesJson, l.content)
                     }.isSuccess
                 }
                 Toast.makeText(
@@ -200,7 +206,7 @@ fun LectureDetailScreen(
                     },
                     modifier = Modifier.fillMaxWidth(),
                 )
-                if (current.slidesJson.isNotBlank()) {
+                if (current.slidesJson.isNotBlank() || PptxExporter.hasTable(current.content)) {
                     Spacer(Modifier.height(Spacing.m))
                     MedoraButton(
                         text = stringResource(R.string.export_pptx),
@@ -261,6 +267,11 @@ fun LectureDetailScreen(
             }
             itemsIndexed(lines) { index, line ->
                 val row = line.trim()
+                val imagePath = NoteImages.pathOf(line)
+                if (imagePath != null) {
+                    NoteImage(imagePath)
+                    return@itemsIndexed
+                }
                 if (row.startsWith("|")) {
                     if (isTableSeparator(row)) return@itemsIndexed
                     val next = lines.getOrNull(index + 1)?.trim().orEmpty()
@@ -472,5 +483,28 @@ private fun TableRow(cells: List<String>, header: Boolean) {
                     .padding(Spacing.s),
             )
         }
+    }
+}
+
+// One image from the note, loaded off the main thread.
+@Composable
+private fun NoteImage(path: String) {
+    val context = LocalContext.current
+    val bitmap by produceState<android.graphics.Bitmap?>(null, path) {
+        value = withContext(Dispatchers.IO) { NoteImages.load(context, path, 1200) }
+    }
+    val b = bitmap
+    if (b != null) {
+        Image(
+            bitmap = b.asImageBitmap(),
+            contentDescription = null,
+            contentScale = ContentScale.FillWidth,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = Spacing.s)
+                .clip(MaterialTheme.shapes.medium),
+        )
+    } else {
+        Spacer(Modifier.height(Spacing.s))
     }
 }

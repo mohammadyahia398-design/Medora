@@ -3,6 +3,7 @@ package com.example.medora.export
 import android.content.Context
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.RectF
 import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
 import android.net.Uri
@@ -11,6 +12,7 @@ import android.text.StaticLayout
 import android.text.TextDirectionHeuristics
 import android.text.TextPaint
 import com.example.medora.data.Card
+import com.example.medora.data.NoteImages
 
 data class PdfLabels(val summary: String, val cards: String, val disclaimer: String)
 
@@ -33,7 +35,7 @@ object PdfExporter {
     ) {
         val doc = PdfDocument()
         try {
-            val w = PageWriter(doc)
+            val w = PageWriter(doc, context)
             w.newPage()
 
             val titleP = paint(20f, bold = true)
@@ -80,7 +82,7 @@ object PdfExporter {
             typeface = if (bold) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
         }
 
-    private class PageWriter(private val doc: PdfDocument) {
+    private class PageWriter(private val doc: PdfDocument, private val context: Context) {
         private var page: PdfDocument.Page? = null
         private var y = M.toFloat()
         private var number = 0
@@ -128,9 +130,30 @@ object PdfExporter {
                     table(all.subList(start, i), body, bold)
                     gap(gapAfter + 6f)
                 } else {
-                    block(all[i], body, gapAfter)
+                    val path = NoteImages.pathOf(all[i])
+                    if (path != null) image(path, gapAfter) else block(all[i], body, gapAfter)
                     i++
                 }
+            }
+        }
+
+        // A note image, scaled to the page width (at most half a page high).
+        private fun image(path: String, gapAfter: Float) {
+            val bmp = NoteImages.load(context, path, 1200) ?: return
+            try {
+                var w = width.toFloat()
+                var h = w * bmp.height / bmp.width
+                val maxH = (H - 2 * M) / 2f
+                if (h > maxH) {
+                    w = w * maxH / h
+                    h = maxH
+                }
+                if (y + h > H - M && y > M) newPage()
+                val left = M + (width - w) / 2f
+                page!!.canvas.drawBitmap(bmp, null, RectF(left, y, left + w, y + h), Paint(Paint.FILTER_BITMAP_FLAG))
+                y += h + gapAfter
+            } finally {
+                bmp.recycle()
             }
         }
 

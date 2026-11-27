@@ -89,4 +89,6 @@
     <string name="note_bullet">Bullet</string>
     <string name="note_numbered">Numbered</string>
     <string name="note_table">Table</string>
+    <string name="note_image">Image</string>
+    <string name="note_image_failed">Could not add the image</string>
 </resources>

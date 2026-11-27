@@ -16,3 +16,6 @@
 
 # Room entities and DAOs (kept by name so the generated code and migrations always match).
 -keep class com.example.medora.data.** { *; }
+
+# Kyant backdrop and shapes: pure Compose, no reflection. Only silence optional warnings.
+-dontwarn com.kyant.**
