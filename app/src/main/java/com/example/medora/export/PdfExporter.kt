@@ -2,6 +2,7 @@ package com.example.medora.export
 
 import android.content.Context
 import android.graphics.Color
+import android.graphics.Paint
 import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
 import android.net.Uri
@@ -47,7 +48,7 @@ object PdfExporter {
 
             if (summary.isNotBlank()) {
                 w.block(labels.summary, headP, 6f)
-                summary.split("\n").forEach { w.block(it, bodyP, 4f) }
+                w.lines(summary.split("\n"), bodyP, boldP, 4f)
                 w.block(labels.disclaimer, smallP, 14f)
             }
 
@@ -55,13 +56,13 @@ object PdfExporter {
                 w.block(labels.cards, headP, 8f)
                 cards.forEach { c ->
                     w.block(c.front, boldP, 2f)
-                    c.back.split("\n").forEach { w.block(it, bodyP, 2f) }
+                    w.lines(c.back.split("\n"), bodyP, boldP, 2f)
                     w.gap(10f)
                 }
             }
 
             if (summary.isBlank() && cards.isEmpty()) {
-                content.split("\n").forEach { w.block(it, bodyP, 4f) }
+                w.lines(content.split("\n"), bodyP, boldP, 4f)
             }
 
             w.finish()
@@ -110,6 +111,61 @@ object PdfExporter {
             layout.draw(canvas)
             canvas.restore()
             y += layout.height + gapAfter
+        }
+
+        private fun cells(line: String): List<String> =
+            line.trim().trim('|').split('|').map { it.trim() }
+
+        private fun isSep(line: String): Boolean =
+            cells(line).all { c -> c.isNotEmpty() && c.all { it == '-' || it == ':' } }
+
+        fun lines(all: List<String>, body: TextPaint, bold: TextPaint, gapAfter: Float) {
+            var i = 0
+            while (i < all.size) {
+                if (all[i].trim().startsWith("|")) {
+                    val start = i
+                    while (i < all.size && all[i].trim().startsWith("|")) i++
+                    table(all.subList(start, i), body, bold)
+                    gap(gapAfter + 6f)
+                } else {
+                    block(all[i], body, gapAfter)
+                    i++
+                }
+            }
+        }
+
+        private fun table(raw: List<String>, body: TextPaint, bold: TextPaint) {
+            val rows = raw.filter { !isSep(it) }.map { cells(it) }
+            if (rows.isEmpty()) return
+            val hasHeader = raw.size > 1 && isSep(raw[1])
+            val cols = rows.maxOf { it.size }.coerceAtLeast(1)
+            val colW = width / cols
+            val pad = 4
+            val border = Paint().apply { style = Paint.Style.STROKE; color = Color.GRAY; strokeWidth = 0.8f }
+            val fill = Paint().apply { style = Paint.Style.FILL; color = Color.rgb(235, 235, 235) }
+            rows.forEachIndexed { r, row ->
+                val paint = if (hasHeader && r == 0) bold else body
+                val layouts = (0 until cols).map { c ->
+                    val t = row.getOrElse(c) { "" }.ifEmpty { " " }
+                    StaticLayout.Builder.obtain(t, 0, t.length, paint, colW - 2 * pad)
+                        .setAlignment(Layout.Alignment.ALIGN_NORMAL)
+                        .setTextDirection(TextDirectionHeuristics.FIRSTSTRONG_LTR)
+                        .build()
+                }
+                val h = layouts.maxOf { it.height } + 2f * pad
+                if (y + h > H - M && y > M) newPage()
+                val canvas = page!!.canvas
+                layouts.forEachIndexed { c, l ->
+                    val x = M + c * colW.toFloat()
+                    if (hasHeader && r == 0) canvas.drawRect(x, y, x + colW, y + h, fill)
+                    canvas.drawRect(x, y, x + colW, y + h, border)
+                    canvas.save()
+                    canvas.translate(x + pad, y + pad)
+                    l.draw(canvas)
+                    canvas.restore()
+                }
+                y += h
+            }
         }
 
         fun finish() {
