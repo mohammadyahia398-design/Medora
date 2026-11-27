@@ -32,6 +32,7 @@ import com.example.medora.R
 import com.example.medora.ui.components.MedoraButton
 import com.example.medora.ui.components.MedoraCard
 import java.util.Locale
+import com.example.medora.ui.theme.Spacing
 
 private fun formatTime(totalSeconds: Int): String =
     String.format(Locale.US, "%02d:%02d", totalSeconds / 60, totalSeconds % 60)
@@ -54,8 +55,8 @@ private fun ExamSetup(vm: ExamViewModel) {
         return
     }
     Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(Spacing.l),
+        verticalArrangement = Arrangement.spacedBy(Spacing.m),
     ) {
         MedoraCard(modifier = Modifier.fillMaxWidth(), spaced = false) {
             Text(
@@ -63,7 +64,7 @@ private fun ExamSetup(vm: ExamViewModel) {
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
             )
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(Spacing.s))
             Text(
                 text = stringResource(R.string.exam_setup_hint),
                 style = MaterialTheme.typography.bodyMedium,
@@ -73,7 +74,7 @@ private fun ExamSetup(vm: ExamViewModel) {
             text = stringResource(R.string.exam_questions_count),
             style = MaterialTheme.typography.titleMedium,
         )
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
             options.forEach { n ->
                 if (n == vm.chosenCount) {
                     Button(onClick = { vm.chooseCount(n) }) { Text(n.toString()) }
@@ -105,7 +106,7 @@ private fun ExamRunning(vm: ExamViewModel) {
     var confirmFinish by remember { mutableStateOf(false) }
 
     Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(Spacing.l),
     ) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(
@@ -127,7 +128,7 @@ private fun ExamRunning(vm: ExamViewModel) {
             text = stringResource(R.string.exam_answered, questions.size - vm.unanswered, questions.size),
             style = MaterialTheme.typography.bodySmall,
         )
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(Spacing.m))
         MedoraCard(modifier = Modifier.fillMaxWidth()) {
             Text(
                 text = q.prompt,
@@ -135,7 +136,7 @@ private fun ExamRunning(vm: ExamViewModel) {
                 fontWeight = FontWeight.Bold,
             )
         }
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(Spacing.l))
         q.options.forEachIndexed { i, option ->
             val colors = if (selected == i) {
                 ButtonDefaults.buttonColors()
@@ -152,10 +153,10 @@ private fun ExamRunning(vm: ExamViewModel) {
             ) {
                 Text(option)
             }
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(Spacing.s))
         }
-        Spacer(Modifier.height(8.dp))
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Spacer(Modifier.height(Spacing.s))
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
             OutlinedButton(
                 onClick = { vm.goTo(index - 1) },
                 enabled = index > 0,
@@ -171,7 +172,7 @@ private fun ExamRunning(vm: ExamViewModel) {
                 Text(stringResource(R.string.next))
             }
         }
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(Spacing.m))
         MedoraButton(
             text = stringResource(R.string.exam_finish),
             onClick = { confirmFinish = true },
@@ -210,8 +211,8 @@ private fun ExamResult(vm: ExamViewModel, onOpenLecture: (Long) -> Unit) {
     val wrong = questions.indices.filter { answers.getOrNull(it) != questions[it].correctIndex }
 
     Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(Spacing.l),
+        verticalArrangement = Arrangement.spacedBy(Spacing.m),
     ) {
         MedoraCard(modifier = Modifier.fillMaxWidth(), spaced = false) {
             Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -226,7 +227,7 @@ private fun ExamResult(vm: ExamViewModel, onOpenLecture: (Long) -> Unit) {
                         style = MaterialTheme.typography.titleLarge,
                     )
                 }
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(Spacing.s))
                 Text(
                     text = stringResource(R.string.exam_time_used, formatTime(vm.usedSeconds)),
                     style = MaterialTheme.typography.bodyMedium,
@@ -260,7 +261,7 @@ private fun ExamResult(vm: ExamViewModel, onOpenLecture: (Long) -> Unit) {
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                     )
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(Spacing.s))
                     Text(
                         text = stringResource(R.string.exam_your_answer, mine),
                         style = MaterialTheme.typography.bodyMedium,

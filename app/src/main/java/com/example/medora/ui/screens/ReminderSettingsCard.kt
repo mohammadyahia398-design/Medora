@@ -27,6 +27,7 @@ import androidx.core.content.ContextCompat
 import com.example.medora.R
 import com.example.medora.reminder.ReminderScheduler
 import com.example.medora.ui.components.MedoraCard
+import com.example.medora.ui.theme.Spacing
 
 // Settings card: daily review reminder on/off and hour (0-23).
 @Composable
@@ -89,7 +90,7 @@ fun ReminderSettingsCard() {
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(stringResource(R.string.reminder_time), style = MaterialTheme.typography.bodyLarge)
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                 TextButton(onClick = {
                     hour = (hour + 23) % 24
                     ReminderScheduler.changeHour(context, hour)

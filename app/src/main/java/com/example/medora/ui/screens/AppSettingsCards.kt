@@ -35,6 +35,7 @@ import com.example.medora.ui.components.MedoraCard
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.example.medora.ui.theme.Spacing
 
 private fun Context.findActivity(): Activity? {
     var c: Context? = this
@@ -47,19 +48,19 @@ private fun Context.findActivity(): Activity? {
 
 @Composable
 private fun OptionRow(labels: List<String>, selectedIndex: Int, onSelect: (Int) -> Unit) {
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
         labels.forEachIndexed { i, label ->
             if (i == selectedIndex) {
                 Button(
                     onClick = { onSelect(i) },
                     modifier = Modifier.weight(1f),
-                    contentPadding = PaddingValues(horizontal = 4.dp),
+                    contentPadding = PaddingValues(horizontal = Spacing.xs),
                 ) { Text(label, maxLines = 1) }
             } else {
                 OutlinedButton(
                     onClick = { onSelect(i) },
                     modifier = Modifier.weight(1f),
-                    contentPadding = PaddingValues(horizontal = 4.dp),
+                    contentPadding = PaddingValues(horizontal = Spacing.xs),
                 ) { Text(label, maxLines = 1) }
             }
         }
@@ -88,9 +89,9 @@ fun AppearanceSettingsCard() {
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
         )
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(Spacing.m))
         Text(stringResource(R.string.language_label), style = MaterialTheme.typography.titleSmall)
-        Spacer(Modifier.height(4.dp))
+        Spacer(Modifier.height(Spacing.xs))
         OptionRow(langLabels, langCodes.indexOf(lang).coerceAtLeast(0)) { i ->
             val code = langCodes[i]
             if (code != lang) {
@@ -99,9 +100,9 @@ fun AppearanceSettingsCard() {
                 context.findActivity()?.recreate()
             }
         }
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(Spacing.m))
         Text(stringResource(R.string.theme_label), style = MaterialTheme.typography.titleSmall)
-        Spacer(Modifier.height(4.dp))
+        Spacer(Modifier.height(Spacing.xs))
         OptionRow(themeLabels, themeCodes.indexOf(theme).coerceAtLeast(0)) { i ->
             AppPrefs.setTheme(context, themeCodes[i])
         }
@@ -116,14 +117,13 @@ fun DeleteDataCard() {
     var confirm by remember { mutableStateOf(false) }
     var failed by remember { mutableStateOf(false) }
 
-    MedoraCard(modifier = Modifier.fillMaxWidth(), spaced = false) {
+    MedoraCard(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = stringResource(R.string.data_title),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
         )
         Text(stringResource(R.string.data_delete_hint), style = MaterialTheme.typography.bodySmall)
-        Spacer(Modifier.height(8.dp))
         MedoraButton(
             text = stringResource(R.string.data_delete),
             onClick = { confirm = true },

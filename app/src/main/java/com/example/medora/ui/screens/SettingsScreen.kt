@@ -35,6 +35,7 @@ import com.example.medora.R
 import com.example.medora.ai.AiSettings
 import com.example.medora.ui.components.MedoraButton
 import com.example.medora.ui.components.MedoraCard
+import com.example.medora.ui.theme.Spacing
 
 // AI keys: one Gemini key (main) and one OpenRouter key (backup). Both optional.
 @Composable
@@ -85,8 +86,8 @@ fun SettingsScreen() {
     }
 
     Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(Spacing.l),
+        verticalArrangement = Arrangement.spacedBy(Spacing.m),
     ) {
         AppearanceSettingsCard()
 
