@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -25,6 +24,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.medora.R
 import com.example.medora.ui.components.MedoraButton
 import com.example.medora.ui.components.MedoraCard
+import com.example.medora.ui.components.MedoraOutlinedButton
+import com.example.medora.ui.theme.Spacing
 
 private const val MIN_CARDS_FOR_QUIZ = 4
 
@@ -42,8 +43,8 @@ fun StudyScreen(
     val aiQuestions by vm.aiQuestionCount.collectAsState()
 
     Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
-        verticalArrangement = Arrangement.Center,
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(Spacing.l),
+        verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         MedoraCard(modifier = Modifier.fillMaxWidth()) {
@@ -98,16 +99,23 @@ fun StudyScreen(
                     if (cards.isNotEmpty()) {
                         Spacer(Modifier.height(12.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            OutlinedButton(onClick = { onPractice(PRACTICE_TF) }, modifier = Modifier.weight(1f)) {
-                                Text(stringResource(R.string.practice_tf_title))
-                            }
-                            OutlinedButton(onClick = { onPractice(PRACTICE_SHORT) }, modifier = Modifier.weight(1f)) {
-                                Text(stringResource(R.string.practice_short_title))
-                            }
+                            MedoraOutlinedButton(
+                                text = stringResource(R.string.practice_tf_title),
+                                onClick = { onPractice(PRACTICE_TF) },
+                                modifier = Modifier.weight(1f),
+                            )
+                            MedoraOutlinedButton(
+                                text = stringResource(R.string.practice_short_title),
+                                onClick = { onPractice(PRACTICE_SHORT) },
+                                modifier = Modifier.weight(1f),
+                            )
                         }
-                        OutlinedButton(onClick = { onPractice(PRACTICE_WEAK) }, modifier = Modifier.fillMaxWidth()) {
-                            Text(stringResource(R.string.practice_weak_title))
-                        }
+                        Spacer(Modifier.height(8.dp))
+                        MedoraOutlinedButton(
+                            text = stringResource(R.string.practice_weak_title),
+                            onClick = { onPractice(PRACTICE_WEAK) },
+                            modifier = Modifier.fillMaxWidth(),
+                        )
                     }
                 }
             }

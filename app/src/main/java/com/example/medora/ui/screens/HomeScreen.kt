@@ -1,6 +1,8 @@
 package com.example.medora.ui.screens
 
 import android.app.Application
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -15,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,6 +37,7 @@ import com.example.medora.data.CardRepository
 import com.example.medora.data.MedoraDatabase
 import com.example.medora.ui.components.MedoraButton
 import com.example.medora.ui.components.MedoraCard
+import com.example.medora.ui.theme.Spacing
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -101,10 +105,13 @@ fun HomeScreen(
 ) {
     val s by vm.state.collectAsState()
     Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(Spacing.l),
+        verticalArrangement = Arrangement.spacedBy(Spacing.m),
     ) {
-        MedoraCard(modifier = Modifier.fillMaxWidth()) {
+        MedoraCard(
+            modifier = Modifier.fillMaxWidth(),
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+        ) {
             Text(
                 text = stringResource(R.string.home_today),
                 style = MaterialTheme.typography.titleMedium,
@@ -113,7 +120,7 @@ fun HomeScreen(
             Spacer(Modifier.height(8.dp))
             Text(
                 text = stringResource(R.string.due_now, s.dueNow),
-                style = MaterialTheme.typography.headlineSmall,
+                style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
             )
             Text(
@@ -178,7 +185,8 @@ fun HomeScreen(
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }
-            s.recent.forEach { l ->
+            s.recent.forEachIndexed { index, l ->
+                if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -211,17 +219,22 @@ fun HomeScreen(
 
 @Composable
 private fun ProgressBar(fraction: Float) {
-    val shape = RoundedCornerShape(4.dp)
+    val animated by animateFloatAsState(
+        targetValue = fraction.coerceIn(0f, 1f),
+        animationSpec = tween(durationMillis = 600),
+        label = "progress",
+    )
+    val shape = RoundedCornerShape(5.dp)
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(8.dp)
+            .height(10.dp)
             .clip(shape)
             .background(MaterialTheme.colorScheme.surfaceVariant),
     ) {
         Box(
             modifier = Modifier
-                .fillMaxWidth(fraction.coerceIn(0f, 1f))
+                .fillMaxWidth(animated)
                 .fillMaxHeight()
                 .background(MaterialTheme.colorScheme.primary),
         )
