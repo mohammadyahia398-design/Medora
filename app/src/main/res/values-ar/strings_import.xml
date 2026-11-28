@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="import_file">استيراد ملف</string>
-    <string name="import_failed_file">تعذّر استيراد الملف. استخدم ملفاً نصياً (.txt) بترميز UTF-8 أصغر من 5 ميجا، أو PDF فيه نص قابل للتحديد (غير ممسوح ضوئياً) أصغر من 20 ميجا.</string>
+    <string name="import_failed_file">تعذّر استيراد الملف. استخدم ملفاً نصياً (.txt) بترميز UTF-8 أصغر من 5 ميجا، أو PDF أصغر من 20 ميجا، أو صورة أصغر من 15 ميجا. الصفحات الممسوحة والصور تُقرأ على الهاتف (النص الإنجليزي فقط).</string>
+    <string name="import_reading">جارٍ قراءة الملف…</string>
+    <string name="ocr_progress">جارٍ قراءة الصفحات الممسوحة: %1$d من %2$d</string>
 </resources>

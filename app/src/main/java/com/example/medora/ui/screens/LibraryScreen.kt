@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -83,6 +84,8 @@ private fun groupLectures(lectures: List<Lecture>, query: String, noSubject: Str
 fun LibraryScreen(onOpenLecture: (Long) -> Unit, vm: LibraryViewModel = viewModel()) {
     val lectures by vm.lectures.collectAsState()
     val importFailed by vm.importFailed.collectAsState()
+    val importing by vm.importing.collectAsState()
+    val ocrProgress by vm.ocrProgress.collectAsState()
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) vm.importText(uri)
     }
@@ -171,7 +174,7 @@ fun LibraryScreen(onOpenLecture: (Long) -> Unit, vm: LibraryViewModel = viewMode
             GlassBox(
                 backdrop = glass,
                 shape = pill,
-                onClick = { picker.launch(arrayOf("text/*", "application/pdf")) },
+                onClick = { picker.launch(arrayOf("text/*", "application/pdf", "image/*")) },
                 modifier = Modifier.height(56.dp),
             ) {
                 Text(
@@ -195,6 +198,24 @@ fun LibraryScreen(onOpenLecture: (Long) -> Unit, vm: LibraryViewModel = viewMode
                 )
             }
         }
+    }
+
+    if (importing) {
+        AlertDialog(
+            onDismissRequest = {},
+            confirmButton = {},
+            text = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    CircularProgressIndicator(modifier = Modifier.size(28.dp))
+                    Spacer(modifier = Modifier.size(Spacing.l))
+                    val (done, total) = ocrProgress
+                    Text(
+                        if (total > 0) stringResource(R.string.ocr_progress, done, total)
+                        else stringResource(R.string.import_reading),
+                    )
+                }
+            },
+        )
     }
 
     if (importFailed) {
