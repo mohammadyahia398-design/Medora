@@ -15,9 +15,20 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.AlertDialog
@@ -42,10 +53,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.medora.R
 import com.example.medora.data.Lecture
-import com.example.medora.ui.components.GlassBox
 import com.example.medora.ui.components.MedoraCard
-import com.example.medora.ui.components.glassSource
-import com.example.medora.ui.components.rememberGlassBackdrop
+import com.example.medora.ui.components.MedoraArrowButton
+import com.example.medora.ui.components.MedoraScreenTitle
+import com.example.medora.ui.components.MedoraTextTabs
+import com.example.medora.ui.icons.MedoraIcons
+import com.example.medora.ui.icons.themed
+import com.example.medora.ui.theme.MedoraPastel
 import com.example.medora.ui.theme.Spacing
 import java.text.DateFormat
 import java.util.Date
@@ -106,14 +120,14 @@ fun LibraryScreen(
     var query by remember { mutableStateOf("") }
     val noSubject = stringResource(R.string.library_no_subject)
     var tag by remember { mutableStateOf<String?>(null) }
+    var tab by remember { mutableStateOf(0) }
+    var openGroup by remember { mutableStateOf<String?>(null) }
+    var menuOpen by remember { mutableStateOf(false) }
     val allTags = remember(lectures) { lectures.flatMap { it.tagList() }.distinct().sortedBy { it.lowercase() } }
     val groups = remember(lectures, query, noSubject, tag) { groupLectures(lectures, query.trim(), noSubject, tag) }
-
-    val glass = rememberGlassBackdrop()
-    val pill = RoundedCornerShape(28.dp)
+    val shown = remember(groups, openGroup) { if (openGroup == null) groups else groups.filter { it.name == openGroup } }
 
     Box(modifier = Modifier.fillMaxSize()) {
-      Box(modifier = Modifier.fillMaxSize().glassSource(glass)) {
         if (lectures.isEmpty()) {
             Text(
                 text = stringResource(R.string.library_empty),
@@ -123,9 +137,38 @@ fun LibraryScreen(
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(start = Spacing.l, end = Spacing.l, top = 84.dp, bottom = 96.dp),
+                contentPadding = PaddingValues(start = Spacing.l, end = Spacing.l, top = Spacing.xs, bottom = 96.dp),
                 verticalArrangement = Arrangement.spacedBy(Spacing.m),
             ) {
+                item(key = "title") { MedoraScreenTitle(stringResource(R.string.tab_library)) }
+                item(key = "tabs") {
+                    MedoraTextTabs(
+                        titles = listOf(
+                            stringResource(R.string.library_tab_subjects),
+                            stringResource(R.string.library_tab_lectures),
+                        ),
+                        selected = tab,
+                        onSelect = {
+                            tab = it
+                            openGroup = null
+                        },
+                    )
+                }
+                item(key = "search") {
+                    OutlinedTextField(
+                        value = query,
+                        onValueChange = { query = it },
+                        placeholder = { Text(stringResource(R.string.library_search)) },
+                        singleLine = true,
+                        shape = MaterialTheme.shapes.small,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = MaterialTheme.colorScheme.surface,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                        ),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
                 if (allTags.isNotEmpty()) {
                     item(key = "tags") {
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
@@ -146,96 +189,91 @@ fun LibraryScreen(
                             style = MaterialTheme.typography.bodyMedium,
                         )
                     }
-                }
-                groups.forEach { group ->
-                    item(key = "h_" + group.name) {
-                        Text(
-                            text = stringResource(R.string.library_group, group.name, group.items.size),
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.padding(top = Spacing.xs),
+                } else if (tab == 0) {
+                    itemsIndexed(groups, key = { _, g -> "s_" + g.name }) { index, group ->
+                        SubjectCard(
+                            group = group,
+                            toneIndex = index,
+                            onClick = {
+                                openGroup = group.name
+                                tab = 1
+                            },
                         )
                     }
-                    items(group.items, key = { it.lecture.id }) { hit ->
-                        val lecture = hit.lecture
-                        LectureItem(
-                            lecture,
-                            snippet = hit.snippet,
-                            onOpen = { onOpenLecture(lecture.id) },
-                            onDelete = { toDelete = lecture },
-                        )
+                } else {
+                    if (openGroup != null) {
+                        item(key = "open_group") {
+                            FilterChip(
+                                selected = true,
+                                onClick = { openGroup = null },
+                                label = { Text(openGroup.orEmpty() + "  ×") },
+                            )
+                        }
+                    }
+                    shown.forEach { group ->
+                        item(key = "h_" + group.name) {
+                            Text(
+                                text = stringResource(R.string.library_group, group.name, group.items.size),
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onBackground,
+                                modifier = Modifier.padding(top = Spacing.xs),
+                            )
+                        }
+                        items(group.items, key = { it.lecture.id }) { hit ->
+                            val lecture = hit.lecture
+                            LectureItem(
+                                lecture,
+                                snippet = hit.snippet,
+                                onOpen = { onOpenLecture(lecture.id) },
+                                onDelete = { toDelete = lecture },
+                            )
+                        }
                     }
                 }
             }
         }
 
-      }
-
-        // Glass items float over the list (outside glassSource, so the list shows through).
-        if (lectures.isNotEmpty()) {
-            GlassBox(
-                backdrop = glass,
-                shape = pill,
+        // One round + button. It opens a short menu: add, import, study packs.
+        Box(modifier = Modifier.align(Alignment.BottomEnd).padding(Spacing.l)) {
+            val addLabel = stringResource(R.string.add_lecture)
+            Box(
                 modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .fillMaxWidth()
-                    .padding(start = Spacing.l, end = Spacing.l, top = Spacing.s),
+                    .size(56.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary)
+                    .clickable(role = Role.Button) { menuOpen = true }
+                    .semantics { contentDescription = addLabel },
+                contentAlignment = Alignment.Center,
             ) {
-                OutlinedTextField(
-                    value = query,
-                    onValueChange = { query = it },
-                    placeholder = { Text(stringResource(R.string.library_search)) },
-                    singleLine = true,
-                    shape = pill,
-                    modifier = Modifier.fillMaxWidth(),
+                Image(
+                    imageVector = MedoraIcons.Plus.themed(),
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onPrimary),
                 )
             }
-        }
-
-        Column(
-            modifier = Modifier.align(Alignment.BottomEnd).padding(Spacing.xl),
-            horizontalAlignment = Alignment.End,
-            verticalArrangement = Arrangement.spacedBy(Spacing.m),
-        ) {
-            GlassBox(
-                backdrop = glass,
-                shape = pill,
-                onClick = onOpenPacks,
-                modifier = Modifier.height(56.dp),
-            ) {
-                Text(
-                    text = stringResource(R.string.packs_title),
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(horizontal = 20.dp),
+            DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.add_lecture)) },
+                    onClick = {
+                        menuOpen = false
+                        showAdd = true
+                    },
                 )
-            }
-            GlassBox(
-                backdrop = glass,
-                shape = pill,
-                onClick = { picker.launch(arrayOf("text/*", "application/pdf", "image/*")) },
-                modifier = Modifier.height(56.dp),
-            ) {
-                Text(
-                    text = stringResource(R.string.import_file),
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(horizontal = 20.dp),
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.import_file)) },
+                    onClick = {
+                        menuOpen = false
+                        picker.launch(arrayOf("text/*", "application/pdf", "image/*"))
+                    },
                 )
-            }
-            GlassBox(
-                backdrop = glass,
-                shape = CircleShape,
-                onClick = { showAdd = true },
-                modifier = Modifier.size(56.dp),
-            ) {
-                Text(
-                    text = "+",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onBackground,
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.packs_title)) },
+                    onClick = {
+                        menuOpen = false
+                        onOpenPacks()
+                    },
                 )
             }
         }
@@ -294,6 +332,58 @@ fun LibraryScreen(
                 TextButton(onClick = { toDelete = null }) { Text(stringResource(R.string.cancel)) }
             },
         )
+    }
+}
+
+// One pastel card per subject, like the reference: icon in a white circle, a count pill,
+// the name, and an arrow. The whole card opens the subject.
+@Composable
+private fun SubjectCard(group: LectureGroup, toneIndex: Int, onClick: () -> Unit) {
+    val tone = MedoraPastel.tone(toneIndex)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(MaterialTheme.shapes.medium)
+            .background(tone.container)
+            .clickable(onClick = onClick)
+            .padding(Spacing.card),
+    ) {
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surface),
+                contentAlignment = Alignment.Center,
+            ) {
+                Image(imageVector = MedoraIcons.Library.themed(), contentDescription = null, modifier = Modifier.size(22.dp))
+            }
+            Spacer(Modifier.weight(1f))
+            Text(
+                text = stringResource(R.string.library_lecture_count, group.items.size),
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surface)
+                    .padding(horizontal = Spacing.m, vertical = Spacing.xs + 2.dp),
+            )
+        }
+        Spacer(Modifier.height(Spacing.l))
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
+            Text(
+                text = group.name,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = tone.content,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
+            )
+            Spacer(Modifier.width(Spacing.m))
+            MedoraArrowButton()
+        }
     }
 }
 

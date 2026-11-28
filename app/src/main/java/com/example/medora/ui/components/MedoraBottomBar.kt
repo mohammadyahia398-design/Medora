@@ -23,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
@@ -30,7 +31,6 @@ import com.example.medora.ui.icons.themed
 import com.example.medora.ui.theme.Dimens
 
 // Flat floating bottom bar. White capsule, thin border, no shadow, no glass.
-// The chosen tab gets a soft pill behind its icon.
 @Composable
 fun MedoraBottomBar(
     modifier: Modifier = Modifier,
@@ -49,6 +49,8 @@ fun MedoraBottomBar(
     )
 }
 
+// Icon only. The chosen tab gets a dark capsule (inverse colors) with a white icon.
+// The label is kept as the content description for screen readers.
 @Composable
 fun RowScope.MedoraBottomItem(
     icon: ImageVector,
@@ -57,14 +59,13 @@ fun RowScope.MedoraBottomItem(
     onClick: () -> Unit,
 ) {
     val interaction = remember { MutableInteractionSource() }
-    val alpha = if (selected) 1f else 0.7f
-    Column(
+    Box(
         modifier = Modifier
             .weight(1f)
             .fillMaxHeight()
             .clip(CircleShape)
             .background(
-                if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
+                if (selected) MaterialTheme.colorScheme.inverseSurface
                 else androidx.compose.ui.graphics.Color.Transparent,
             )
             .clickable(
@@ -73,20 +74,14 @@ fun RowScope.MedoraBottomItem(
                 role = Role.Tab,
                 onClick = onClick,
             ),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+        contentAlignment = Alignment.Center,
     ) {
         Image(
             imageVector = icon.themed(),
-            contentDescription = null,
+            contentDescription = label,
             modifier = Modifier.size(Dimens.iconL),
-            alpha = alpha,
-        )
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = alpha),
-            maxLines = 1,
+            alpha = if (selected) 1f else 0.7f,
+            colorFilter = if (selected) ColorFilter.tint(MaterialTheme.colorScheme.inverseOnSurface) else null,
         )
     }
 }

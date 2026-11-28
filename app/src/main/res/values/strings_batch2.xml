@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="library_tab_subjects">Subjects</string>
+    <string name="library_tab_lectures">Lectures</string>
+    <string name="library_lecture_count">%1$d lectures</string>
+    <string name="home_title">Your progress today</string>
+</resources>

@@ -123,7 +123,10 @@ fun MedoraApp() {
     val isPractice = route == ROUTE_PRACTICE
     val isMistakes = route == ROUTE_MISTAKES
     val isPacks = route == ROUTE_PACKS || route == ROUTE_PACK
-    val isFlow = route == ROUTE_SPLASH || route == ROUTE_ONBOARDING || route == ROUTE_GOAL
+    // Splash, onboarding, goal, and the dark study screens (cards, quiz) draw their own top area.
+    val isFlow = route == ROUTE_SPLASH || route == ROUTE_ONBOARDING || route == ROUTE_GOAL || isReview || isQuiz
+    // The Focus screen (Study tab) has its own capsules on top, so no top bar there.
+    val noTopBar = isFlow || tab == Tab.Study
     val isSub = isSettings || isLecture || isReview || isQuiz || isNote || isExam || isSources || isPractice || isMistakes || isPacks
 
     val titleRes = when {
@@ -155,7 +158,7 @@ fun MedoraApp() {
                     startDestination = ROUTE_SPLASH,
                     modifier = Modifier
                         .padding(padding)
-                        .padding(top = if (isFlow) 0.dp else Dimens.topBarSpace, bottom = if (tab != null) Dimens.bottomBarSpace else 0.dp),
+                        .padding(top = if (noTopBar) 0.dp else Dimens.topBarSpace, bottom = if (tab != null) Dimens.bottomBarSpace else 0.dp),
                 ) {
                     composable(ROUTE_SPLASH) {
                         val ctx = LocalContext.current
@@ -201,7 +204,10 @@ fun MedoraApp() {
                     }
                     composable(ROUTE_SETTINGS) { SettingsScreen() }
                     composable(ROUTE_REVIEW) {
-                        ReviewScreen(onOpenLecture = { navController.navigate("lecture/$it") })
+                        ReviewScreen(
+                            onOpenLecture = { navController.navigate("lecture/$it") },
+                            onBack = { navController.popBackStack() },
+                        )
                     }
                     composable(ROUTE_EXAM) {
                         ExamScreen(onOpenLecture = { navController.navigate("lecture/$it") })
@@ -233,7 +239,10 @@ fun MedoraApp() {
                         )
                     }
                     composable(ROUTE_QUIZ) {
-                        QuizScreen(onOpenLecture = { navController.navigate("lecture/$it") })
+                        QuizScreen(
+                            onOpenLecture = { navController.navigate("lecture/$it") },
+                            onBack = { navController.popBackStack() },
+                        )
                     }
                     composable(
                         ROUTE_LECTURE,
@@ -254,8 +263,8 @@ fun MedoraApp() {
                 }
             }
         }
-        if (!isFlow) MedoraTopBar(
-            title = stringResource(titleRes),
+        if (!noTopBar) MedoraTopBar(
+            title = if (tab == Tab.Home || tab == Tab.Library || tab == Tab.Progress) "" else stringResource(titleRes),
             modifier = Modifier.align(Alignment.TopCenter),
             startIcon = if (isSub) MedoraIcons.Back else null,
             startDescription = stringResource(R.string.back),

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="review_reviewed">تمت مراجعة %1$d بطاقة</string>
+    <string name="review_total">%1$d بطاقة</string>
+    <string name="review_swipe_hint">اسحب لليمين إن كنت واثقاً، ولليسار إن احتجت مزيداً من التدريب</string>
+</resources>

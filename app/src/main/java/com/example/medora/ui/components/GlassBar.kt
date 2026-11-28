@@ -60,9 +60,12 @@ fun GlassBox(
     modifier: Modifier = Modifier,
     shape: Shape = RoundedCornerShape(28.dp),
     onClick: (() -> Unit)? = null,
+    // Optional own frost color (and the solid color for phones without blur).
+    tint: Color? = null,
+    fallback: Color? = null,
     content: @Composable BoxScope.() -> Unit,
 ) {
-    val base = modifier.then(glassLook(backdrop, shape)).clip(shape)
+    val base = modifier.then(glassLook(backdrop, shape, tint, fallback)).clip(shape)
     Box(
         modifier = if (onClick != null) base.clickable(onClick = onClick) else base,
         contentAlignment = Alignment.Center,
@@ -71,7 +74,7 @@ fun GlassBox(
 }
 
 @Composable
-private fun glassLook(backdrop: LayerBackdrop, shape: Shape): Modifier {
+private fun glassLook(backdrop: LayerBackdrop, shape: Shape, tint: Color? = null, fallback: Color? = null): Modifier {
     val dark = LocalMedoraDark.current
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         Modifier.drawBackdrop(
@@ -83,12 +86,12 @@ private fun glassLook(backdrop: LayerBackdrop, shape: Shape): Modifier {
                 lens(12.dp.toPx(), 24.dp.toPx())
             },
             onDrawSurface = {
-                drawRect(if (dark) MedoraColors.GlassDark else MedoraColors.GlassLight)
+                drawRect(tint ?: if (dark) MedoraColors.GlassDark else MedoraColors.GlassLight)
             },
         )
     } else {
         Modifier
-            .background(if (dark) MedoraColors.GlassSolidDark else MedoraColors.GlassSolidLight, shape)
+            .background(fallback ?: if (dark) MedoraColors.GlassSolidDark else MedoraColors.GlassSolidLight, shape)
             .border(1.dp, if (dark) MedoraColors.GlassBorderDark else MedoraColors.GlassBorderLight, shape)
     }
 }

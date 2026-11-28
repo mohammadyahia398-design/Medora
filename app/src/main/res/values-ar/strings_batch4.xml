@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="b4_focus_title">تركيز</string>
+    <string name="b4_break_title">استراحة</string>
+    <string name="b4_minutes">دقيقة</string>
+    <string name="b4_start">ابدأ</string>
+    <string name="b4_pause">إيقاف مؤقت</string>
+    <string name="b4_resume">متابعة</string>
+    <string name="b4_reset">إعادة</string>
+    <string name="b4_skip">تخطٍّ</string>
+    <string name="b4_tools">أدوات الدراسة</string>
+    <string name="b4_sessions">جلسات منجزة: %1$d</string>
+    <string name="b4_dial_desc">مدة التركيز: %1$d دقيقة</string>
+    <string name="b4_dial_hint">اسحب الحلقة لاختيار المدة</string>
+    <string name="b4_break_hint">خذ استراحة قصيرة</string>
+    <string name="b4_an_title">التحليلات</string>
+    <string name="b4_an_total">إجمالي المراجعات</string>
+    <string name="b4_an_best">أطول سلسلة</string>
+    <string name="b4_an_goal_progress">%1$d من %2$d بطاقة</string>
+    <string name="b4_an_goal_left">متبقٍّ %1$d</string>
+    <string name="b4_an_goal_done">تم</string>
+    <string name="b4_an_week_title">البطاقات المراجَعة</string>
+    <string name="b4_an_heat_title">خريطة الدراسة</string>
+    <string name="b4_an_heat_sub">هذا الشهر</string>
+</resources>

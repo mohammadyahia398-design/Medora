@@ -7,6 +7,8 @@ import androidx.compose.ui.unit.sp
 
 // Text styles. Roomy line height so Arabic and English both breathe.
 val MedoraTypography = Typography(
+    // Big timer number (Focus screen).
+    displayMedium = TextStyle(fontWeight = FontWeight.Normal, fontSize = 56.sp, lineHeight = 64.sp),
     headlineMedium = TextStyle(fontWeight = FontWeight.Bold, fontSize = 28.sp, lineHeight = 36.sp),
     headlineSmall = TextStyle(fontWeight = FontWeight.Bold, fontSize = 24.sp, lineHeight = 32.sp),
     titleLarge = TextStyle(fontWeight = FontWeight.Bold, fontSize = 22.sp, lineHeight = 30.sp),

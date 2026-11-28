@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="b4_focus_title">Focus</string>
+    <string name="b4_break_title">Break</string>
+    <string name="b4_minutes">min</string>
+    <string name="b4_start">Start</string>
+    <string name="b4_pause">Pause</string>
+    <string name="b4_resume">Resume</string>
+    <string name="b4_reset">Reset</string>
+    <string name="b4_skip">Skip</string>
+    <string name="b4_tools">Study tools</string>
+    <string name="b4_sessions">Sessions done: %1$d</string>
+    <string name="b4_dial_desc">Focus time: %1$d minutes</string>
+    <string name="b4_dial_hint">Drag the ring to set the time</string>
+    <string name="b4_break_hint">Take a short break</string>
+    <string name="b4_an_title">Analytics</string>
+    <string name="b4_an_total">Total reviews</string>
+    <string name="b4_an_best">Best streak</string>
+    <string name="b4_an_goal_progress">%1$d of %2$d cards</string>
+    <string name="b4_an_goal_left">%1$d left</string>
+    <string name="b4_an_goal_done">Done</string>
+    <string name="b4_an_week_title">Cards reviewed</string>
+    <string name="b4_an_heat_title">Study heatmap</string>
+    <string name="b4_an_heat_sub">This month</string>
+</resources>

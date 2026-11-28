@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="review_reviewed">%1$d cards reviewed</string>
+    <string name="review_total">%1$d cards</string>
+    <string name="review_swipe_hint">Swipe right if you are confident, and left if you need more practice</string>
+</resources>

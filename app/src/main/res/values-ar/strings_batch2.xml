@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="library_tab_subjects">المواد</string>
+    <string name="library_tab_lectures">المحاضرات</string>
+    <string name="library_lecture_count">%1$d محاضرة</string>
+    <string name="home_title">تقدمك اليوم</string>
+</resources>
