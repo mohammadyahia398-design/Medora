@@ -1,0 +1,901 @@
+diff --git a/app/src/main/java/com/example/medora/ui/components/GlassBar.kt b/app/src/main/java/com/example/medora/ui/components/GlassBar.kt
+index 3666034..d84ac58 100644
+--- a/app/src/main/java/com/example/medora/ui/components/GlassBar.kt
++++ b/app/src/main/java/com/example/medora/ui/components/GlassBar.kt
+@@ -60,9 +60,12 @@ fun GlassBox(
+     modifier: Modifier = Modifier,
+     shape: Shape = RoundedCornerShape(28.dp),
+     onClick: (() -> Unit)? = null,
++    // Optional own frost color (and the solid color for phones without blur).
++    tint: Color? = null,
++    fallback: Color? = null,
+     content: @Composable BoxScope.() -> Unit,
+ ) {
+-    val base = modifier.then(glassLook(backdrop, shape)).clip(shape)
++    val base = modifier.then(glassLook(backdrop, shape, tint, fallback)).clip(shape)
+     Box(
+         modifier = if (onClick != null) base.clickable(onClick = onClick) else base,
+         contentAlignment = Alignment.Center,
+@@ -71,7 +74,7 @@ fun GlassBox(
+ }
+ 
+ @Composable
+-private fun glassLook(backdrop: LayerBackdrop, shape: Shape): Modifier {
++private fun glassLook(backdrop: LayerBackdrop, shape: Shape, tint: Color? = null, fallback: Color? = null): Modifier {
+     val dark = LocalMedoraDark.current
+     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+         Modifier.drawBackdrop(
+@@ -83,12 +86,12 @@ private fun glassLook(backdrop: LayerBackdrop, shape: Shape): Modifier {
+                 lens(12.dp.toPx(), 24.dp.toPx())
+             },
+             onDrawSurface = {
+-                drawRect(if (dark) MedoraColors.GlassDark else MedoraColors.GlassLight)
++                drawRect(tint ?: if (dark) MedoraColors.GlassDark else MedoraColors.GlassLight)
+             },
+         )
+     } else {
+         Modifier
+-            .background(if (dark) MedoraColors.GlassSolidDark else MedoraColors.GlassSolidLight, shape)
++            .background(fallback ?: if (dark) MedoraColors.GlassSolidDark else MedoraColors.GlassSolidLight, shape)
+             .border(1.dp, if (dark) MedoraColors.GlassBorderDark else MedoraColors.GlassBorderLight, shape)
+     }
+ }
+diff --git a/app/src/main/java/com/example/medora/ui/components/MedoraImmersive.kt b/app/src/main/java/com/example/medora/ui/components/MedoraImmersive.kt
+new file mode 100644
+index 0000000..1d76d39
+--- /dev/null
++++ b/app/src/main/java/com/example/medora/ui/components/MedoraImmersive.kt
+@@ -0,0 +1,54 @@
++package com.example.medora.ui.components
++
++import androidx.compose.foundation.Canvas
++import androidx.compose.foundation.layout.Box
++import androidx.compose.foundation.layout.BoxScope
++import androidx.compose.foundation.layout.fillMaxSize
++import androidx.compose.material3.LocalContentColor
++import androidx.compose.runtime.Composable
++import androidx.compose.runtime.CompositionLocalProvider
++import androidx.compose.ui.Modifier
++import androidx.compose.ui.geometry.Offset
++import androidx.compose.ui.graphics.Brush
++import androidx.compose.ui.graphics.Color
++import com.example.medora.ui.theme.MedoraColors
++import com.example.medora.ui.theme.MedoraTheme
++import com.kyant.backdrop.backdrops.LayerBackdrop
++
++// Full-screen dark scene for the study screens (cards, quiz). A navy gradient with soft
++// color glows: this is what the frosted glass cards blur and show through.
++// Always dark, whatever the app theme. The content gets the backdrop to pass to GlassBox.
++@Composable
++fun MedoraImmersive(content: @Composable BoxScope.(LayerBackdrop) -> Unit) {
++    val backdrop = rememberGlassBackdrop()
++    MedoraTheme(darkTheme = true) {
++        CompositionLocalProvider(LocalContentColor provides Color.White) {
++            Box(modifier = Modifier.fillMaxSize()) {
++                Box(modifier = Modifier.fillMaxSize().glassSource(backdrop)) {
++                    Canvas(modifier = Modifier.fillMaxSize()) {
++                        drawRect(Brush.verticalGradient(listOf(Color(0xFF070A24), Color(0xFF0A0F3D))))
++                        fun glow(color: Color, alpha: Float, x: Float, y: Float, r: Float) {
++                            val c = Offset(size.width * x, size.height * y)
++                            drawCircle(
++                                brush = Brush.radialGradient(listOf(color.copy(alpha = alpha), Color.Transparent), c, size.width * r),
++                                radius = size.width * r,
++                                center = c,
++                            )
++                        }
++                        glow(MedoraColors.Blue, 0.60f, 0.15f, 0.28f, 0.75f)
++                        glow(MedoraColors.Sky, 0.30f, 0.95f, 0.55f, 0.60f)
++                        glow(MedoraColors.Teal, 0.28f, 0.30f, 0.95f, 0.70f)
++                    }
++                }
++                content(backdrop)
++            }
++        }
++    }
++}
++
++// Colors shared by the glass pieces on the dark scene.
++object ImmersiveGlass {
++    val frost = Color.White.copy(alpha = 0.14f)
++    val frostSolid = Color(0xFF1B2250).copy(alpha = 0.94f)
++    val line = Color.White.copy(alpha = 0.22f)
++}
+diff --git a/app/src/main/java/com/example/medora/ui/navigation/MedoraApp.kt b/app/src/main/java/com/example/medora/ui/navigation/MedoraApp.kt
+index 25fc589..d7ad6da 100644
+--- a/app/src/main/java/com/example/medora/ui/navigation/MedoraApp.kt
++++ b/app/src/main/java/com/example/medora/ui/navigation/MedoraApp.kt
+@@ -123,7 +123,8 @@ fun MedoraApp() {
+     val isPractice = route == ROUTE_PRACTICE
+     val isMistakes = route == ROUTE_MISTAKES
+     val isPacks = route == ROUTE_PACKS || route == ROUTE_PACK
+-    val isFlow = route == ROUTE_SPLASH || route == ROUTE_ONBOARDING || route == ROUTE_GOAL
++    // Splash, onboarding, goal, and the dark study screens (cards, quiz) draw their own top area.
++    val isFlow = route == ROUTE_SPLASH || route == ROUTE_ONBOARDING || route == ROUTE_GOAL || isReview || isQuiz
+     val isSub = isSettings || isLecture || isReview || isQuiz || isNote || isExam || isSources || isPractice || isMistakes || isPacks
+ 
+     val titleRes = when {
+@@ -201,7 +202,10 @@ fun MedoraApp() {
+                     }
+                     composable(ROUTE_SETTINGS) { SettingsScreen() }
+                     composable(ROUTE_REVIEW) {
+-                        ReviewScreen(onOpenLecture = { navController.navigate("lecture/$it") })
++                        ReviewScreen(
++                            onOpenLecture = { navController.navigate("lecture/$it") },
++                            onBack = { navController.popBackStack() },
++                        )
+                     }
+                     composable(ROUTE_EXAM) {
+                         ExamScreen(onOpenLecture = { navController.navigate("lecture/$it") })
+@@ -233,7 +237,10 @@ fun MedoraApp() {
+                         )
+                     }
+                     composable(ROUTE_QUIZ) {
+-                        QuizScreen(onOpenLecture = { navController.navigate("lecture/$it") })
++                        QuizScreen(
++                            onOpenLecture = { navController.navigate("lecture/$it") },
++                            onBack = { navController.popBackStack() },
++                        )
+                     }
+                     composable(
+                         ROUTE_LECTURE,
+diff --git a/app/src/main/java/com/example/medora/ui/screens/QuizScreen.kt b/app/src/main/java/com/example/medora/ui/screens/QuizScreen.kt
+index b7dcd1a..d135b50 100644
+--- a/app/src/main/java/com/example/medora/ui/screens/QuizScreen.kt
++++ b/app/src/main/java/com/example/medora/ui/screens/QuizScreen.kt
+@@ -1,137 +1,234 @@
+ package com.example.medora.ui.screens
+ 
++import androidx.compose.foundation.background
++import androidx.compose.foundation.border
++import androidx.compose.foundation.clickable
+ import androidx.compose.foundation.layout.Arrangement
++import androidx.compose.foundation.layout.Box
+ import androidx.compose.foundation.layout.Column
++import androidx.compose.foundation.layout.Row
+ import androidx.compose.foundation.layout.Spacer
+ import androidx.compose.foundation.layout.fillMaxSize
+ import androidx.compose.foundation.layout.fillMaxWidth
+ import androidx.compose.foundation.layout.height
++import androidx.compose.foundation.layout.heightIn
++import androidx.compose.foundation.layout.navigationBarsPadding
+ import androidx.compose.foundation.layout.padding
++import androidx.compose.foundation.layout.size
++import androidx.compose.foundation.layout.statusBarsPadding
+ import androidx.compose.foundation.rememberScrollState
++import androidx.compose.foundation.shape.CircleShape
++import androidx.compose.foundation.shape.RoundedCornerShape
+ import androidx.compose.foundation.verticalScroll
+-import androidx.compose.material3.Button
+-import androidx.compose.material3.ButtonDefaults
+ import androidx.compose.material3.MaterialTheme
+ import androidx.compose.material3.Text
+ import androidx.compose.material3.TextButton
+ import androidx.compose.runtime.Composable
+ import androidx.compose.ui.Alignment
+ import androidx.compose.ui.Modifier
++import androidx.compose.ui.draw.clip
++import androidx.compose.ui.graphics.Color
+ import androidx.compose.ui.res.stringResource
+ import androidx.compose.ui.text.font.FontWeight
++import androidx.compose.ui.text.style.TextAlign
+ import androidx.compose.ui.unit.dp
+ import androidx.lifecycle.viewmodel.compose.viewModel
+ import com.example.medora.R
+ import com.example.medora.ui.components.AiBadge
++import com.example.medora.ui.components.GlassBox
++import com.example.medora.ui.components.ImmersiveGlass
+ import com.example.medora.ui.components.MedoraButton
+-import com.example.medora.ui.components.MedoraCard
++import com.example.medora.ui.components.MedoraImmersive
+ import com.example.medora.ui.theme.MedoraColors
++import com.example.medora.ui.theme.Spacing
+ 
++// Quiz on the same dark scene as the cards. The question and its four options sit in
++// one frosted glass card. Right answer green with a check, wrong answer coral with a cross.
+ @Composable
+-fun QuizScreen(onOpenLecture: (Long) -> Unit, vm: QuizViewModel = viewModel()) {
++fun QuizScreen(
++    onOpenLecture: (Long) -> Unit,
++    onBack: () -> Unit = {},
++    vm: QuizViewModel = viewModel(),
++) {
+     val questions = vm.questions
+-    when {
+-        !vm.loaded -> Unit
+-        questions.isEmpty() -> CenterText(stringResource(R.string.quiz_need_cards))
+-        vm.index >= questions.size -> Column(
+-            modifier = Modifier.fillMaxSize().padding(24.dp),
+-            verticalArrangement = Arrangement.Center,
+-            horizontalAlignment = Alignment.CenterHorizontally,
+-        ) {
+-            Text(
+-                text = stringResource(R.string.score_of, vm.score, questions.size),
+-                style = MaterialTheme.typography.headlineMedium,
+-                fontWeight = FontWeight.Bold,
+-            )
+-            Spacer(Modifier.height(24.dp))
+-            MedoraButton(text = stringResource(R.string.restart), onClick = { vm.restart() })
+-        }
+-        else -> {
+-            val q = questions[vm.index]
+-            val selected = vm.selected
+-            Column(
+-                modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+-            ) {
++    MedoraImmersive { glass ->
++        when {
++            !vm.loaded -> Unit
++            questions.isEmpty() -> StudyMessage(glass, onBack) {
+                 Text(
+-                    text = stringResource(R.string.progress_of, vm.index + 1, questions.size),
+-                    style = MaterialTheme.typography.bodyMedium,
++                    text = stringResource(R.string.quiz_need_cards),
++                    style = MaterialTheme.typography.bodyLarge,
++                    textAlign = TextAlign.Center,
+                 )
+-                Spacer(Modifier.height(12.dp))
+-                MedoraCard(modifier = Modifier.fillMaxWidth(), spaced = false) {
+-                    if (q.fromAi) {
+-                        AiBadge()
+-                        Spacer(Modifier.height(8.dp))
+-                    }
+-                    Text(
+-                        text = q.prompt,
+-                        style = MaterialTheme.typography.headlineSmall,
+-                        fontWeight = FontWeight.Bold,
+-                    )
+-                }
+-                Spacer(Modifier.height(16.dp))
+-                q.options.forEachIndexed { i, option ->
+-                    val colors = when {
+-                        selected == null -> ButtonDefaults.buttonColors()
+-                        i == q.correctIndex -> ButtonDefaults.buttonColors(
+-                            containerColor = MedoraColors.Green,
+-                            contentColor = MedoraColors.Ink,
+-                        )
+-                        i == selected -> ButtonDefaults.buttonColors(
+-                            containerColor = MedoraColors.Coral,
+-                            contentColor = MedoraColors.Ink,
+-                        )
+-                        else -> ButtonDefaults.buttonColors(
+-                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+-                        )
+-                    }
+-                    Button(
+-                        onClick = { vm.select(i) },
+-                        modifier = Modifier.fillMaxWidth(),
+-                        colors = colors,
+-                    ) {
+-                        Text(option)
+-                    }
+-                    Spacer(Modifier.height(8.dp))
+-                }
+-                if (selected != null) {
+-                    Spacer(Modifier.height(8.dp))
+-                    Text(
+-                        text = stringResource(
+-                            if (selected == q.correctIndex) R.string.correct else R.string.wrong
+-                        ),
+-                        style = MaterialTheme.typography.titleMedium,
+-                        fontWeight = FontWeight.Bold,
+-                    )
+-                    if (selected != q.correctIndex) {
++            }
++            vm.index >= questions.size -> StudyMessage(glass, onBack) {
++                Text(
++                    text = stringResource(R.string.score_of, vm.score, questions.size),
++                    style = MaterialTheme.typography.headlineMedium,
++                    fontWeight = FontWeight.Bold,
++                    textAlign = TextAlign.Center,
++                )
++                Spacer(Modifier.height(Spacing.xl))
++                MedoraButton(text = stringResource(R.string.restart), onClick = { vm.restart() })
++            }
++            else -> {
++                val q = questions[vm.index]
++                val selected = vm.selected
++                Column(
++                    modifier = Modifier
++                        .fillMaxSize()
++                        .statusBarsPadding()
++                        .navigationBarsPadding()
++                        .padding(Spacing.l),
++                ) {
++                    Row(verticalAlignment = Alignment.CenterVertically) {
++                        GlassBackButton(glass, onBack)
++                        Spacer(Modifier.weight(1f))
+                         Text(
+-                            text = stringResource(R.string.exam_correct_answer, q.options[q.correctIndex]),
+-                            style = MaterialTheme.typography.bodyMedium,
++                            text = stringResource(R.string.progress_of, vm.index + 1, questions.size),
++                            style = MaterialTheme.typography.titleMedium,
++                            fontWeight = FontWeight.Bold,
+                         )
+                     }
+-                    if (q.source.isNotBlank()) {
+-                        Text(
+-                            text = stringResource(R.string.source_label) + ": " + q.source,
+-                            style = MaterialTheme.typography.bodySmall,
+-                        )
++                    Spacer(Modifier.height(Spacing.l))
++                    val done = vm.index + (if (selected != null) 1 else 0)
++                    SceneProgress(done.toFloat() / questions.size, MedoraColors.Green)
++                    Spacer(Modifier.height(Spacing.l))
++
++                    GlassBox(
++                        backdrop = glass,
++                        shape = RoundedCornerShape(28.dp),
++                        tint = ImmersiveGlass.frost,
++                        fallback = ImmersiveGlass.frostSolid,
++                        modifier = Modifier.weight(1f, fill = false).fillMaxWidth(),
++                    ) {
++                        Column(
++                            modifier = Modifier
++                                .fillMaxWidth()
++                                .verticalScroll(rememberScrollState())
++                                .padding(Spacing.l),
++                            verticalArrangement = Arrangement.spacedBy(Spacing.m),
++                        ) {
++                            if (q.fromAi) AiBadge()
++                            Text(
++                                text = q.prompt,
++                                style = MaterialTheme.typography.titleLarge,
++                                fontWeight = FontWeight.Bold,
++                            )
++                            q.options.forEachIndexed { i, option ->
++                                OptionRow(
++                                    text = option,
++                                    state = when {
++                                        selected == null -> OptionState.Idle
++                                        i == q.correctIndex -> OptionState.Right
++                                        i == selected -> OptionState.Wrong
++                                        else -> OptionState.Dim
++                                    },
++                                    enabled = selected == null,
++                                    onClick = { vm.select(i) },
++                                )
++                            }
++                            if (selected != null) {
++                                Text(
++                                    text = stringResource(if (selected == q.correctIndex) R.string.correct else R.string.wrong),
++                                    style = MaterialTheme.typography.titleMedium,
++                                    fontWeight = FontWeight.Bold,
++                                    color = if (selected == q.correctIndex) MedoraColors.Green else MedoraColors.Coral,
++                                )
++                                if (selected != q.correctIndex) {
++                                    Text(
++                                        text = stringResource(R.string.exam_correct_answer, q.options[q.correctIndex]),
++                                        style = MaterialTheme.typography.bodyMedium,
++                                    )
++                                }
++                                if (q.source.isNotBlank()) {
++                                    Text(
++                                        text = stringResource(R.string.source_label) + ": " + q.source,
++                                        style = MaterialTheme.typography.bodySmall,
++                                        color = Color.White.copy(alpha = 0.7f),
++                                    )
++                                }
++                                q.page?.let { page ->
++                                    Text(
++                                        text = stringResource(R.string.page_label, page),
++                                        style = MaterialTheme.typography.bodySmall,
++                                        color = Color.White.copy(alpha = 0.7f),
++                                    )
++                                }
++                                TextButton(onClick = { onOpenLecture(q.lectureId) }) {
++                                    Text(stringResource(R.string.open_lecture))
++                                }
++                            }
++                        }
+                     }
+-                    q.page?.let { page ->
+-                        Text(
+-                            text = stringResource(R.string.page_label, page),
+-                            style = MaterialTheme.typography.bodySmall,
++
++                    if (selected != null) {
++                        Spacer(Modifier.height(Spacing.l))
++                        MedoraButton(
++                            text = stringResource(R.string.next),
++                            onClick = { vm.next() },
++                            modifier = Modifier.fillMaxWidth(),
++                            containerColor = MedoraColors.Green,
++                            contentColor = MedoraColors.Ink,
+                         )
+                     }
+-                    TextButton(onClick = { onOpenLecture(q.lectureId) }) {
+-                        Text(stringResource(R.string.open_lecture))
+-                    }
+-                    Spacer(Modifier.height(8.dp))
+-                    MedoraButton(
+-                        text = stringResource(R.string.next),
+-                        onClick = { vm.next() },
+-                        modifier = Modifier.fillMaxWidth(),
+-                    )
+                 }
+             }
+         }
+     }
+ }
++
++private enum class OptionState { Idle, Right, Wrong, Dim }
++
++// One answer as a capsule. A thin translucent fill, not another glass layer.
++@Composable
++private fun OptionRow(text: String, state: OptionState, enabled: Boolean, onClick: () -> Unit) {
++    val shape = RoundedCornerShape(28.dp)
++    val fill = when (state) {
++        OptionState.Right -> MedoraColors.Green.copy(alpha = 0.30f)
++        OptionState.Wrong -> MedoraColors.Coral.copy(alpha = 0.30f)
++        OptionState.Dim -> Color.White.copy(alpha = 0.05f)
++        OptionState.Idle -> Color.White.copy(alpha = 0.10f)
++    }
++    val line = when (state) {
++        OptionState.Right -> MedoraColors.Green
++        OptionState.Wrong -> MedoraColors.Coral
++        else -> ImmersiveGlass.line
++    }
++    Row(
++        modifier = Modifier
++            .fillMaxWidth()
++            .heightIn(min = 56.dp)
++            .clip(shape)
++            .background(fill)
++            .border(1.dp, line, shape)
++            .clickable(enabled = enabled, onClick = onClick)
++            .padding(horizontal = Spacing.l, vertical = Spacing.m),
++        verticalAlignment = Alignment.CenterVertically,
++    ) {
++        Text(
++            text = text,
++            style = MaterialTheme.typography.bodyLarge,
++            fontWeight = FontWeight.SemiBold,
++            color = Color.White.copy(alpha = if (state == OptionState.Dim) 0.6f else 1f),
++            modifier = Modifier.weight(1f),
++        )
++        if (state == OptionState.Right || state == OptionState.Wrong) {
++            Box(
++                modifier = Modifier
++                    .padding(start = Spacing.m)
++                    .size(24.dp)
++                    .clip(CircleShape)
++                    .background(if (state == OptionState.Right) MedoraColors.Green else MedoraColors.Coral),
++                contentAlignment = Alignment.Center,
++            ) {
++                Text(
++                    text = if (state == OptionState.Right) "✓" else "✕",
++                    style = MaterialTheme.typography.labelMedium,
++                    fontWeight = FontWeight.Bold,
++                    color = MedoraColors.Ink,
++                )
++            }
++        }
++    }
++}
+diff --git a/app/src/main/java/com/example/medora/ui/screens/ReviewScreen.kt b/app/src/main/java/com/example/medora/ui/screens/ReviewScreen.kt
+index 3ad2e59..c47eed9 100644
+--- a/app/src/main/java/com/example/medora/ui/screens/ReviewScreen.kt
++++ b/app/src/main/java/com/example/medora/ui/screens/ReviewScreen.kt
+@@ -1,127 +1,320 @@
+ package com.example.medora.ui.screens
+ 
++import androidx.compose.animation.core.Animatable
++import androidx.compose.animation.core.Spring
++import androidx.compose.animation.core.spring
++import androidx.compose.animation.core.tween
++import androidx.compose.foundation.background
++import androidx.compose.foundation.clickable
++import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+ import androidx.compose.foundation.layout.Arrangement
++import androidx.compose.foundation.layout.Box
+ import androidx.compose.foundation.layout.Column
+ import androidx.compose.foundation.layout.Row
+ import androidx.compose.foundation.layout.Spacer
++import androidx.compose.foundation.layout.fillMaxHeight
+ import androidx.compose.foundation.layout.fillMaxSize
+ import androidx.compose.foundation.layout.fillMaxWidth
+ import androidx.compose.foundation.layout.height
++import androidx.compose.foundation.layout.navigationBarsPadding
++import androidx.compose.foundation.layout.offset
+ import androidx.compose.foundation.layout.padding
++import androidx.compose.foundation.layout.size
++import androidx.compose.foundation.layout.statusBarsPadding
+ import androidx.compose.foundation.rememberScrollState
++import androidx.compose.foundation.shape.CircleShape
++import androidx.compose.foundation.shape.RoundedCornerShape
+ import androidx.compose.foundation.verticalScroll
+ import androidx.compose.material3.MaterialTheme
+ import androidx.compose.material3.Text
+ import androidx.compose.material3.TextButton
+ import androidx.compose.runtime.Composable
++import androidx.compose.runtime.remember
++import androidx.compose.runtime.rememberCoroutineScope
+ import androidx.compose.ui.Alignment
+ import androidx.compose.ui.Modifier
++import androidx.compose.ui.draw.clip
++import androidx.compose.ui.graphics.Color
++import androidx.compose.ui.graphics.graphicsLayer
++import androidx.compose.ui.input.pointer.pointerInput
++import androidx.compose.ui.platform.LocalConfiguration
++import androidx.compose.ui.platform.LocalDensity
++import androidx.compose.ui.platform.LocalLayoutDirection
+ import androidx.compose.ui.res.stringResource
++import androidx.compose.ui.semantics.contentDescription
++import androidx.compose.ui.semantics.semantics
+ import androidx.compose.ui.text.font.FontWeight
++import androidx.compose.ui.text.style.TextAlign
++import androidx.compose.ui.unit.IntOffset
++import androidx.compose.ui.unit.LayoutDirection
+ import androidx.compose.ui.unit.dp
++import androidx.compose.ui.unit.sp
+ import androidx.lifecycle.viewmodel.compose.viewModel
+ import com.example.medora.R
+ import com.example.medora.domain.Fsrs
++import com.example.medora.ui.components.GlassBox
++import com.example.medora.ui.components.ImmersiveGlass
+ import com.example.medora.ui.components.MedoraButton
+-import com.example.medora.ui.components.MedoraCard
++import com.example.medora.ui.components.MedoraImmersive
++import com.example.medora.ui.theme.Spacing
++import com.kyant.backdrop.backdrops.LayerBackdrop
++import kotlinx.coroutines.launch
++import kotlin.math.abs
++import kotlin.math.roundToInt
+ 
++// Flashcards on a dark scene with a frosted glass card.
++// Show answer, then swipe right (Good) or left (Again). The four buttons stay for precise rating.
+ @Composable
+-fun ReviewScreen(onOpenLecture: (Long) -> Unit, vm: ReviewViewModel = viewModel()) {
++fun ReviewScreen(
++    onOpenLecture: (Long) -> Unit,
++    onBack: () -> Unit = {},
++    vm: ReviewViewModel = viewModel(),
++) {
+     val deck = vm.deck
+-    when {
+-        !vm.loaded -> Unit
+-        deck.isEmpty() -> CenterText(stringResource(R.string.no_due_cards))
+-        vm.index >= deck.size -> Column(
+-            modifier = Modifier.fillMaxSize().padding(24.dp),
+-            verticalArrangement = Arrangement.Center,
+-            horizontalAlignment = Alignment.CenterHorizontally,
+-        ) {
++    MedoraImmersive { glass ->
++        when {
++            !vm.loaded -> Unit
++            deck.isEmpty() -> StudyMessage(glass, onBack) {
++                Text(
++                    text = stringResource(R.string.no_due_cards),
++                    style = MaterialTheme.typography.bodyLarge,
++                    textAlign = TextAlign.Center,
++                )
++            }
++            vm.index >= deck.size -> StudyMessage(glass, onBack) {
++                Text(
++                    text = stringResource(R.string.done),
++                    style = MaterialTheme.typography.headlineMedium,
++                    fontWeight = FontWeight.Bold,
++                )
++                Spacer(Modifier.height(Spacing.s))
++                Text(
++                    text = stringResource(R.string.knew_count, vm.knew, deck.size),
++                    style = MaterialTheme.typography.titleMedium,
++                )
++                Spacer(Modifier.height(Spacing.xl))
++                MedoraButton(text = stringResource(R.string.restart), onClick = { vm.restart() })
++            }
++            else -> CardSession(glass, vm, onOpenLecture, onBack)
++        }
++    }
++}
++
++@Composable
++private fun CardSession(glass: LayerBackdrop, vm: ReviewViewModel, onOpenLecture: (Long) -> Unit, onBack: () -> Unit) {
++    val deck = vm.deck
++    val card = deck[vm.index]
++    val scope = rememberCoroutineScope()
++    val widthPx = with(LocalDensity.current) { LocalConfiguration.current.screenWidthDp.dp.toPx() }
++    val threshold = widthPx * 0.28f
++    // New offset for every card, so the next card starts in the middle.
++    val offsetX = remember(vm.index) { Animatable(0f) }
++
++    Column(
++        modifier = Modifier
++            .fillMaxSize()
++            .statusBarsPadding()
++            .navigationBarsPadding()
++            .padding(Spacing.l),
++    ) {
++        Row(verticalAlignment = Alignment.CenterVertically) {
++            GlassBackButton(glass, onBack)
++            Spacer(Modifier.weight(1f))
+             Text(
+-                text = stringResource(R.string.done),
+-                style = MaterialTheme.typography.headlineMedium,
++                text = stringResource(R.string.progress_of, vm.index + 1, deck.size),
++                style = MaterialTheme.typography.titleMedium,
+                 fontWeight = FontWeight.Bold,
+             )
+-            Spacer(Modifier.height(8.dp))
++        }
++        Spacer(Modifier.height(Spacing.l))
++        SceneProgress(vm.index.toFloat() / deck.size, Color(0xFF90E0EF))
++        Spacer(Modifier.height(Spacing.xs))
++        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+             Text(
+-                text = stringResource(R.string.knew_count, vm.knew, deck.size),
+-                style = MaterialTheme.typography.titleMedium,
++                text = stringResource(R.string.review_reviewed, vm.index),
++                style = MaterialTheme.typography.labelSmall,
++                color = Color.White.copy(alpha = 0.7f),
++            )
++            Text(
++                text = stringResource(R.string.review_total, deck.size),
++                style = MaterialTheme.typography.labelSmall,
++                color = Color.White.copy(alpha = 0.7f),
+             )
+-            Spacer(Modifier.height(24.dp))
+-            MedoraButton(text = stringResource(R.string.restart), onClick = { vm.restart() })
+         }
+-        else -> {
+-            val card = deck[vm.index]
++        Spacer(Modifier.height(Spacing.l))
++
++        GlassBox(
++            backdrop = glass,
++            shape = RoundedCornerShape(28.dp),
++            tint = ImmersiveGlass.frost,
++            fallback = ImmersiveGlass.frostSolid,
++            modifier = Modifier
++                .weight(1f)
++                .fillMaxWidth()
++                .offset { IntOffset(offsetX.value.roundToInt(), 0) }
++                .graphicsLayer { alpha = 1f - (abs(offsetX.value) / widthPx).coerceIn(0f, 0.6f) }
++                .pointerInput(vm.index, vm.revealed) {
++                    if (vm.revealed) {
++                        detectHorizontalDragGestures(
++                            onDragEnd = {
++                                scope.launch {
++                                    val x = offsetX.value
++                                    if (abs(x) > threshold) {
++                                        offsetX.animateTo(if (x > 0) widthPx else -widthPx, tween(160))
++                                        vm.answer(if (x > 0) Fsrs.Rating.Good else Fsrs.Rating.Again)
++                                    } else {
++                                        offsetX.animateTo(0f, spring(stiffness = Spring.StiffnessMedium))
++                                    }
++                                }
++                            },
++                            onDragCancel = { scope.launch { offsetX.animateTo(0f) } },
++                            onHorizontalDrag = { change, delta ->
++                                change.consume()
++                                scope.launch { offsetX.snapTo(offsetX.value + delta) }
++                            },
++                        )
++                    }
++                },
++            onClick = if (vm.revealed) null else ({ vm.reveal() }),
++        ) {
+             Column(
+-                modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
++                modifier = Modifier
++                    .fillMaxSize()
++                    .verticalScroll(rememberScrollState())
++                    .padding(Spacing.xl),
++                horizontalAlignment = Alignment.CenterHorizontally,
++                verticalArrangement = Arrangement.Center,
+             ) {
+                 Text(
+-                    text = stringResource(R.string.progress_of, vm.index + 1, deck.size),
+-                    style = MaterialTheme.typography.bodyMedium,
++                    text = card.front,
++                    style = MaterialTheme.typography.headlineSmall,
++                    fontWeight = FontWeight.Bold,
++                    textAlign = TextAlign.Center,
+                 )
+-                Spacer(Modifier.height(12.dp))
+-                MedoraCard(modifier = Modifier.fillMaxWidth(), spaced = false) {
++                if (vm.revealed) {
++                    Spacer(Modifier.height(Spacing.l))
++                    Box(Modifier.fillMaxWidth().height(1.dp).background(ImmersiveGlass.line))
++                    Spacer(Modifier.height(Spacing.l))
+                     Text(
+-                        text = card.front,
+-                        style = MaterialTheme.typography.headlineSmall,
+-                        fontWeight = FontWeight.Bold,
+-                    )
+-                    if (vm.revealed) {
+-                        Spacer(Modifier.height(16.dp))
+-                        Text(text = card.back, style = MaterialTheme.typography.bodyLarge)
+-                        if (card.source.isNotBlank() && card.source != card.back) {
+-                            Spacer(Modifier.height(12.dp))
+-                            Text(
+-                                text = stringResource(R.string.source_label) + ": " + card.source,
+-                                style = MaterialTheme.typography.bodySmall,
+-                            )
+-                        }
+-                        vm.pages[card.id]?.let { page ->
+-                            Text(
+-                                text = stringResource(R.string.page_label, page),
+-                                style = MaterialTheme.typography.bodySmall,
+-                            )
+-                        }
+-                        TextButton(onClick = { onOpenLecture(card.lectureId) }) {
+-                            Text(stringResource(R.string.open_lecture))
+-                        }
+-                    }
+-                }
+-                Spacer(Modifier.height(16.dp))
+-                if (!vm.revealed) {
+-                    MedoraButton(
+-                        text = stringResource(R.string.show_answer),
+-                        onClick = { vm.reveal() },
+-                        modifier = Modifier.fillMaxWidth(),
++                        text = card.back,
++                        style = MaterialTheme.typography.bodyLarge,
++                        textAlign = TextAlign.Center,
+                     )
+-                } else {
+-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+-                        MedoraButton(
+-                            text = stringResource(R.string.rate_again),
+-                            onClick = { vm.answer(Fsrs.Rating.Again) },
+-                            modifier = Modifier.weight(1f),
+-                        )
+-                        MedoraButton(
+-                            text = stringResource(R.string.rate_hard),
+-                            onClick = { vm.answer(Fsrs.Rating.Hard) },
+-                            modifier = Modifier.weight(1f),
++                    if (card.source.isNotBlank() && card.source != card.back) {
++                        Spacer(Modifier.height(Spacing.m))
++                        Text(
++                            text = stringResource(R.string.source_label) + ": " + card.source,
++                            style = MaterialTheme.typography.bodySmall,
++                            color = Color.White.copy(alpha = 0.7f),
++                            textAlign = TextAlign.Center,
+                         )
+                     }
+-                    Spacer(Modifier.height(8.dp))
+-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+-                        MedoraButton(
+-                            text = stringResource(R.string.rate_good),
+-                            onClick = { vm.answer(Fsrs.Rating.Good) },
+-                            modifier = Modifier.weight(1f),
+-                        )
+-                        MedoraButton(
+-                            text = stringResource(R.string.rate_easy),
+-                            onClick = { vm.answer(Fsrs.Rating.Easy) },
+-                            modifier = Modifier.weight(1f),
++                    vm.pages[card.id]?.let { page ->
++                        Text(
++                            text = stringResource(R.string.page_label, page),
++                            style = MaterialTheme.typography.bodySmall,
++                            color = Color.White.copy(alpha = 0.7f),
+                         )
+                     }
++                    TextButton(onClick = { onOpenLecture(card.lectureId) }) {
++                        Text(stringResource(R.string.open_lecture))
++                    }
+                 }
+             }
+         }
++
++        Spacer(Modifier.height(Spacing.l))
++        if (!vm.revealed) {
++            MedoraButton(
++                text = stringResource(R.string.show_answer),
++                onClick = { vm.reveal() },
++                modifier = Modifier.fillMaxWidth(),
++            )
++        } else {
++            Text(
++                text = stringResource(R.string.review_swipe_hint),
++                style = MaterialTheme.typography.labelMedium,
++                color = Color.White.copy(alpha = 0.7f),
++                textAlign = TextAlign.Center,
++                modifier = Modifier.fillMaxWidth(),
++            )
++            Spacer(Modifier.height(Spacing.m))
++            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
++                RatingChip(glass, stringResource(R.string.rate_again), Modifier.weight(1f)) { vm.answer(Fsrs.Rating.Again) }
++                RatingChip(glass, stringResource(R.string.rate_hard), Modifier.weight(1f)) { vm.answer(Fsrs.Rating.Hard) }
++                RatingChip(glass, stringResource(R.string.rate_good), Modifier.weight(1f)) { vm.answer(Fsrs.Rating.Good) }
++                RatingChip(glass, stringResource(R.string.rate_easy), Modifier.weight(1f)) { vm.answer(Fsrs.Rating.Easy) }
++            }
++        }
++    }
++}
++
++@Composable
++private fun RatingChip(glass: LayerBackdrop, label: String, modifier: Modifier, onClick: () -> Unit) {
++    GlassBox(
++        backdrop = glass,
++        shape = CircleShape,
++        tint = ImmersiveGlass.frost,
++        fallback = ImmersiveGlass.frostSolid,
++        onClick = onClick,
++        modifier = modifier.height(48.dp),
++    ) {
++        Text(text = label, style = MaterialTheme.typography.labelLarge, maxLines = 1)
++    }
++}
++
++// Round glass back button with a plain chevron (flips in right-to-left languages).
++@Composable
++internal fun GlassBackButton(glass: LayerBackdrop, onBack: () -> Unit) {
++    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
++    val label = stringResource(R.string.back)
++    GlassBox(
++        backdrop = glass,
++        shape = CircleShape,
++        tint = ImmersiveGlass.frost,
++        fallback = ImmersiveGlass.frostSolid,
++        onClick = onBack,
++        modifier = Modifier.size(44.dp),
++    ) {
++        Text(
++            text = if (rtl) "›" else "‹",
++            fontSize = 28.sp,
++            fontWeight = FontWeight.Bold,
++            modifier = Modifier.semantics { contentDescription = label },
++        )
++    }
++}
++
++// Thin rounded progress bar on the dark scene.
++@Composable
++internal fun SceneProgress(fraction: Float, fill: Color) {
++    Box(
++        modifier = Modifier
++            .fillMaxWidth()
++            .height(8.dp)
++            .clip(CircleShape)
++            .background(Color.White.copy(alpha = 0.16f)),
++    ) {
++        Box(
++            modifier = Modifier
++                .fillMaxWidth(fraction.coerceIn(0f, 1f))
++                .fillMaxHeight()
++                .clip(CircleShape)
++                .background(fill),
++        )
++    }
++}
++
++// Centered message (empty, finished) with a back button, on the dark scene.
++@Composable
++internal fun StudyMessage(glass: LayerBackdrop, onBack: () -> Unit, content: @Composable () -> Unit) {
++    Column(modifier = Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().padding(Spacing.l)) {
++        GlassBackButton(glass, onBack)
++        Column(
++            modifier = Modifier.weight(1f).fillMaxWidth().padding(Spacing.l),
++            verticalArrangement = Arrangement.Center,
++            horizontalAlignment = Alignment.CenterHorizontally,
++        ) { content() }
+     }
+ }
+ 
+diff --git a/app/src/main/res/values-ar/strings_batch3.xml b/app/src/main/res/values-ar/strings_batch3.xml
+new file mode 100644
+index 0000000..07c265c
+--- /dev/null
++++ b/app/src/main/res/values-ar/strings_batch3.xml
+@@ -0,0 +1,6 @@
++<?xml version="1.0" encoding="utf-8"?>
++<resources>
++    <string name="review_reviewed">تمت مراجعة %1$d بطاقة</string>
++    <string name="review_total">%1$d بطاقة</string>
++    <string name="review_swipe_hint">اسحب لليمين إن كنت واثقاً، ولليسار إن احتجت مزيداً من التدريب</string>
++</resources>
+diff --git a/app/src/main/res/values/strings_batch3.xml b/app/src/main/res/values/strings_batch3.xml
+new file mode 100644
+index 0000000..ea4f02e
+--- /dev/null
++++ b/app/src/main/res/values/strings_batch3.xml
+@@ -0,0 +1,6 @@
++<?xml version="1.0" encoding="utf-8"?>
++<resources>
++    <string name="review_reviewed">%1$d cards reviewed</string>
++    <string name="review_total">%1$d cards</string>
++    <string name="review_swipe_hint">Swipe right if you are confident, and left if you need more practice</string>
++</resources>
