@@ -135,29 +135,11 @@ private fun study(p: Pal) = icon("Study") {
     }
 }
 
-// Progress: an hourglass, dark bars and sand, soft glass.
+// Progress: a histogram. Three soft bars, the tallest one is dark.
 private fun progress(p: Pal) = icon("Progress") {
-    fill(p.soft) {
-        moveTo(7.8f, 5.2f)
-        lineTo(16.2f, 5.2f)
-        quadTo(16.2f, 9.6f, 13.3f, 11.3f)
-        quadTo(12.6f, 11.7f, 12.6f, 12f)
-        quadTo(12.6f, 12.3f, 13.3f, 12.7f)
-        quadTo(16.2f, 14.4f, 16.2f, 18.8f)
-        lineTo(7.8f, 18.8f)
-        quadTo(7.8f, 14.4f, 10.7f, 12.7f)
-        quadTo(11.4f, 12.3f, 11.4f, 12f)
-        quadTo(11.4f, 11.7f, 10.7f, 11.3f)
-        quadTo(7.8f, 9.6f, 7.8f, 5.2f)
-        close()
-    }
-    fill(p.ink) {
-        moveTo(9.4f, 18.8f)
-        quadTo(12f, 14.6f, 14.6f, 18.8f)
-        close()
-    }
-    fill(p.ink) { soft(5.6f, 2.6f, 12.8f, 2.2f, 1.1f) }
-    fill(p.ink) { soft(5.6f, 19.2f, 12.8f, 2.2f, 1.1f) }
+    fill(p.soft) { soft(3.5f, 12.5f, 4.6f, 8f, 1.9f) }
+    fill(p.soft) { soft(9.7f, 8f, 4.6f, 12.5f, 1.9f) }
+    fill(p.ink) { soft(15.9f, 3.5f, 4.6f, 17f, 1.9f) }
 }
 
 // Settings: two switches. Thick, so it reads well on small buttons.
