@@ -32,6 +32,7 @@ import com.example.medora.data.DataEraser
 import com.example.medora.settings.AppPrefs
 import com.example.medora.ui.components.MedoraButton
 import com.example.medora.ui.components.MedoraCard
+import com.example.medora.ui.components.MedoraDangerButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -124,7 +125,7 @@ fun DeleteDataCard() {
             fontWeight = FontWeight.Bold,
         )
         Text(stringResource(R.string.data_delete_hint), style = MaterialTheme.typography.bodySmall)
-        MedoraButton(
+        MedoraDangerButton(
             text = stringResource(R.string.data_delete),
             onClick = { confirm = true },
             modifier = Modifier.fillMaxWidth(),

@@ -62,11 +62,15 @@ private val Scheme = lightColorScheme(
     onTertiary = Color.White,
     tertiaryContainer = Color(0xFFFFE3B8),
     onTertiaryContainer = Color(0xFF3A2400),
-    background = MedoraColors.White,
+    background = Color(0xFFF4F6F8),
     onBackground = MedoraColors.Ink,
-    surface = Color(0xFFF2FAFD),
+    error = Color(0xFFC62828),
+    onError = Color.White,
+    errorContainer = Color(0xFFFDE4E2),
+    onErrorContainer = Color(0xFF8C1D18),
+    surface = Color.White,
     onSurface = MedoraColors.Ink,
-    surfaceVariant = Color(0xFFE4F3F8),
+    surfaceVariant = Color(0xFFE9EEF2),
     onSurfaceVariant = Color(0xFF3F4F73),
     surfaceTint = MedoraColors.Blue,
     surfaceContainerLowest = Color.White,
@@ -96,6 +100,10 @@ private val DarkScheme = darkColorScheme(
     onTertiaryContainer = Color(0xFFFFE3B8),
     background = Color.Black,
     onBackground = Color(0xFFEAF6FA),
+    error = Color(0xFFFFB4AB),
+    onError = Color(0xFF690005),
+    errorContainer = Color(0xFF4A1512),
+    onErrorContainer = Color(0xFFFFDAD6),
     surface = Color(0xFF0A0B1C),
     onSurface = Color(0xFFEAF6FA),
     surfaceVariant = Color(0xFF161933),
@@ -114,8 +122,8 @@ private val DarkScheme = darkColorScheme(
 )
 
 private val MedoraShapes = Shapes(
-    small = RoundedCornerShape(12.dp),
-    medium = RoundedCornerShape(20.dp),
+    small = RoundedCornerShape(Dimens.radiusField),
+    medium = RoundedCornerShape(Dimens.radiusCard),
     large = RoundedCornerShape(28.dp),
 )
 

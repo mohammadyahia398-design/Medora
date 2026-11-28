@@ -51,7 +51,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.medora.R
-import com.example.medora.ui.components.GlassBar
+import com.example.medora.ui.components.MedoraBottomBar
+import com.example.medora.ui.components.MedoraBottomItem
+import com.example.medora.ui.components.MedoraTopBar
+import com.example.medora.ui.theme.Dimens
 import com.example.medora.ui.glass.LiquidBottomTab
 import com.example.medora.ui.glass.LiquidBottomTabs
 import com.example.medora.ui.theme.LocalMedoraDark
@@ -133,16 +136,7 @@ fun MedoraApp() {
 
     Box(modifier = Modifier.fillMaxSize()) {
         Box(modifier = Modifier.fillMaxSize().layerBackdrop(backdrop)) {
-            Box(
-                modifier = Modifier.fillMaxSize().background(
-                    Brush.verticalGradient(
-                        listOf(
-                            MaterialTheme.colorScheme.background,
-                            MaterialTheme.colorScheme.surfaceVariant,
-                        ),
-                    ),
-                ),
-            )
+            Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background))
             Scaffold(
                 containerColor = Color.Transparent,
                 contentColor = MaterialTheme.colorScheme.onBackground,
@@ -152,7 +146,7 @@ fun MedoraApp() {
                     startDestination = Tab.Home.route,
                     modifier = Modifier
                         .padding(padding)
-                        .padding(top = 64.dp, bottom = if (tab != null) 88.dp else 0.dp),
+                        .padding(top = Dimens.topBarSpace, bottom = if (tab != null) Dimens.bottomBarSpace else 0.dp),
                 ) {
                     composable(Tab.Home.route) {
                         HomeScreen(
@@ -234,45 +228,16 @@ fun MedoraApp() {
                 }
             }
         }
-        GlassBar(
-            backdrop = backdrop,
-            height = 56.dp,
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .statusBarsPadding()
-                .padding(start = 16.dp, end = 16.dp, top = 8.dp),
-        ) {
-            Box(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
-                if (isSub) {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Image(
-                            imageVector = MedoraIcons.Back.themed(),
-                            contentDescription = stringResource(R.string.back),
-                            modifier = Modifier.size(24.dp),
-                        )
-                    }
-                }
-            }
-            Text(
-                text = stringResource(titleRes),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onBackground,
-                textAlign = TextAlign.Center,
-                maxLines = 1,
-                modifier = Modifier.weight(1f),
-            )
-            Box(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
-                if (!isSub) {
-                    IconButton(onClick = { navController.navigate(ROUTE_SETTINGS) }) {
-                        Image(
-                            imageVector = MedoraIcons.Settings.themed(),
-                            contentDescription = stringResource(R.string.settings),
-                            modifier = Modifier.size(28.dp),
-                        )
-                    }
-                }
-            }
-        }
+        MedoraTopBar(
+            title = stringResource(titleRes),
+            modifier = Modifier.align(Alignment.TopCenter),
+            startIcon = if (isSub) MedoraIcons.Back else null,
+            startDescription = stringResource(R.string.back),
+            onStart = { navController.popBackStack() },
+            endIcon = if (tab == Tab.Home) MedoraIcons.Settings else null,
+            endDescription = stringResource(R.string.settings),
+            onEnd = { navController.navigate(ROUTE_SETTINGS) },
+        )
         if (tab != null) {
             val goTab: (Tab) -> Unit = { item ->
                 navController.navigate(item.route) {
@@ -283,140 +248,21 @@ fun MedoraApp() {
                     restoreState = true
                 }
             }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                // Kyant liquid bottom tabs: drag the bubble, refraction on Android 13+.
-                val tabs = Tab.values()
-                val selectedIndex = tabs.indexOf(tab)
-                LiquidBottomTabs(
-                    selectedTabIndex = { selectedIndex },
-                    onTabSelected = { goTab(tabs[it]) },
-                    backdrop = backdrop,
-                    tabsCount = tabs.size,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .navigationBarsPadding()
-                        .padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
-                ) {
-                    tabs.forEach { item ->
-                        LiquidBottomTab(onClick = { goTab(item) }) {
-                            Image(
-                                imageVector = item.icon.themed(),
-                                contentDescription = null,
-                                modifier = Modifier.size(28.dp),
-                            )
-                            Text(
-                                text = stringResource(item.label),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onBackground,
-                                maxLines = 1,
-                            )
-                        }
-                    }
-                }
-            } else {
-                GlassBar(
-                    backdrop = backdrop,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .navigationBarsPadding()
-                        .padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
-                ) {
-                    Tab.values().forEach { item ->
-                        GlassTabItem(
-                            tab = item,
-                            selected = item == tab,
-                            onClick = { goTab(item) },
-                        )
-                    }
+            MedoraBottomBar(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
+                    .padding(start = Dimens.screenPadding, end = Dimens.screenPadding, bottom = 12.dp),
+            ) {
+                Tab.values().forEach { item ->
+                    MedoraBottomItem(
+                        icon = item.icon,
+                        label = stringResource(item.label),
+                        selected = item == tab,
+                        onClick = { goTab(item) },
+                    )
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun RowScope.GlassTabItem(tab: Tab, selected: Boolean, onClick: () -> Unit) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val pressed by interactionSource.collectIsPressedAsState()
-
-    // 0 -> 1 when selected. The bouncy spring makes the pill and the icon "pop".
-    val sel by animateFloatAsState(
-        targetValue = if (selected) 1f else 0f,
-        animationSpec = spring(dampingRatio = 0.55f, stiffness = Spring.StiffnessMediumLow),
-        label = "tabSelected",
-    )
-    val press by animateFloatAsState(
-        targetValue = if (pressed) 0.86f else 1f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
-        label = "tabPress",
-    )
-
-    // A short wiggle when the tab becomes selected (not on first start).
-    val wiggle = remember { Animatable(0f) }
-    val firstRun = remember { booleanArrayOf(true) }
-    LaunchedEffect(selected) {
-        if (firstRun[0]) {
-            firstRun[0] = false
-            return@LaunchedEffect
-        }
-        if (selected) {
-            wiggle.animateTo(-14f, tween(90))
-            wiggle.animateTo(10f, tween(110))
-            wiggle.animateTo(
-                0f,
-                spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
-            )
-        }
-    }
-
-    Column(
-        modifier = Modifier
-            .weight(1f)
-            .fillMaxHeight()
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                role = Role.Tab,
-                onClick = onClick,
-            ),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Box(
-            modifier = Modifier.size(width = 56.dp, height = 32.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .graphicsLayer {
-                        scaleX = 0.3f + 0.7f * sel
-                        alpha = sel.coerceIn(0f, 1f)
-                    }
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.22f), RoundedCornerShape(16.dp)),
-            )
-            Image(
-                imageVector = tab.icon.themed(),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(28.dp)
-                    .graphicsLayer {
-                        val scale = (1f + 0.15f * sel) * press
-                        scaleX = scale
-                        scaleY = scale
-                        translationY = -2.dp.toPx() * sel
-                        rotationZ = wiggle.value
-                        alpha = (0.55f + 0.45f * sel).coerceIn(0f, 1f)
-                    },
-            )
-        }
-        Text(
-            text = stringResource(tab.label),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.graphicsLayer {
-                alpha = (0.55f + 0.45f * sel).coerceIn(0f, 1f)
-            },
-        )
     }
 }
