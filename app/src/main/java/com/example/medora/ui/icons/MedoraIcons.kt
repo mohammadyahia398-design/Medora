@@ -210,6 +210,27 @@ private fun sliders(p: Pal) = icon("Sliders") {
     fill(p.ink) { circle(15.2f, 16f, 3f) }
 }
 
+// Planner: a calendar page with a dark top band and two rings. New icon, same style.
+private fun planner(p: Pal) = icon("Planner") {
+    fill(p.soft) { soft(3.5f, 5f, 17f, 15.5f, 3.6f) }
+    fill(p.ink) {
+        moveTo(3.5f, 10f)
+        lineTo(3.5f, 8.6f)
+        quadTo(3.5f, 5f, 7.1f, 5f)
+        lineTo(16.9f, 5f)
+        quadTo(20.5f, 5f, 20.5f, 8.6f)
+        lineTo(20.5f, 10f)
+        close()
+    }
+    line(p.ink, 2.2f) {
+        moveTo(8.2f, 3f)
+        lineTo(8.2f, 6.2f)
+        moveTo(15.8f, 3f)
+        lineTo(15.8f, 6.2f)
+    }
+    fill(p.ink) { soft(13.6f, 13.6f, 3.8f, 3.8f, 1.2f) }
+}
+
 object MedoraIcons {
     val Home: ImageVector by lazy { home(LightPal) }
     val Library: ImageVector by lazy { library(LightPal) }
@@ -223,6 +244,7 @@ object MedoraIcons {
     val Share: ImageVector by lazy { share(LightPal) }
     val Exit: ImageVector by lazy { exit(LightPal) }
     val Sliders: ImageVector by lazy { sliders(LightPal) }
+    val Planner: ImageVector by lazy { planner(LightPal) }
 
     // The same icons for the dark theme.
     internal val dark: Map<ImageVector, ImageVector> by lazy {
@@ -239,6 +261,7 @@ object MedoraIcons {
             Share to share(DarkPal),
             Exit to exit(DarkPal),
             Sliders to sliders(DarkPal),
+            Planner to planner(DarkPal),
         )
     }
 }

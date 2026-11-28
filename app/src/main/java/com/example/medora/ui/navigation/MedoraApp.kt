@@ -83,6 +83,9 @@ import com.example.medora.ui.screens.ReviewScreen
 import com.example.medora.ui.screens.SettingsScreen
 import com.example.medora.ui.screens.SourcesScreen
 import com.example.medora.ui.screens.StudyScreen
+import com.example.medora.ui.screens.PlannerScreen
+import com.example.medora.ui.screens.FocusLink
+import com.example.medora.ui.screens.PendingFocus
 
 private const val ROUTE_SETTINGS = "settings"
 private const val ROUTE_LECTURE = "lecture/{id}"
@@ -103,6 +106,7 @@ private enum class Tab(val route: String, @StringRes val label: Int, val icon: I
     Home("home", R.string.tab_home, MedoraIcons.Home),
     Library("library", R.string.tab_library, MedoraIcons.Library),
     Study("study", R.string.tab_study, MedoraIcons.Study),
+    Planner("planner", R.string.b5_tab_planner, MedoraIcons.Planner),
     Progress("progress", R.string.tab_progress, MedoraIcons.Progress),
 }
 
@@ -199,6 +203,16 @@ fun MedoraApp() {
                             onMistakes = { navController.navigate(ROUTE_MISTAKES) },
                         )
                     }
+                    composable(Tab.Planner.route) {
+                        PlannerScreen(onFocus = { task ->
+                            FocusLink.pending = PendingFocus(task.id, task.title, task.minutes)
+                            navController.navigate(Tab.Study.route) {
+                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        })
+                    }
                     composable(Tab.Progress.route) {
                         ProgressScreen(onOpenLecture = { navController.navigate("lecture/$it") })
                     }
@@ -264,7 +278,7 @@ fun MedoraApp() {
             }
         }
         if (!noTopBar) MedoraTopBar(
-            title = if (tab == Tab.Home || tab == Tab.Library || tab == Tab.Progress) "" else stringResource(titleRes),
+            title = if (tab == Tab.Home || tab == Tab.Library || tab == Tab.Progress || tab == Tab.Planner) "" else stringResource(titleRes),
             modifier = Modifier.align(Alignment.TopCenter),
             startIcon = if (isSub) MedoraIcons.Back else null,
             startDescription = stringResource(R.string.back),

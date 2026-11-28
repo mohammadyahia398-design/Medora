@@ -151,7 +151,7 @@ object BackupManager {
                     "SELECT name FROM sqlite_master WHERE type='table' AND name='lectures'",
                     null,
                 ).use { it.moveToFirst() }
-                db.version in 1..5 && hasLectures
+                db.version in 1..6 && hasLectures
             }
         } catch (e: Exception) {
             false

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="b5_tab_planner">Planner</string>
+    <string name="b5_title">Your plan</string>
+    <string name="b5_add">Add</string>
+    <string name="b5_cancel">Cancel</string>
+    <string name="b5_tab_day">Day</string>
+    <string name="b5_tab_week">This week</string>
+    <string name="b5_tab_all">All</string>
+    <string name="b5_week_progress">Weekly progress</string>
+    <string name="b5_week_count">%1$d of %2$d tasks done</string>
+    <string name="b5_overdue">Overdue</string>
+    <string name="b5_empty">No tasks here. Tap + to plan one.</string>
+    <string name="b5_minutes">%1$d min</string>
+    <string name="b5_focused">%1$d min focused</string>
+    <string name="b5_done">Done</string>
+    <string name="b5_todo">To do</string>
+    <string name="b5_start_focus">Start focus on this task</string>
+    <string name="b5_new_task">New task</string>
+    <string name="b5_field_title">Task</string>
+    <string name="b5_field_subject">Subject (optional)</string>
+    <string name="b5_field_time">Focus time</string>
+    <string name="b5_field_day">Day</string>
+    <string name="b5_today">Today</string>
+    <string name="b5_tomorrow">Tomorrow</string>
+    <string name="b5_delete_title">Delete this task?</string>
+    <string name="b5_delete">Delete</string>
+    <string name="b5_detach">Remove</string>
+</resources>

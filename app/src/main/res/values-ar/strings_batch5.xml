@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="b5_tab_planner">المخطط</string>
+    <string name="b5_title">خطتك</string>
+    <string name="b5_add">إضافة</string>
+    <string name="b5_cancel">إلغاء</string>
+    <string name="b5_tab_day">اليوم</string>
+    <string name="b5_tab_week">هذا الأسبوع</string>
+    <string name="b5_tab_all">الكل</string>
+    <string name="b5_week_progress">تقدم الأسبوع</string>
+    <string name="b5_week_count">أنجزت %1$d من %2$d مهام</string>
+    <string name="b5_overdue">متأخرة</string>
+    <string name="b5_empty">لا توجد مهام هنا. اضغط + لإضافة مهمة.</string>
+    <string name="b5_minutes">%1$d دقيقة</string>
+    <string name="b5_focused">%1$d دقيقة تركيز</string>
+    <string name="b5_done">منجزة</string>
+    <string name="b5_todo">لم تُنجز</string>
+    <string name="b5_start_focus">ابدأ التركيز على هذه المهمة</string>
+    <string name="b5_new_task">مهمة جديدة</string>
+    <string name="b5_field_title">المهمة</string>
+    <string name="b5_field_subject">المادة (اختياري)</string>
+    <string name="b5_field_time">مدة التركيز</string>
+    <string name="b5_field_day">اليوم</string>
+    <string name="b5_today">اليوم</string>
+    <string name="b5_tomorrow">غداً</string>
+    <string name="b5_delete_title">حذف هذه المهمة؟</string>
+    <string name="b5_delete">حذف</string>
+    <string name="b5_detach">إزالة</string>
+</resources>

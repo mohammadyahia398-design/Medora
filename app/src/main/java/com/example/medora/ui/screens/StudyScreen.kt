@@ -28,6 +28,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -51,6 +52,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.medora.R
@@ -89,6 +91,13 @@ fun StudyScreen(
     var menuOpen by remember { mutableStateOf(false) }
     val quizReady = cards.size >= MIN_CARDS_FOR_QUIZ || aiQuestions > 0
     val isBreak = focus.phase == FocusViewModel.Phase.Break
+    val pending = FocusLink.pending
+    LaunchedEffect(pending) {
+        if (pending != null) {
+            focus.attachTask(pending)
+            FocusLink.pending = null
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -154,6 +163,26 @@ fun StudyScreen(
             color = MaterialTheme.colorScheme.onBackground,
             textAlign = TextAlign.Center,
         )
+        if (focus.taskTitle.isNotBlank()) {
+            Spacer(Modifier.height(Spacing.s))
+            Row(
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surface)
+                    .padding(start = Spacing.l, end = Spacing.xs),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = focus.taskTitle,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.widthIn(max = 220.dp),
+                )
+                TextButton(onClick = { focus.detachTask() }) { Text(stringResource(R.string.b5_detach)) }
+            }
+        }
         Spacer(Modifier.height(Spacing.xl))
 
         FocusDial(focus = focus, modifier = Modifier.fillMaxWidth(0.82f))
@@ -187,7 +216,7 @@ fun StudyScreen(
             Spacer(Modifier.height(Spacing.s))
             Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
                 TextButton(onClick = { focus.reset() }) { Text(stringResource(R.string.b4_reset)) }
-                TextButton(onClick = { focus.finishPhase() }) { Text(stringResource(R.string.b4_skip)) }
+                TextButton(onClick = { focus.skip() }) { Text(stringResource(R.string.b4_skip)) }
             }
         }
         if (focus.sessionsDone > 0) {

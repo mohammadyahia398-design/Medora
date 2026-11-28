@@ -106,9 +106,27 @@ private val MIGRATION_4_5 = object : Migration(4, 5) {
     }
 }
 
+// Version 6: study planner tasks. Nothing else changes, so all data is kept.
+private val MIGRATION_5_6 = object : Migration(5, 6) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `tasks` (" +
+                "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                "`title` TEXT NOT NULL, " +
+                "`subject` TEXT NOT NULL, " +
+                "`day` INTEGER NOT NULL, " +
+                "`minutes` INTEGER NOT NULL, " +
+                "`done` INTEGER NOT NULL, " +
+                "`doneAt` INTEGER NOT NULL, " +
+                "`focusMinutes` INTEGER NOT NULL, " +
+                "`createdAt` INTEGER NOT NULL)"
+        )
+    }
+}
+
 @Database(
-    entities = [Lecture::class, Card::class, ReviewLog::class, QuizResult::class, AiQuestion::class, Mistake::class, StudyPack::class],
-    version = 5,
+    entities = [Lecture::class, Card::class, ReviewLog::class, QuizResult::class, AiQuestion::class, Mistake::class, StudyPack::class, StudyTask::class],
+    version = 6,
     exportSchema = false,
 )
 abstract class MedoraDatabase : RoomDatabase() {
@@ -118,6 +136,7 @@ abstract class MedoraDatabase : RoomDatabase() {
     abstract fun aiQuestionDao(): AiQuestionDao
     abstract fun mistakeDao(): MistakeDao
     abstract fun studyPackDao(): StudyPackDao
+    abstract fun taskDao(): StudyTaskDao
 
     companion object {
         @Volatile private var instance: MedoraDatabase? = null
@@ -136,7 +155,7 @@ abstract class MedoraDatabase : RoomDatabase() {
                     context.applicationContext,
                     MedoraDatabase::class.java,
                     "medora.db",
-                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5).build().also { instance = it }
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6).build().also { instance = it }
             }
     }
 }
