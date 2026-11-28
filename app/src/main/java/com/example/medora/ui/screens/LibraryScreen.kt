@@ -2,7 +2,10 @@ package com.example.medora.ui.screens
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -53,6 +56,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.medora.R
 import com.example.medora.data.Lecture
+import com.example.medora.data.NoteImages
+import com.example.medora.ui.components.plainNote
 import com.example.medora.ui.components.MedoraCard
 import com.example.medora.ui.components.MedoraArrowButton
 import com.example.medora.ui.components.MedoraScreenTitle
@@ -121,10 +126,20 @@ fun LibraryScreen(
     val noSubject = stringResource(R.string.library_no_subject)
     var tag by remember { mutableStateOf<String?>(null) }
     var tab by remember { mutableStateOf(0) }
+    var kind by remember { mutableStateOf(0) }
     var openGroup by remember { mutableStateOf<String?>(null) }
     var menuOpen by remember { mutableStateOf(false) }
     val allTags = remember(lectures) { lectures.flatMap { it.tagList() }.distinct().sortedBy { it.lowercase() } }
-    val groups = remember(lectures, query, noSubject, tag) { groupLectures(lectures, query.trim(), noSubject, tag) }
+    // Kind filter (all / with summary / with images) works on the lectures tab only.
+    val effectiveKind = if (tab == 1) kind else 0
+    val filtered = remember(lectures, effectiveKind) {
+        when (effectiveKind) {
+            1 -> lectures.filter { it.summary.isNotBlank() }
+            2 -> lectures.filter { l -> l.content.lineSequence().any { NoteImages.pathOf(it) != null } }
+            else -> lectures
+        }
+    }
+    val groups = remember(filtered, query, noSubject, tag) { groupLectures(filtered, query.trim(), noSubject, tag) }
     val shown = remember(groups, openGroup) { if (openGroup == null) groups else groups.filter { it.name == openGroup } }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -140,7 +155,9 @@ fun LibraryScreen(
                 contentPadding = PaddingValues(start = Spacing.l, end = Spacing.l, top = Spacing.xs, bottom = 96.dp),
                 verticalArrangement = Arrangement.spacedBy(Spacing.m),
             ) {
-                item(key = "title") { MedoraScreenTitle(stringResource(R.string.tab_library)) }
+                item(key = "title") {
+                    MedoraScreenTitle(stringResource(if (tab == 1) R.string.b6_notes_title else R.string.tab_library))
+                }
                 item(key = "tabs") {
                     MedoraTextTabs(
                         titles = listOf(
@@ -160,7 +177,7 @@ fun LibraryScreen(
                         onValueChange = { query = it },
                         placeholder = { Text(stringResource(R.string.library_search)) },
                         singleLine = true,
-                        shape = MaterialTheme.shapes.small,
+                        shape = CircleShape,
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedContainerColor = MaterialTheme.colorScheme.surface,
                             unfocusedContainerColor = MaterialTheme.colorScheme.surface,
@@ -169,15 +186,25 @@ fun LibraryScreen(
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
+                if (tab == 1) {
+                    item(key = "kinds") {
+                        val names = listOf(
+                            stringResource(R.string.b6_kind_all),
+                            stringResource(R.string.b6_kind_summaries),
+                            stringResource(R.string.b6_kind_images),
+                        )
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
+                            items(names.size, key = { "k_$it" }) { i ->
+                                PillChip(names[i], selected = kind == i, onClick = { kind = i })
+                            }
+                        }
+                    }
+                }
                 if (allTags.isNotEmpty()) {
                     item(key = "tags") {
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
                             items(allTags, key = { "t_$it" }) { t ->
-                                FilterChip(
-                                    selected = tag == t,
-                                    onClick = { tag = if (tag == t) null else t },
-                                    label = { Text("#$t") },
-                                )
+                                PillChip("#$t", selected = tag == t, onClick = { tag = if (tag == t) null else t })
                             }
                         }
                     }
@@ -203,11 +230,7 @@ fun LibraryScreen(
                 } else {
                     if (openGroup != null) {
                         item(key = "open_group") {
-                            FilterChip(
-                                selected = true,
-                                onClick = { openGroup = null },
-                                label = { Text(openGroup.orEmpty() + "  ×") },
-                            )
+                            PillChip(openGroup.orEmpty() + "  ×", selected = true, onClick = { openGroup = null })
                         }
                     }
                     shown.forEach { group ->
@@ -220,13 +243,11 @@ fun LibraryScreen(
                                 modifier = Modifier.padding(top = Spacing.xs),
                             )
                         }
-                        items(group.items, key = { it.lecture.id }) { hit ->
-                            val lecture = hit.lecture
-                            LectureItem(
-                                lecture,
-                                snippet = hit.snippet,
-                                onOpen = { onOpenLecture(lecture.id) },
-                                onDelete = { toDelete = lecture },
+                        item(key = "g_" + group.name) {
+                            NotesGrid(
+                                items = group.items,
+                                onOpen = { onOpenLecture(it.id) },
+                                onDelete = { toDelete = it },
                             )
                         }
                     }
@@ -343,7 +364,7 @@ private fun SubjectCard(group: LectureGroup, toneIndex: Int, onClick: () -> Unit
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(MaterialTheme.shapes.medium)
+            .clip(MaterialTheme.shapes.large)
             .background(tone.container)
             .clickable(onClick = onClick)
             .padding(Spacing.card),
@@ -387,48 +408,108 @@ private fun SubjectCard(group: LectureGroup, toneIndex: Int, onClick: () -> Unit
     }
 }
 
+// Two columns of pastel note cards with different heights. Tap opens, long press deletes.
 @Composable
-private fun LectureItem(lecture: Lecture, snippet: String?, onOpen: () -> Unit, onDelete: () -> Unit) {
-    MedoraCard(modifier = Modifier.fillMaxWidth().clickable(onClick = onOpen), spaced = false) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = lecture.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                )
-                if (lecture.subject.isNotBlank()) {
-                    Text(text = lecture.subject, style = MaterialTheme.typography.bodyMedium)
+private fun NotesGrid(items: List<LectureHit>, onOpen: (Lecture) -> Unit, onDelete: (Lecture) -> Unit) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.m)) {
+        for (col in 0..1) {
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
+                items.forEachIndexed { i, hit ->
+                    if (i % 2 == col) NoteCard(hit, onOpen, onDelete)
                 }
-                val tags = lecture.tagList()
-                if (tags.isNotEmpty()) {
-                    Text(
-                        text = tags.joinToString("  ") { "#$it" },
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-                if (snippet != null) {
-                    Text(
-                        text = snippet,
-                        style = MaterialTheme.typography.bodySmall,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-                Spacer(Modifier.height(Spacing.xs))
-                Text(
-                    text = DateFormat.getDateInstance().format(Date(lecture.createdAt)),
-                    style = MaterialTheme.typography.bodySmall,
-                )
             }
-            TextButton(
-                onClick = onDelete,
-                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
-            ) { Text(stringResource(R.string.delete)) }
         }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun NoteCard(hit: LectureHit, onOpen: (Lecture) -> Unit, onDelete: (Lecture) -> Unit) {
+    val lecture = hit.lecture
+    val tone = MedoraPastel.tone(lecture.id.toInt())
+    val lines = when ((lecture.id % 3).toInt()) {
+        0 -> 3
+        1 -> 5
+        else -> 2
+    }
+    val preview = remember(lecture.id, lecture.summary, lecture.content, hit.snippet) {
+        hit.snippet ?: plainNote(
+            lecture.summary.ifBlank {
+                lecture.content.lineSequence()
+                    .filter { it.isNotBlank() && NoteImages.pathOf(it) == null }
+                    .joinToString(" ")
+            }
+        ).take(260)
+    }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(MaterialTheme.shapes.large)
+            .background(tone.container)
+            .combinedClickable(onClick = { onOpen(lecture) }, onLongClick = { onDelete(lecture) })
+            .padding(Spacing.card),
+    ) {
+        Text(
+            text = lecture.title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = tone.content,
+            maxLines = 3,
+            overflow = TextOverflow.Ellipsis,
+        )
+        if (preview.isNotBlank()) {
+            Spacer(Modifier.height(Spacing.s))
+            Text(
+                text = preview,
+                style = MaterialTheme.typography.bodySmall,
+                color = tone.content.copy(alpha = 0.7f),
+                maxLines = lines,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        Spacer(Modifier.height(Spacing.m))
+        if (lecture.subject.isNotBlank()) {
+            Text(
+                text = lecture.subject,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surface)
+                    .padding(horizontal = Spacing.m, vertical = Spacing.xs),
+            )
+            Spacer(Modifier.height(Spacing.s))
+        }
+        Text(
+            text = DateFormat.getDateInstance().format(Date(lecture.createdAt)),
+            style = MaterialTheme.typography.labelSmall,
+            color = tone.content.copy(alpha = 0.6f),
+        )
+    }
+}
+
+// Capsule filter chip. The chosen one is filled with the main color.
+@Composable
+private fun PillChip(text: String, selected: Boolean, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .heightIn(min = 40.dp)
+            .clip(CircleShape)
+            .background(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(horizontal = Spacing.l),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Medium,
+            color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+        )
     }
 }
 
