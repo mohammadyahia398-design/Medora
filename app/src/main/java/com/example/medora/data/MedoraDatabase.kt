@@ -131,9 +131,23 @@ private val MIGRATION_6_7 = object : Migration(6, 7) {
     }
 }
 
+// Version 8: notifications center. One new table, all data is kept.
+private val MIGRATION_7_8 = object : Migration(7, 8) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `notifications` (" +
+                "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                "`kind` TEXT NOT NULL, " +
+                "`value` INTEGER NOT NULL, " +
+                "`at` INTEGER NOT NULL, " +
+                "`read` INTEGER NOT NULL)"
+        )
+    }
+}
+
 @Database(
-    entities = [Lecture::class, Card::class, ReviewLog::class, QuizResult::class, AiQuestion::class, Mistake::class, StudyPack::class, StudyTask::class],
-    version = 7,
+    entities = [Lecture::class, Card::class, ReviewLog::class, QuizResult::class, AiQuestion::class, Mistake::class, StudyPack::class, StudyTask::class, AppNotification::class],
+    version = 8,
     exportSchema = false,
 )
 abstract class MedoraDatabase : RoomDatabase() {
@@ -144,6 +158,7 @@ abstract class MedoraDatabase : RoomDatabase() {
     abstract fun mistakeDao(): MistakeDao
     abstract fun studyPackDao(): StudyPackDao
     abstract fun taskDao(): StudyTaskDao
+    abstract fun notificationDao(): NotificationDao
 
     companion object {
         @Volatile private var instance: MedoraDatabase? = null
@@ -162,7 +177,7 @@ abstract class MedoraDatabase : RoomDatabase() {
                     context.applicationContext,
                     MedoraDatabase::class.java,
                     "medora.db",
-                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7).build().also { instance = it }
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8).build().also { instance = it }
             }
     }
 }

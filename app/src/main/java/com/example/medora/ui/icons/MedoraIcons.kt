@@ -231,6 +231,20 @@ private fun planner(p: Pal) = icon("Planner") {
     fill(p.ink) { soft(13.6f, 13.6f, 3.8f, 3.8f, 1.2f) }
 }
 
+// Bell: a soft body with a dark rim and a dark clapper.
+private fun bell(p: Pal) = icon("Bell") {
+    fill(p.soft) {
+        moveTo(6.2f, 16.6f)
+        lineTo(6.2f, 11f)
+        arcTo(5.8f, 5.8f, 0f, false, true, 17.8f, 11f)
+        lineTo(17.8f, 16.6f)
+        close()
+    }
+    line(p.ink, 2.4f) { moveTo(4.8f, 17.2f); lineTo(19.2f, 17.2f) }
+    line(p.ink, 2.2f) { moveTo(12f, 3.4f); lineTo(12f, 5.2f) }
+    fill(p.ink) { circle(12f, 20.2f, 1.5f) }
+}
+
 object MedoraIcons {
     val Home: ImageVector by lazy { home(LightPal) }
     val Library: ImageVector by lazy { library(LightPal) }
@@ -245,6 +259,7 @@ object MedoraIcons {
     val Exit: ImageVector by lazy { exit(LightPal) }
     val Sliders: ImageVector by lazy { sliders(LightPal) }
     val Planner: ImageVector by lazy { planner(LightPal) }
+    val Bell: ImageVector by lazy { bell(LightPal) }
 
     // The same icons for the dark theme.
     internal val dark: Map<ImageVector, ImageVector> by lazy {
@@ -262,6 +277,7 @@ object MedoraIcons {
             Exit to exit(DarkPal),
             Sliders to sliders(DarkPal),
             Planner to planner(DarkPal),
+            Bell to bell(DarkPal),
         )
     }
 }

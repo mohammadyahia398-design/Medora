@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="b10_notif_title">Notifications</string>
+    <string name="b10_notif_open">Open notifications</string>
+    <string name="b10_notif_review">Cards due for review: %1$d</string>
+    <string name="b10_notif_task">Tasks left for today: %1$d</string>
+    <string name="b10_week">This week</string>
+    <string name="b10_earlier">Earlier</string>
+    <string name="b10_mark_read">Mark all as read</string>
+    <string name="b10_clear">Clear all</string>
+    <string name="b10_empty">Nothing here yet. Reminders for due cards and today\'s tasks will show up here.</string>
+</resources>

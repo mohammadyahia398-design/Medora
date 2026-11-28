@@ -9,6 +9,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.medora.MainActivity
 import com.example.medora.R
+import com.example.medora.data.AppNotification
 import com.example.medora.data.MedoraDatabase
 
 // Runs once a day. Sends a notification only if there are cards due for review.
@@ -20,16 +21,30 @@ class ReminderWorker(
     override suspend fun doWork(): Result {
         return try {
             if (!ReminderScheduler.isEnabled(applicationContext)) return Result.success()
-            val dueCount = MedoraDatabase.get(applicationContext)
-                .cardDao()
-                .getDue(System.currentTimeMillis(), 999)
-                .size
-            if (dueCount > 0) notifyDue(dueCount)
+            val db = MedoraDatabase.get(applicationContext)
+            val dueCount = db.cardDao().getDue(System.currentTimeMillis(), 999).size
+            val openTasks = db.taskDao().countOpenOn(todayStart())
+            // The notifications center keeps a line for each reminder, even if the phone
+            // notification is switched off.
+            if (dueCount > 0) {
+                db.notificationDao().insert(AppNotification(kind = AppNotification.KIND_REVIEW, value = dueCount))
+                notifyDue(dueCount)
+            }
+            if (openTasks > 0) {
+                db.notificationDao().insert(AppNotification(kind = AppNotification.KIND_TASK, value = openTasks))
+            }
             Result.success()
         } catch (e: Exception) {
             Result.success()
         }
     }
+
+    private fun todayStart(): Long = java.util.Calendar.getInstance().apply {
+        set(java.util.Calendar.HOUR_OF_DAY, 0)
+        set(java.util.Calendar.MINUTE, 0)
+        set(java.util.Calendar.SECOND, 0)
+        set(java.util.Calendar.MILLISECOND, 0)
+    }.timeInMillis
 
     private fun notifyDue(count: Int) {
         val manager = NotificationManagerCompat.from(applicationContext)

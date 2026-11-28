@@ -43,6 +43,7 @@ import com.example.medora.ui.screens.LectureDetailScreen
 import com.example.medora.ui.screens.LibraryScreen
 import com.example.medora.ui.screens.MistakesScreen
 import com.example.medora.ui.screens.NoteEditorScreen
+import com.example.medora.ui.screens.NotificationsScreen
 import com.example.medora.ui.screens.PackDetailScreen
 import com.example.medora.ui.screens.PacksScreen
 import com.example.medora.ui.screens.PracticeScreen
@@ -57,6 +58,7 @@ import com.example.medora.ui.screens.FocusLink
 import com.example.medora.ui.screens.PendingFocus
 
 private const val ROUTE_SETTINGS = "settings"
+private const val ROUTE_NOTIFICATIONS = "notifications"
 private const val ROUTE_LECTURE = "lecture/{id}"
 private const val ROUTE_REVIEW = "review"
 private const val ROUTE_QUIZ = "quiz"
@@ -87,6 +89,7 @@ fun MedoraApp() {
     val route = backStackEntry?.destination?.route
     val tab = Tab.values().firstOrNull { it.route == route }
     val isSettings = route == ROUTE_SETTINGS
+    val isNotifications = route == ROUTE_NOTIFICATIONS
     val isLecture = route == ROUTE_LECTURE
     val isReview = route == ROUTE_REVIEW
     val isQuiz = route == ROUTE_QUIZ
@@ -100,10 +103,11 @@ fun MedoraApp() {
     val isFlow = route == ROUTE_SPLASH || route == ROUTE_ONBOARDING || route == ROUTE_GOAL || isReview || isQuiz
     // The Focus screen (Study tab) has its own capsules on top, so no top bar there.
     val noTopBar = isFlow || tab == Tab.Study
-    val isSub = isSettings || isLecture || isReview || isQuiz || isNote || isExam || isSources || isPractice || isMistakes || isPacks
+    val isSub = isSettings || isNotifications || isLecture || isReview || isQuiz || isNote || isExam || isSources || isPractice || isMistakes || isPacks
 
     val titleRes = when {
         isSettings -> R.string.settings
+        isNotifications -> R.string.b10_notif_title
         isLecture -> R.string.lecture_details
         isReview -> R.string.review_title
         isQuiz -> R.string.quiz_title
@@ -185,7 +189,10 @@ fun MedoraApp() {
                     composable(Tab.Progress.route) {
                         ProgressScreen(onOpenLecture = { navController.navigate("lecture/$it") })
                     }
-                    composable(ROUTE_SETTINGS) { SettingsScreen() }
+                    composable(ROUTE_SETTINGS) {
+                        SettingsScreen(onOpenNotifications = { navController.navigate(ROUTE_NOTIFICATIONS) })
+                    }
+                    composable(ROUTE_NOTIFICATIONS) { NotificationsScreen() }
                     composable(ROUTE_REVIEW) {
                         ReviewScreen(
                             onOpenLecture = { navController.navigate("lecture/$it") },
@@ -247,7 +254,7 @@ fun MedoraApp() {
             }
         }
         if (!noTopBar) MedoraTopBar(
-            title = if (tab == Tab.Home || tab == Tab.Library || tab == Tab.Progress || tab == Tab.Planner) "" else stringResource(titleRes),
+            title = if (tab == Tab.Home || tab == Tab.Library || tab == Tab.Progress || tab == Tab.Planner || isNotifications) "" else stringResource(titleRes),
             modifier = Modifier.align(Alignment.TopCenter),
             startIcon = if (isSub) MedoraIcons.Back else null,
             startDescription = stringResource(R.string.back),

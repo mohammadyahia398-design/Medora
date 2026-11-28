@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="b10_notif_title">الإشعارات</string>
+    <string name="b10_notif_open">فتح الإشعارات</string>
+    <string name="b10_notif_review">بطاقات مستحقة للمراجعة: %1$d</string>
+    <string name="b10_notif_task">مهام متبقية لليوم: %1$d</string>
+    <string name="b10_week">هذا الأسبوع</string>
+    <string name="b10_earlier">أقدم</string>
+    <string name="b10_mark_read">تعليم الكل كمقروء</string>
+    <string name="b10_clear">مسح الكل</string>
+    <string name="b10_empty">لا شيء هنا بعد. ستظهر هنا تذكيرات البطاقات المستحقة ومهام اليوم.</string>
+</resources>

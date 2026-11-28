@@ -36,6 +36,9 @@ interface StudyTaskDao {
     @Query("UPDATE tasks SET focusMinutes = focusMinutes + :minutes WHERE id = :id")
     suspend fun addFocus(id: Long, minutes: Int)
 
+    @Query("SELECT COUNT(*) FROM tasks WHERE day = :day AND done = 0")
+    suspend fun countOpenOn(day: Long): Int
+
     @Query("DELETE FROM tasks WHERE id = :id")
     suspend fun delete(id: Long)
 }

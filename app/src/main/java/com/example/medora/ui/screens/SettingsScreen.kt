@@ -55,7 +55,7 @@ import com.example.medora.ui.theme.Spacing
 
 // AI keys: one Gemini key (main) and one OpenRouter key (backup). Both optional.
 @Composable
-fun SettingsScreen() {
+fun SettingsScreen(onOpenNotifications: () -> Unit = {}) {
     val context = LocalContext.current
     val settings = remember { AiSettings(context) }
     var geminiKey by remember { mutableStateOf(settings.geminiKey) }
@@ -106,6 +106,8 @@ fun SettingsScreen() {
         verticalArrangement = Arrangement.spacedBy(Spacing.m),
     ) {
         SettingsStatsRow()
+
+        SettingsNotificationsGroup(onOpen = onOpenNotifications)
 
         AppearanceSettingsCard()
 
