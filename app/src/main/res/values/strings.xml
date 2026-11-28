@@ -98,6 +98,6 @@
     <string name="stat_week_title">Last 7 days</string>
     <string name="stat_streak">Streak</string>
     <string name="stat_streak_days">%1$d days</string>
-    <string name="stat_goal_today">Today's goal</string>
+    <string name="stat_goal_today">Today\'s goal</string>
     <string name="stat_goal_set">Daily goal: %1$d cards</string>
 </resources>
