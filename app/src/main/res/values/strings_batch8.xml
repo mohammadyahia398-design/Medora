@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="b8_library">My stickers</string>
+    <string name="b8_library_add">+ Add</string>
+    <string name="b8_library_empty">Add images from your phone to make your own stickers</string>
+    <string name="b8_library_delete_title">Remove from your stickers?</string>
+</resources>

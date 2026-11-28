@@ -1,10 +1,14 @@
 package com.example.medora.ui.screens
 
+import android.graphics.Bitmap
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -20,6 +24,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -32,10 +37,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -44,6 +51,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -56,6 +65,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.medora.R
 import com.example.medora.data.NoteImages
 import com.example.medora.data.Sticker
+import com.example.medora.data.StickerLibrary
 import com.example.medora.data.Stickers
 import com.example.medora.ui.components.NotePreview
 import com.example.medora.ui.components.StickerBoard
@@ -112,6 +122,7 @@ private fun togglePrefix(v: TextFieldValue, prefix: String): TextFieldValue {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 // Note editor, soft style: big borderless title, writing area, and a floating capsule of tools.
 // The capsule opens a second capsule for text format and a rounded panel for stickers.
 // Stickers sit in a layer over the writing area: one finger moves, two fingers resize and rotate.
@@ -129,6 +140,9 @@ fun NoteEditorScreen(
     var preview by remember(loaded.id) { mutableStateOf(false) }
     var showFormat by remember { mutableStateOf(false) }
     var showStickers by remember { mutableStateOf(false) }
+    var showLibrary by remember { mutableStateOf(false) }
+    var library by remember { mutableStateOf(emptyList<String>()) }
+    var libToDelete by remember { mutableStateOf<String?>(null) }
     var toRemove by remember { mutableStateOf<Sticker?>(null) }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -137,6 +151,7 @@ fun NoteEditorScreen(
         val jitter = ((stickers.size % 5) - 2) * 0.06f
         stickers.add(Sticker(id = System.nanoTime(), image = image, emoji = emoji, x = 0.5f + jitter, y = 0.35f + jitter))
         showStickers = false
+        showLibrary = false
     }
 
     // System photo picker: no storage permission needed.
@@ -152,17 +167,18 @@ fun NoteEditorScreen(
             }
         }
     }
-    val stickerPicker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        if (uri != null) {
+    // "My stickers": pick images once; each is saved with a white edge.
+    val libraryPicker = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia(10)) { uris ->
+        if (uris.isNotEmpty()) {
             scope.launch {
-                val path = withContext(Dispatchers.IO) { NoteImages.save(context, uri)?.let { NoteImages.pathOf(it) } }
-                if (path != null) {
-                    addSticker(path, "")
-                } else {
-                    Toast.makeText(context, R.string.note_image_failed, Toast.LENGTH_SHORT).show()
-                }
+                val failed = withContext(Dispatchers.IO) { uris.count { !StickerLibrary.add(context, it) } }
+                library = withContext(Dispatchers.IO) { StickerLibrary.list(context) }
+                if (failed > 0) Toast.makeText(context, R.string.note_image_failed, Toast.LENGTH_SHORT).show()
             }
         }
+    }
+    LaunchedEffect(showLibrary) {
+        if (showLibrary) library = withContext(Dispatchers.IO) { StickerLibrary.list(context) }
     }
     val imageRequest = PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
     val ink = MaterialTheme.colorScheme.onBackground
@@ -272,23 +288,6 @@ fun NoteEditorScreen(
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        item(key = "gallery") {
-                            Box(
-                                modifier = Modifier
-                                    .heightIn(min = 44.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.primary)
-                                    .clickable(role = Role.Button) { stickerPicker.launch(imageRequest) }
-                                    .padding(horizontal = 16.dp),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.b7_sticker_gallery),
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                )
-                            }
-                        }
                         items(Stickers.BUILT_IN, key = { it }) { e ->
                             Box(
                                 modifier = Modifier
@@ -297,6 +296,61 @@ fun NoteEditorScreen(
                                     .clickable(role = Role.Button) { addSticker("", e) },
                                 contentAlignment = Alignment.Center,
                             ) { Text(text = e, fontSize = 28.sp) }
+                        }
+                    }
+                }
+            }
+            if (showLibrary) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(28.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .padding(8.dp),
+                ) {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        item(key = "add") {
+                            Box(
+                                modifier = Modifier
+                                    .heightIn(min = 44.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.primary)
+                                    .clickable(role = Role.Button) {
+                                        libraryPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                                    }
+                                    .padding(horizontal = 16.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.b8_library_add),
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                )
+                            }
+                        }
+                        if (library.isEmpty()) {
+                            item(key = "empty") {
+                                Text(
+                                    text = stringResource(R.string.b8_library_empty),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.widthIn(max = 220.dp),
+                                )
+                            }
+                        }
+                        items(library, key = { it }) { path ->
+                            LibraryThumb(
+                                path = path,
+                                onClick = {
+                                    scope.launch {
+                                        val copy = withContext(Dispatchers.IO) { StickerLibrary.useCopy(context, path) }
+                                        if (copy != null) addSticker(copy, "")
+                                    }
+                                },
+                                onLongClick = { libToDelete = path },
+                            )
                         }
                     }
                 }
@@ -314,13 +368,39 @@ fun NoteEditorScreen(
                 CapsuleItem(stringResource(R.string.b7_format), active = showFormat) { showFormat = !showFormat }
                 CapsuleItem(stringResource(R.string.note_table)) { body = insertTable(body) }
                 CapsuleItem(stringResource(R.string.note_image)) { imagePicker.launch(imageRequest) }
-                CapsuleItem(stringResource(R.string.b7_sticker), active = showStickers) { showStickers = !showStickers }
+                CapsuleItem(stringResource(R.string.b7_sticker), active = showStickers) {
+                    showStickers = !showStickers
+                    if (showStickers) showLibrary = false
+                }
+                CapsuleItem(stringResource(R.string.b8_library), active = showLibrary) {
+                    showLibrary = !showLibrary
+                    if (showLibrary) showStickers = false
+                }
                 CapsuleItem(
                     stringResource(if (preview) R.string.note_edit else R.string.note_preview),
                     active = preview,
                 ) { preview = !preview }
             }
         }
+    }
+
+    libToDelete?.let { path ->
+        AlertDialog(
+            onDismissRequest = { libToDelete = null },
+            title = { Text(stringResource(R.string.b8_library_delete_title)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    libToDelete = null
+                    scope.launch {
+                        withContext(Dispatchers.IO) { StickerLibrary.delete(context, path) }
+                        library = withContext(Dispatchers.IO) { StickerLibrary.list(context) }
+                    }
+                }) { Text(stringResource(R.string.delete)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { libToDelete = null }) { Text(stringResource(R.string.cancel)) }
+            },
+        )
     }
 
     toRemove?.let { target ->
@@ -373,5 +453,32 @@ private fun CapsuleItem(text: String, active: Boolean = false, onClick: () -> Un
             maxLines = 1,
             color = if (active) MaterialTheme.colorScheme.inverseSurface else MaterialTheme.colorScheme.inverseOnSurface,
         )
+    }
+}
+
+// One saved sticker in the library panel. Tap puts it on the note, long press removes it.
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun LibraryThumb(path: String, onClick: () -> Unit, onLongClick: () -> Unit) {
+    val context = LocalContext.current
+    val bitmap by produceState<Bitmap?>(null, path) {
+        value = withContext(Dispatchers.IO) { NoteImages.load(context, path, 256) }
+    }
+    Box(
+        modifier = Modifier
+            .size(64.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        val b = bitmap
+        if (b != null) {
+            Image(
+                bitmap = b.asImageBitmap(),
+                contentDescription = null,
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.fillMaxSize().padding(2.dp),
+            )
+        }
     }
 }

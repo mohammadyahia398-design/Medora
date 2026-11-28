@@ -70,7 +70,7 @@ object NoteImages {
     // Removes images that no note uses any more (frees space).
     fun deleteUnused(context: Context, used: Set<String>) {
         File(context.filesDir, DIR).listFiles()?.forEach { f ->
-            if ("$DIR/${f.name}" !in used) f.delete()
+            if ("$DIR/${f.name}" !in used && !f.name.startsWith("lib_")) f.delete()
         }
     }
 

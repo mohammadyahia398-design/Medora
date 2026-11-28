@@ -128,7 +128,15 @@ private fun StickerPhoto(path: String) {
         value = withContext(Dispatchers.IO) { NoteImages.load(context, path, 512) }
     }
     val b = bitmap
-    if (b != null) {
+    if (b != null && path.endsWith(".png")) {
+        // Library sticker: the white edge is already part of the picture.
+        Image(
+            bitmap = b.asImageBitmap(),
+            contentDescription = null,
+            contentScale = ContentScale.Fit,
+            modifier = Modifier.fillMaxSize(),
+        )
+    } else if (b != null) {
         val shape = RoundedCornerShape(18.dp)
         Image(
             bitmap = b.asImageBitmap(),

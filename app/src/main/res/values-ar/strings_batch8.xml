@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="b8_library">مكتبتي</string>
+    <string name="b8_library_add">+ إضافة</string>
+    <string name="b8_library_empty">أضف صوراً من هاتفك لتصنع ملصقاتك</string>
+    <string name="b8_library_delete_title">حذف من مكتبتك؟</string>
+</resources>

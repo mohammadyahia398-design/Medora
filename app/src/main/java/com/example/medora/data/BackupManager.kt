@@ -36,6 +36,8 @@ object BackupManager {
             sql.query("SELECT stickersJson FROM lectures").use { c ->
                 while (c.moveToNext()) used += Stickers.imagePaths(c.getString(0).orEmpty())
             }
+            // My stickers library is kept too.
+            used += StickerLibrary.list(context)
             NoteImages.deleteUnused(context, used)
             val originals = mutableSetOf<String>()
             sql.query("SELECT originalFile FROM lectures").use { c ->
