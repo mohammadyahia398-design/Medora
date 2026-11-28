@@ -1,5 +1,6 @@
 package com.example.medora.ui.icons
 
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
@@ -7,29 +8,78 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.PathBuilder
 import androidx.compose.ui.graphics.vector.path
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import com.example.medora.ui.theme.LocalMedoraDark
-import com.example.medora.ui.theme.MedoraColors
 
-// Our own icons, drawn in code. One style for all: a dark rounded outline
-// and a single soft color on the main shape. Grid: 24 x 24, stroke 1.8.
-// edge = lines that touch the background, detail = the marks drawn on top of
-// a fill. Light theme: near-black marks on soft fills. Dark theme: white marks
-// on deeper fills, so the icon keeps its look on a black background.
+// Medora icons, drawn in code. One style for all: two tones, no outlines.
+// ink  = the main mark (near-black in light theme, white in dark theme)
+// soft = the quiet body behind it (light gray in light theme, dark gray in dark theme)
+// Every corner is rounded, every line has round caps, so all edges are soft.
+// Grid: 24 x 24.
 
-private const val STROKE = 1.8f
+private class Pal(val ink: Color, val soft: Color)
 
-private fun PathBuilder.rrect(x: Float, y: Float, w: Float, h: Float, r: Float) {
-    moveTo(x + r, y)
-    lineTo(x + w - r, y)
-    quadTo(x + w, y, x + w, y + r)
-    lineTo(x + w, y + h - r)
-    quadTo(x + w, y + h, x + w - r, y + h)
-    lineTo(x + r, y + h)
-    quadTo(x, y + h, x, y + h - r)
-    lineTo(x, y + r)
-    quadTo(x, y, x + r, y)
+private val LightPal = Pal(ink = Color(0xFF111114), soft = Color(0xFFC6C6CC))
+private val DarkPal = Pal(ink = Color(0xFFFFFFFF), soft = Color(0xFF55555B))
+
+private fun icon(
+    name: String,
+    autoMirror: Boolean = false,
+    block: ImageVector.Builder.() -> Unit,
+): ImageVector =
+    ImageVector.Builder(
+        name = name,
+        defaultWidth = 24.dp,
+        defaultHeight = 24.dp,
+        viewportWidth = 24f,
+        viewportHeight = 24f,
+        autoMirror = autoMirror,
+    ).apply(block).build()
+
+// A filled shape. The thin same-color stroke with round joins softens every sharp corner.
+private fun ImageVector.Builder.fill(
+    color: Color,
+    soften: Float = 0.8f,
+    block: PathBuilder.() -> Unit,
+) {
+    path(
+        fill = SolidColor(color),
+        stroke = SolidColor(color),
+        strokeLineWidth = soften,
+        strokeLineCap = StrokeCap.Round,
+        strokeLineJoin = StrokeJoin.Round,
+        pathBuilder = block,
+    )
+}
+
+// A line with round ends and round bends.
+private fun ImageVector.Builder.line(
+    color: Color,
+    width: Float,
+    block: PathBuilder.() -> Unit,
+) {
+    path(
+        stroke = SolidColor(color),
+        strokeLineWidth = width,
+        strokeLineCap = StrokeCap.Round,
+        strokeLineJoin = StrokeJoin.Round,
+        pathBuilder = block,
+    )
+}
+
+// A rounded rectangle with a gentle, continuous corner (softer than a plain circle arc).
+private fun PathBuilder.soft(x: Float, y: Float, w: Float, h: Float, r: Float) {
+    val s = minOf(r * 1.3f, minOf(w, h) / 2f)
+    val f = 0.3f * s
+    moveTo(x + s, y)
+    lineTo(x + w - s, y)
+    curveTo(x + w - f, y, x + w, y + f, x + w, y + s)
+    lineTo(x + w, y + h - s)
+    curveTo(x + w, y + h - f, x + w - f, y + h, x + w - s, y + h)
+    lineTo(x + s, y + h)
+    curveTo(x + f, y + h, x, y + h - f, x, y + h - s)
+    lineTo(x, y + s)
+    curveTo(x, y + f, x + f, y, x + s, y)
     close()
 }
 
@@ -40,118 +90,143 @@ private fun PathBuilder.circle(cx: Float, cy: Float, r: Float) {
     close()
 }
 
-private fun icon(name: String, block: ImageVector.Builder.() -> Unit): ImageVector =
-    ImageVector.Builder(
-        name = name,
-        defaultWidth = 24.dp,
-        defaultHeight = 24.dp,
-        viewportWidth = 24f,
-        viewportHeight = 24f,
-    ).apply(block).build()
-
-private class Pal(
-    val edge: Color,
-    val detail: Color,
-    val teal: Color,
-    val orange: Color,
-    val green: Color,
-    val coral: Color,
-)
-
-private val LightPal = Pal(
-    edge = MedoraColors.IconInk,
-    detail = MedoraColors.IconInk,
-    teal = MedoraColors.Teal,
-    orange = MedoraColors.Orange,
-    green = MedoraColors.Green,
-    coral = MedoraColors.Coral,
-)
-
-private val DarkPal = Pal(
-    edge = Color.White,
-    detail = Color.White,
-    teal = Color(0xFF1F9E8E),
-    orange = Color(0xFFD98A1F),
-    green = Color(0xFF3FA864),
-    coral = Color(0xFFD9625A),
-)
-
-// A rounded outline in ink. If tint is given, the shape is filled with that soft color.
-private fun ImageVector.Builder.outline(
-    ink: Color,
-    tint: Color?,
-    width: Float = STROKE,
-    block: PathBuilder.() -> Unit,
-) {
-    path(
-        fill = tint?.let { SolidColor(it) },
-        stroke = SolidColor(ink),
-        strokeLineWidth = width,
-        strokeLineCap = StrokeCap.Round,
-        strokeLineJoin = StrokeJoin.Round,
-        pathBuilder = block,
-    )
+// Home: two stacked cards, the top one is the strong one.
+private fun home(p: Pal) = icon("Home") {
+    fill(p.soft) { soft(4f, 13.2f, 16f, 6.8f, 3f) }
+    fill(p.ink) { soft(3.5f, 4f, 17f, 7.6f, 3.2f) }
 }
 
-private fun home(p: Pal): ImageVector = icon("Home") {
-    outline(p.edge, p.teal) {
-        moveTo(4f, 10.5f); lineTo(12f, 4f); lineTo(20f, 10.5f)
-        lineTo(20f, 18.5f); quadTo(20f, 20f, 18.5f, 20f)
-        lineTo(5.5f, 20f); quadTo(4f, 20f, 4f, 18.5f); close()
-    }
-    outline(p.detail, null) {
-        moveTo(10f, 20f); lineTo(10f, 15f)
-        quadTo(10f, 13f, 12f, 13f); quadTo(14f, 13f, 14f, 15f)
-        lineTo(14f, 20f)
+// Library: a folder with a small dark tab.
+private fun library(p: Pal) = icon("Library") {
+    fill(p.soft) { soft(3f, 8.2f, 18f, 12.3f, 3.6f) }
+    fill(p.ink) {
+        moveTo(3.2f, 9.4f)
+        lineTo(3.2f, 7.8f)
+        quadTo(3.2f, 5.4f, 5.6f, 5.4f)
+        lineTo(8.6f, 5.4f)
+        quadTo(9.8f, 5.4f, 10.5f, 6.4f)
+        lineTo(11.4f, 7.7f)
+        lineTo(11.4f, 9.4f)
+        close()
     }
 }
 
-private fun library(p: Pal): ImageVector = icon("Library") {
-    outline(p.edge, p.orange) { rrect(5f, 3.5f, 14f, 17f, 2.5f) }
-    outline(p.detail, null) { moveTo(9.5f, 3.5f); lineTo(9.5f, 20.5f) }
-    outline(p.detail, null) {
-        moveTo(12.5f, 8f); lineTo(16f, 8f)
-        moveTo(12.5f, 11.5f); lineTo(15f, 11.5f)
+// Study: a bookmark ribbon with a dark cap.
+private fun study(p: Pal) = icon("Study") {
+    fill(p.soft) {
+        moveTo(5.6f, 6.2f)
+        lineTo(18.4f, 6.2f)
+        lineTo(18.4f, 19.6f)
+        quadTo(18.4f, 20.9f, 17.2f, 20.2f)
+        lineTo(12f, 16.9f)
+        lineTo(6.8f, 20.2f)
+        quadTo(5.6f, 20.9f, 5.6f, 19.6f)
+        close()
+    }
+    fill(p.ink) {
+        moveTo(5.6f, 7.6f)
+        lineTo(5.6f, 6.2f)
+        quadTo(5.6f, 3.4f, 8.4f, 3.4f)
+        lineTo(15.6f, 3.4f)
+        quadTo(18.4f, 3.4f, 18.4f, 6.2f)
+        lineTo(18.4f, 7.6f)
+        quadTo(12f, 5.4f, 5.6f, 7.6f)
+        close()
     }
 }
 
-private fun study(p: Pal): ImageVector = icon("Study") {
-    outline(p.edge, p.green) {
-        moveTo(12f, 5f); lineTo(21f, 9.5f); lineTo(12f, 14f); lineTo(3f, 9.5f); close()
+// Progress: an hourglass, dark bars and sand, soft glass.
+private fun progress(p: Pal) = icon("Progress") {
+    fill(p.soft) {
+        moveTo(7.8f, 5.2f)
+        lineTo(16.2f, 5.2f)
+        quadTo(16.2f, 9.6f, 13.3f, 11.3f)
+        quadTo(12.6f, 11.7f, 12.6f, 12f)
+        quadTo(12.6f, 12.3f, 13.3f, 12.7f)
+        quadTo(16.2f, 14.4f, 16.2f, 18.8f)
+        lineTo(7.8f, 18.8f)
+        quadTo(7.8f, 14.4f, 10.7f, 12.7f)
+        quadTo(11.4f, 12.3f, 11.4f, 12f)
+        quadTo(11.4f, 11.7f, 10.7f, 11.3f)
+        quadTo(7.8f, 9.6f, 7.8f, 5.2f)
+        close()
     }
-    outline(p.edge, null) {
-        moveTo(7f, 12f); lineTo(7f, 15.5f)
-        quadTo(12f, 19f, 17f, 15.5f); lineTo(17f, 12f)
+    fill(p.ink) {
+        moveTo(9.4f, 18.8f)
+        quadTo(12f, 14.6f, 14.6f, 18.8f)
+        close()
     }
-    outline(p.edge, null) { moveTo(21f, 9.5f); lineTo(21f, 14.5f) }
+    fill(p.ink) { soft(5.6f, 2.6f, 12.8f, 2.2f, 1.1f) }
+    fill(p.ink) { soft(5.6f, 19.2f, 12.8f, 2.2f, 1.1f) }
 }
 
-private fun progress(p: Pal): ImageVector = icon("Progress") {
-    outline(p.edge, p.teal) { rrect(4f, 12f, 4.5f, 8f, 1.5f) }
-    outline(p.edge, p.teal) { rrect(9.75f, 8f, 4.5f, 12f, 1.5f) }
-    outline(p.edge, p.orange) { rrect(15.5f, 4f, 4.5f, 16f, 1.5f) }
+// Settings: two switches. Thick, so it reads well on small buttons.
+private fun settings(p: Pal) = icon("Settings") {
+    fill(p.soft) { soft(3f, 3.8f, 18f, 7.8f, 3.9f) }
+    fill(p.ink) { circle(16.9f, 7.7f, 2.6f) }
+    fill(p.soft) { soft(3f, 12.4f, 18f, 7.8f, 3.9f) }
+    fill(p.ink) { circle(7.1f, 16.3f, 2.6f) }
 }
 
-private fun settings(p: Pal): ImageVector = icon("Settings") {
-    outline(p.edge, null) { moveTo(4f, 8f); lineTo(20f, 8f) }
-    outline(p.edge, p.coral) { circle(15f, 8f, 2.6f) }
-    outline(p.edge, null) { moveTo(4f, 16f); lineTo(20f, 16f) }
-    outline(p.edge, p.coral) { circle(9f, 16f, 2.6f) }
+// Back: a soft square tile with a thick chevron.
+private fun back(p: Pal) = icon("Back", autoMirror = true) {
+    fill(p.soft) { soft(3f, 3f, 18f, 18f, 6f) }
+    line(p.ink, 2.5f) {
+        moveTo(13.7f, 8.2f)
+        lineTo(9.9f, 12f)
+        lineTo(13.7f, 15.8f)
+    }
 }
 
-private fun back(p: Pal): ImageVector =
-    ImageVector.Builder(
-        name = "Back",
-        defaultWidth = 24.dp,
-        defaultHeight = 24.dp,
-        viewportWidth = 24f,
-        viewportHeight = 24f,
-        autoMirror = true,
-    ).apply {
-        outline(p.edge, null, 2.2f) {
-            moveTo(15f, 5f); lineTo(8f, 12f); lineTo(15f, 19f)
-        }
-    }.build()
+private fun plus(p: Pal) = icon("Plus") {
+    fill(p.soft) { soft(3f, 3f, 18f, 18f, 6f) }
+    line(p.ink, 2.5f) { moveTo(12f, 7.6f); lineTo(12f, 16.4f) }
+    line(p.ink, 2.5f) { moveTo(7.6f, 12f); lineTo(16.4f, 12f) }
+}
+
+private fun minus(p: Pal) = icon("Minus") {
+    fill(p.soft) { soft(3f, 3f, 18f, 18f, 6f) }
+    line(p.ink, 2.5f) { moveTo(7.6f, 12f); lineTo(16.4f, 12f) }
+}
+
+private fun lock(p: Pal) = icon("Lock") {
+    line(p.ink, 2.4f) {
+        moveTo(8.6f, 10.8f)
+        lineTo(8.6f, 8.2f)
+        arcTo(3.4f, 3.4f, 0f, false, true, 15.4f, 8.2f)
+        lineTo(15.4f, 10.8f)
+    }
+    fill(p.soft) { soft(5f, 10.6f, 14f, 10f, 4f) }
+    fill(p.ink) { circle(12f, 14.6f, 1.5f) }
+    line(p.ink, 1.9f) { moveTo(12f, 15.2f); lineTo(12f, 17.6f) }
+}
+
+private fun share(p: Pal) = icon("Share") {
+    fill(p.soft) { soft(4.5f, 10.6f, 15f, 10f, 3.6f) }
+    line(p.ink, 2.4f) { moveTo(12f, 15.6f); lineTo(12f, 4f) }
+    line(p.ink, 2.4f) {
+        moveTo(7.9f, 8f)
+        lineTo(12f, 3.9f)
+        lineTo(16.1f, 8f)
+    }
+}
+
+private fun exit(p: Pal) = icon("Exit", autoMirror = true) {
+    fill(p.soft) { soft(11f, 4.5f, 8.6f, 15f, 3f) }
+    line(p.ink, 2.4f) { moveTo(15f, 12f); lineTo(4.4f, 12f) }
+    line(p.ink, 2.4f) {
+        moveTo(8.6f, 7.8f)
+        lineTo(4.4f, 12f)
+        lineTo(8.6f, 16.2f)
+    }
+}
+
+private fun sliders(p: Pal) = icon("Sliders") {
+    line(p.soft, 2f) { moveTo(3.6f, 8f); lineTo(20.4f, 8f) }
+    line(p.soft, 2f) { moveTo(3.6f, 16f); lineTo(20.4f, 16f) }
+    fill(p.ink) { circle(8.8f, 8f, 3f) }
+    fill(p.ink) { circle(15.2f, 16f, 3f) }
+}
 
 object MedoraIcons {
     val Home: ImageVector by lazy { home(LightPal) }
@@ -160,6 +235,12 @@ object MedoraIcons {
     val Progress: ImageVector by lazy { progress(LightPal) }
     val Settings: ImageVector by lazy { settings(LightPal) }
     val Back: ImageVector by lazy { back(LightPal) }
+    val Plus: ImageVector by lazy { plus(LightPal) }
+    val Minus: ImageVector by lazy { minus(LightPal) }
+    val Lock: ImageVector by lazy { lock(LightPal) }
+    val Share: ImageVector by lazy { share(LightPal) }
+    val Exit: ImageVector by lazy { exit(LightPal) }
+    val Sliders: ImageVector by lazy { sliders(LightPal) }
 
     // The same icons for the dark theme.
     internal val dark: Map<ImageVector, ImageVector> by lazy {
@@ -170,6 +251,12 @@ object MedoraIcons {
             Progress to progress(DarkPal),
             Settings to settings(DarkPal),
             Back to back(DarkPal),
+            Plus to plus(DarkPal),
+            Minus to minus(DarkPal),
+            Lock to lock(DarkPal),
+            Share to share(DarkPal),
+            Exit to exit(DarkPal),
+            Sliders to sliders(DarkPal),
         )
     }
 }
