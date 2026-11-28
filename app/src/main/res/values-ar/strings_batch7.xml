@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="b7_body_hint">ابدأ الكتابة…</string>
+    <string name="b7_format">تنسيق</string>
+    <string name="b7_sticker">ملصق</string>
+    <string name="b7_sticker_gallery">صوري</string>
+    <string name="b7_sticker_delete_title">حذف هذا الملصق؟</string>
+</resources>

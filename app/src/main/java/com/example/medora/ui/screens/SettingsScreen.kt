@@ -2,7 +2,15 @@ package com.example.medora.ui.screens
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,6 +18,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.OutlinedTextField
@@ -23,6 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -35,6 +49,8 @@ import com.example.medora.R
 import com.example.medora.ai.AiSettings
 import com.example.medora.ui.components.MedoraButton
 import com.example.medora.ui.components.MedoraCard
+import com.example.medora.ui.components.MedoraOutlinedButton
+import com.example.medora.ui.theme.MedoraPastel
 import com.example.medora.ui.theme.Spacing
 
 // AI keys: one Gemini key (main) and one OpenRouter key (backup). Both optional.
@@ -98,8 +114,7 @@ fun SettingsScreen() {
         )
         Text(text = stringResource(R.string.ai_privacy), style = MaterialTheme.typography.bodySmall)
 
-        MedoraCard(modifier = Modifier.fillMaxWidth()) {
-            Text("Gemini", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        SettingsSection(title = "Gemini", badge = "G", toneIndex = 3) {
             Text(stringResource(R.string.gemini_hint), style = MaterialTheme.typography.bodySmall)
             OutlinedTextField(
                 value = geminiKey,
@@ -107,6 +122,8 @@ fun SettingsScreen() {
                 label = { Text(stringResource(R.string.api_key)) },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
+                shape = CircleShape,
+                colors = settingsFieldColors(),
                 modifier = Modifier.fillMaxWidth(),
             )
             OutlinedTextField(
@@ -114,12 +131,13 @@ fun SettingsScreen() {
                 onValueChange = { geminiModel = it; saved = false },
                 label = { Text(stringResource(R.string.model_name)) },
                 singleLine = true,
+                shape = CircleShape,
+                colors = settingsFieldColors(),
                 modifier = Modifier.fillMaxWidth(),
             )
         }
 
-        MedoraCard(modifier = Modifier.fillMaxWidth()) {
-            Text("OpenRouter", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        SettingsSection(title = "OpenRouter", badge = "O", toneIndex = 1) {
             Text(stringResource(R.string.openrouter_hint), style = MaterialTheme.typography.bodySmall)
             OutlinedTextField(
                 value = orKey,
@@ -127,6 +145,8 @@ fun SettingsScreen() {
                 label = { Text(stringResource(R.string.api_key)) },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
+                shape = CircleShape,
+                colors = settingsFieldColors(),
                 modifier = Modifier.fillMaxWidth(),
             )
             OutlinedTextField(
@@ -134,6 +154,8 @@ fun SettingsScreen() {
                 onValueChange = { orModel = it; saved = false },
                 label = { Text(stringResource(R.string.model_name)) },
                 singleLine = true,
+                shape = CircleShape,
+                colors = settingsFieldColors(),
                 modifier = Modifier.fillMaxWidth(),
             )
         }
@@ -155,19 +177,14 @@ fun SettingsScreen() {
 
         ReminderSettingsCard()
 
-        Text(
-            text = stringResource(R.string.backup_section),
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-        )
-        MedoraCard(modifier = Modifier.fillMaxWidth()) {
+        SettingsSection(title = stringResource(R.string.backup_section), badge = "\u2601", toneIndex = 2) {
             Text(stringResource(R.string.backup_hint), style = MaterialTheme.typography.bodySmall)
             MedoraButton(
                 text = stringResource(R.string.backup_export),
                 onClick = { exportLauncher.launch("medora-backup.zip") },
                 modifier = Modifier.fillMaxWidth(),
             )
-            MedoraButton(
+            MedoraOutlinedButton(
                 text = stringResource(R.string.backup_restore),
                 onClick = { restoreLauncher.launch(arrayOf("*/*")) },
                 modifier = Modifier.fillMaxWidth(),
@@ -178,5 +195,52 @@ fun SettingsScreen() {
         }
 
         DeleteDataCard()
+    }
+}
+
+// White rounded fields that sit nicely on a pastel card.
+@Composable
+private fun settingsFieldColors() = OutlinedTextFieldDefaults.colors(
+    focusedContainerColor = MaterialTheme.colorScheme.surface,
+    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+    unfocusedBorderColor = Color.Transparent,
+    focusedBorderColor = MaterialTheme.colorScheme.primary,
+)
+
+// One pastel rounded block: a white round badge, the title, then the content.
+@Composable
+private fun SettingsSection(
+    title: String,
+    badge: String,
+    toneIndex: Int,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    val tone = MedoraPastel.tone(toneIndex)
+    CompositionLocalProvider(LocalContentColor provides tone.content) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(MaterialTheme.shapes.large)
+                .background(tone.container)
+                .padding(Spacing.card),
+            verticalArrangement = Arrangement.spacedBy(Spacing.m),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier.size(40.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surface),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = badge,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+                Spacer(Modifier.width(Spacing.m))
+                Text(text = title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            }
+            content()
+        }
     }
 }

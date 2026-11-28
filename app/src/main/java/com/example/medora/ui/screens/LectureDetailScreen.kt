@@ -5,6 +5,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -62,11 +64,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.example.medora.data.Card
 import com.example.medora.data.NoteImages
+import com.example.medora.data.Stickers
 import com.example.medora.domain.CardSuggester
 import com.example.medora.domain.Insights
 import com.example.medora.ui.components.AiBadge
 import com.example.medora.ui.components.MedoraButton
 import com.example.medora.ui.components.MedoraMoreMenu
+import com.example.medora.ui.components.StickerBoard
 import com.example.medora.ui.components.MedoraCard
 import com.example.medora.ui.components.NoteImage
 import com.example.medora.ui.components.NoteTableRow
@@ -96,6 +100,7 @@ fun LectureDetailScreen(
     var suggestions by remember { mutableStateOf<List<CardSuggester.Suggestion>?>(null) }
     var showOrganize by remember { mutableStateOf(false) }
     val insights = remember(lecture?.insightsJson) { Insights.parse(lecture?.insightsJson.orEmpty()) }
+    val stickerList = remember(lecture?.stickersJson) { Stickers.parse(lecture?.stickersJson.orEmpty()) }
     val termsLabel = stringResource(R.string.insights_terms)
     val tablesLabel = stringResource(R.string.insights_tables)
     val classesLabel = stringResource(R.string.insights_classes)
@@ -293,6 +298,22 @@ fun LectureDetailScreen(
                     InsightsSection(insights)
                     Spacer(Modifier.height(Spacing.l))
                 }
+            }
+        }
+
+        // Stickers the user placed on this note (read only here; moved in the editor).
+        if (stickerList.isNotEmpty()) {
+            item(key = "stickers") {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(3f / 4f)
+                        .clip(MaterialTheme.shapes.large)
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                ) {
+                    StickerBoard(stickers = stickerList, modifier = Modifier.fillMaxSize())
+                }
+                Spacer(Modifier.height(Spacing.l))
             }
         }
 

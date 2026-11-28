@@ -20,6 +20,8 @@ data class Lecture(
     @ColumnInfo(defaultValue = "''") val tags: String = "",
     @ColumnInfo(defaultValue = "''") val originalFile: String = "",
     @ColumnInfo(defaultValue = "''") val insightsJson: String = "",
+    // v7: stickers placed on the note (JSON, see Stickers).
+    @ColumnInfo(defaultValue = "''") val stickersJson: String = "",
 ) {
     // Tags are saved as one comma-separated text.
     fun tagList(): List<String> = splitTags(tags)

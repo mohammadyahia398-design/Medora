@@ -32,6 +32,10 @@ object BackupManager {
                     }
                 }
             }
+            // Photo stickers live in the same image folder.
+            sql.query("SELECT stickersJson FROM lectures").use { c ->
+                while (c.moveToNext()) used += Stickers.imagePaths(c.getString(0).orEmpty())
+            }
             NoteImages.deleteUnused(context, used)
             val originals = mutableSetOf<String>()
             sql.query("SELECT originalFile FROM lectures").use { c ->
@@ -151,7 +155,7 @@ object BackupManager {
                     "SELECT name FROM sqlite_master WHERE type='table' AND name='lectures'",
                     null,
                 ).use { it.moveToFirst() }
-                db.version in 1..6 && hasLectures
+                db.version in 1..7 && hasLectures
             }
         } catch (e: Exception) {
             false

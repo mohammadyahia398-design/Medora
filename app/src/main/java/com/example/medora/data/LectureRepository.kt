@@ -24,8 +24,8 @@ class LectureRepository(private val dao: LectureDao) {
     suspend fun saveAi(id: Long, summary: String, slidesJson: String, insightsJson: String) =
         dao.saveAi(id, summary, slidesJson, insightsJson)
 
-    suspend fun updateNote(id: Long, title: String, content: String) =
-        dao.updateNote(id, title.trim(), content)
+    suspend fun updateNote(id: Long, title: String, content: String, stickersJson: String) =
+        dao.updateNote(id, title.trim(), content, stickersJson)
 
     suspend fun organize(id: Long, subject: String, folder: String, tags: List<String>) =
         dao.organize(id, subject.trim(), folder.trim(), tags.joinToString(", "))
