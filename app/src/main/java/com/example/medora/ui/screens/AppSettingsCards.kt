@@ -30,8 +30,7 @@ import com.example.medora.R
 import com.example.medora.data.BackupManager
 import com.example.medora.data.DataEraser
 import com.example.medora.settings.AppPrefs
-import com.example.medora.ui.components.MedoraButton
-import com.example.medora.ui.components.MedoraCard
+import com.example.medora.ui.icons.MedoraIcons
 import com.example.medora.ui.components.MedoraDangerButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -84,15 +83,8 @@ fun AppearanceSettingsCard() {
         stringResource(R.string.theme_dark),
     )
 
-    MedoraCard(modifier = Modifier.fillMaxWidth(), spaced = false) {
-        Text(
-            text = stringResource(R.string.appearance_title),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-        )
-        Spacer(Modifier.height(Spacing.m))
-        Text(stringResource(R.string.language_label), style = MaterialTheme.typography.titleSmall)
-        Spacer(Modifier.height(Spacing.xs))
+    SettingsGroup(title = stringResource(R.string.appearance_title)) {
+        SettingsRow(icon = MedoraIcons.Library, title = stringResource(R.string.language_label), toneIndex = 0)
         OptionRow(langLabels, langCodes.indexOf(lang).coerceAtLeast(0)) { i ->
             val code = langCodes[i]
             if (code != lang) {
@@ -101,9 +93,8 @@ fun AppearanceSettingsCard() {
                 context.findActivity()?.recreate()
             }
         }
-        Spacer(Modifier.height(Spacing.m))
-        Text(stringResource(R.string.theme_label), style = MaterialTheme.typography.titleSmall)
-        Spacer(Modifier.height(Spacing.xs))
+        SettingsDivider()
+        SettingsRow(icon = MedoraIcons.Sliders, title = stringResource(R.string.theme_label), toneIndex = 3)
         OptionRow(themeLabels, themeCodes.indexOf(theme).coerceAtLeast(0)) { i ->
             AppPrefs.setTheme(context, themeCodes[i])
         }
@@ -118,11 +109,12 @@ fun DeleteDataCard() {
     var confirm by remember { mutableStateOf(false) }
     var failed by remember { mutableStateOf(false) }
 
-    MedoraCard(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = stringResource(R.string.data_title),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
+    SettingsGroup(title = stringResource(R.string.data_title)) {
+        SettingsRow(
+            icon = MedoraIcons.Exit,
+            title = stringResource(R.string.data_delete),
+            toneIndex = 0,
+            danger = true,
         )
         Text(stringResource(R.string.data_delete_hint), style = MaterialTheme.typography.bodySmall)
         MedoraDangerButton(

@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.example.medora.R
 import com.example.medora.reminder.ReminderScheduler
-import com.example.medora.ui.components.MedoraCard
+import com.example.medora.ui.icons.MedoraIcons
 import com.example.medora.ui.components.MedoraSwitch
 import com.example.medora.ui.theme.Spacing
 
@@ -59,52 +59,48 @@ fun ReminderSettingsCard() {
         }
     }
 
-    Text(
-        text = stringResource(R.string.reminder_section),
-        style = MaterialTheme.typography.titleLarge,
-        fontWeight = FontWeight.Bold,
-    )
-    MedoraCard(modifier = Modifier.fillMaxWidth()) {
+    SettingsGroup(title = stringResource(R.string.reminder_section)) {
         Text(stringResource(R.string.reminder_hint), style = MaterialTheme.typography.bodySmall)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Text(stringResource(R.string.reminder_enable), style = MaterialTheme.typography.bodyLarge)
-            MedoraSwitch(
-                checked = enabled,
-                onCheckedChange = { on ->
-                    if (on) {
-                        turnOn()
-                    } else {
-                        ReminderScheduler.disable(context)
-                        enabled = false
-                    }
-                },
-            )
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Text(stringResource(R.string.reminder_time), style = MaterialTheme.typography.bodyLarge)
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-                TextButton(onClick = {
-                    hour = (hour + 23) % 24
-                    ReminderScheduler.changeHour(context, hour)
-                }) { Text("−") }
-                Text(
-                    text = String.format(java.util.Locale.US, "%02d:00", hour),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
+        SettingsRow(
+            icon = MedoraIcons.Planner,
+            title = stringResource(R.string.reminder_enable),
+            toneIndex = 1,
+            trailing = {
+                MedoraSwitch(
+                    checked = enabled,
+                    onCheckedChange = { on ->
+                        if (on) {
+                            turnOn()
+                        } else {
+                            ReminderScheduler.disable(context)
+                            enabled = false
+                        }
+                    },
                 )
-                TextButton(onClick = {
-                    hour = (hour + 1) % 24
-                    ReminderScheduler.changeHour(context, hour)
-                }) { Text("+") }
-            }
-        }
+            },
+        )
+        SettingsDivider()
+        SettingsRow(
+            icon = MedoraIcons.Study,
+            title = stringResource(R.string.reminder_time),
+            toneIndex = 2,
+            trailing = {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                    TextButton(onClick = {
+                        hour = (hour + 23) % 24
+                        ReminderScheduler.changeHour(context, hour)
+                    }) { Text("\u2212") }
+                    Text(
+                        text = String.format(java.util.Locale.US, "%02d:00", hour),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    TextButton(onClick = {
+                        hour = (hour + 1) % 24
+                        ReminderScheduler.changeHour(context, hour)
+                    }) { Text("+") }
+                }
+            },
+        )
     }
 }

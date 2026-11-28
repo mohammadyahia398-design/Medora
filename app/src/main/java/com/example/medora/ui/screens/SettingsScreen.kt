@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -48,7 +49,6 @@ import kotlinx.coroutines.withContext
 import com.example.medora.R
 import com.example.medora.ai.AiSettings
 import com.example.medora.ui.components.MedoraButton
-import com.example.medora.ui.components.MedoraCard
 import com.example.medora.ui.components.MedoraOutlinedButton
 import com.example.medora.ui.theme.MedoraPastel
 import com.example.medora.ui.theme.Spacing
@@ -105,6 +105,8 @@ fun SettingsScreen() {
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(Spacing.l),
         verticalArrangement = Arrangement.spacedBy(Spacing.m),
     ) {
+        SettingsStatsRow()
+
         AppearanceSettingsCard()
 
         Text(
@@ -220,7 +222,7 @@ private fun SettingsSection(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(MaterialTheme.shapes.large)
+                .clip(RoundedCornerShape(28.dp))
                 .background(tone.container)
                 .padding(Spacing.card),
             verticalArrangement = Arrangement.spacedBy(Spacing.m),
