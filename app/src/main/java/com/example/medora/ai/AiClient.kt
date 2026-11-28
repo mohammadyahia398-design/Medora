@@ -1,6 +1,7 @@
 package com.example.medora.ai
 
 import com.example.medora.domain.CardSuggester
+import com.example.medora.domain.Insights
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -21,6 +22,7 @@ class AiPack(
     val cards: List<CardSuggester.Suggestion>,
     val questions: List<AiQuestionDraft>,
     val slidesJson: String,
+    val insightsJson: String = "",
 )
 
 class NoAiKeyException : Exception("no key")
@@ -201,12 +203,16 @@ You are a study assistant for medical students.
 Use ONLY the lecture text below. Do not add facts that are not in the text.
 Write in the same language as the lecture.
 Return ONLY one JSON object (no markdown, no extra text) with exactly this shape:
-{"summary":"...","cards":[{"front":"...","back":"...","source":"..."}],"questions":[{"question":"...","options":["...","...","...","..."],"answer":0,"source":"..."}],"slides":[{"title":"...","bullets":["..."]}]}
+{"summary":"...","cards":[{"front":"...","back":"...","source":"..."}],"questions":[{"question":"...","options":["...","...","...","..."],"answer":0,"source":"..."}],"slides":[{"title":"...","bullets":["..."]}],"terms":[{"term":"...","definition":"...","source":"..."}],"tables":[{"title":"...","headers":["...","..."],"rows":[["...","..."]]}],"classifications":[{"title":"...","groups":[{"name":"...","items":["..."]}]}]}
 Rules:
 - summary: 150 to 300 words, the key points.
 - cards: 10 to 20 flashcards. front = question or term, back = short answer.
 - questions: 5 to 10 multiple-choice questions, 4 options each, answer = index (0-3) of the correct option.
 - slides: 5 to 10 slides, 3 to 6 short bullets each.
+- terms: 5 to 20 key terms with a short definition from the lecture.
+- tables: 0 to 3 comparison tables (2 to 5 columns) only if the lecture compares things (diseases, drugs, types...). Each row has the same number of cells as headers.
+- classifications: 0 to 3 classifications only if the lecture classifies something; each group has a name and its items.
+- Use empty arrays when the lecture has nothing for a part. Never invent.
 - source: a short exact quote from the lecture that supports the item.
 
 Lecture title: $title
@@ -257,8 +263,11 @@ $content
 
             val summary = o.optString("summary").trim()
             val slides = o.optJSONArray("slides")?.toString().orEmpty()
-            if (summary.isEmpty() && cards.isEmpty() && questions.isEmpty()) throw IOException("empty AI answer")
-            return AiPack(summary, cards, questions, slides)
+            val insights = Insights.from(o)
+            if (summary.isEmpty() && cards.isEmpty() && questions.isEmpty() && insights.isEmpty) {
+                throw IOException("empty AI answer")
+            }
+            return AiPack(summary, cards, questions, slides, insights.toJson())
         }
     }
 }

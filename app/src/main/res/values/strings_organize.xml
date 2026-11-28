@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="organize">Organize</string>
+    <string name="organize_subject">Subject</string>
+    <string name="organize_folder">Folder</string>
+    <string name="organize_tags">Tags</string>
+    <string name="organize_tags_hint">Separate with commas, e.g. cardio, exam 1</string>
+    <string name="folder_label">Folder: %1$s</string>
+    <string name="open_original">Open original</string>
+    <string name="open_original_failed">Could not open the original file.</string>
+    <string name="insights_terms">Terms and definitions</string>
+    <string name="insights_tables">Comparison tables</string>
+    <string name="insights_classes">Classifications</string>
+    <string name="insights_source">Source: %1$s</string>
+    <string name="packs_title">Study packs</string>
+    <string name="packs_hint">A pack groups lectures (for one exam, say): summaries, terms, tables and cards together, exported as one PDF.</string>
+    <string name="packs_new">New pack</string>
+    <string name="packs_empty">No packs yet.</string>
+    <string name="packs_name">Pack name</string>
+    <string name="packs_edit">Edit pack</string>
+    <string name="packs_delete">Delete pack</string>
+    <string name="packs_delete_confirm">Delete this pack? The lectures themselves are kept.</string>
+    <string name="packs_counts">%1$d lectures · %2$d cards</string>
+    <string name="packs_contents">Pack contents</string>
+    <string name="packs_no_lectures">No lectures in this pack. Tap Edit pack to add some.</string>
+    <string name="packs_lecture_parts">%1$d cards · %2$d terms · %3$d tables</string>
+    <string name="packs_no_summary">No summary yet. Open the lecture and use AI to make one.</string>
+</resources>

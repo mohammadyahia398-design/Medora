@@ -42,7 +42,7 @@ class AiViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             try {
                 val pack = client.generate(title, content)
-                lectures.saveAi(lectureId, pack.summary, pack.slidesJson)
+                lectures.saveAi(lectureId, pack.summary, pack.slidesJson, pack.insightsJson)
                 if (pack.questions.isNotEmpty()) {
                     questions.deleteByLecture(lectureId)
                     questions.insertAll(

@@ -66,6 +66,8 @@ import com.example.medora.ui.screens.LectureDetailScreen
 import com.example.medora.ui.screens.LibraryScreen
 import com.example.medora.ui.screens.MistakesScreen
 import com.example.medora.ui.screens.NoteEditorScreen
+import com.example.medora.ui.screens.PackDetailScreen
+import com.example.medora.ui.screens.PacksScreen
 import com.example.medora.ui.screens.PracticeScreen
 import com.example.medora.ui.screens.ProgressScreen
 import com.example.medora.ui.screens.QuizScreen
@@ -83,6 +85,8 @@ private const val ROUTE_EXAM = "exam"
 private const val ROUTE_SOURCES = "sources"
 private const val ROUTE_MISTAKES = "mistakes"
 private const val ROUTE_PRACTICE = "practice/{mode}"
+private const val ROUTE_PACKS = "packs"
+private const val ROUTE_PACK = "pack/{id}"
 
 private enum class Tab(val route: String, @StringRes val label: Int, val icon: ImageVector) {
     Home("home", R.string.tab_home, MedoraIcons.Home),
@@ -107,7 +111,8 @@ fun MedoraApp() {
     val isSources = route == ROUTE_SOURCES
     val isPractice = route == ROUTE_PRACTICE
     val isMistakes = route == ROUTE_MISTAKES
-    val isSub = isSettings || isLecture || isReview || isQuiz || isNote || isExam || isSources || isPractice || isMistakes
+    val isPacks = route == ROUTE_PACKS || route == ROUTE_PACK
+    val isSub = isSettings || isLecture || isReview || isQuiz || isNote || isExam || isSources || isPractice || isMistakes || isPacks
 
     val titleRes = when {
         isSettings -> R.string.settings
@@ -119,6 +124,7 @@ fun MedoraApp() {
         isSources -> R.string.sources_title
         isPractice -> R.string.practice_title
         isMistakes -> R.string.mistakes_title
+        isPacks -> R.string.packs_title
         tab != null -> tab.label
         else -> R.string.app_name
     }
@@ -155,7 +161,10 @@ fun MedoraApp() {
                         )
                     }
                     composable(Tab.Library.route) {
-                        LibraryScreen(onOpenLecture = { navController.navigate("lecture/$it") })
+                        LibraryScreen(
+                            onOpenLecture = { navController.navigate("lecture/$it") },
+                            onOpenPacks = { navController.navigate(ROUTE_PACKS) },
+                        )
                     }
                     composable(Tab.Study.route) {
                         StudyScreen(
@@ -188,6 +197,19 @@ fun MedoraApp() {
                         PracticeScreen(
                             mode = entry.arguments?.getString("mode").orEmpty(),
                             onOpenLecture = { navController.navigate("lecture/$it") },
+                        )
+                    }
+                    composable(ROUTE_PACKS) {
+                        PacksScreen(onOpenPack = { navController.navigate("pack/$it") })
+                    }
+                    composable(
+                        ROUTE_PACK,
+                        arguments = listOf(navArgument("id") { type = NavType.LongType }),
+                    ) { entry ->
+                        PackDetailScreen(
+                            id = entry.arguments?.getLong("id") ?: 0L,
+                            onOpenLecture = { navController.navigate("lecture/$it") },
+                            onDeleted = { navController.popBackStack() },
                         )
                     }
                     composable(ROUTE_QUIZ) {

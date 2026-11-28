@@ -89,9 +89,26 @@ private val MIGRATION_3_4 = object : Migration(3, 4) {
     }
 }
 
+// Version 5: lecture folder, tags, original file and AI insights; study packs.
+private val MIGRATION_4_5 = object : Migration(4, 5) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `lectures` ADD COLUMN `folder` TEXT NOT NULL DEFAULT ''")
+        db.execSQL("ALTER TABLE `lectures` ADD COLUMN `tags` TEXT NOT NULL DEFAULT ''")
+        db.execSQL("ALTER TABLE `lectures` ADD COLUMN `originalFile` TEXT NOT NULL DEFAULT ''")
+        db.execSQL("ALTER TABLE `lectures` ADD COLUMN `insightsJson` TEXT NOT NULL DEFAULT ''")
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `study_packs` (" +
+                "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                "`name` TEXT NOT NULL, " +
+                "`lectureIds` TEXT NOT NULL, " +
+                "`createdAt` INTEGER NOT NULL)"
+        )
+    }
+}
+
 @Database(
-    entities = [Lecture::class, Card::class, ReviewLog::class, QuizResult::class, AiQuestion::class, Mistake::class],
-    version = 4,
+    entities = [Lecture::class, Card::class, ReviewLog::class, QuizResult::class, AiQuestion::class, Mistake::class, StudyPack::class],
+    version = 5,
     exportSchema = false,
 )
 abstract class MedoraDatabase : RoomDatabase() {
@@ -100,6 +117,7 @@ abstract class MedoraDatabase : RoomDatabase() {
     abstract fun statsDao(): StatsDao
     abstract fun aiQuestionDao(): AiQuestionDao
     abstract fun mistakeDao(): MistakeDao
+    abstract fun studyPackDao(): StudyPackDao
 
     companion object {
         @Volatile private var instance: MedoraDatabase? = null
@@ -118,7 +136,7 @@ abstract class MedoraDatabase : RoomDatabase() {
                     context.applicationContext,
                     MedoraDatabase::class.java,
                     "medora.db",
-                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build().also { instance = it }
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5).build().also { instance = it }
             }
     }
 }

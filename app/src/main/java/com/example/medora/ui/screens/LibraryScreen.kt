@@ -18,6 +18,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -54,13 +56,19 @@ private const val SNIPPET_RADIUS = 50
 private class LectureHit(val lecture: Lecture, val snippet: String?)
 private class LectureGroup(val name: String, val items: List<LectureHit>)
 
-// Filters by title, subject or lecture text, then groups by subject (A-Z).
-// A match inside the text shows a short snippet around it.
-private fun groupLectures(lectures: List<Lecture>, query: String, noSubject: String): List<LectureGroup> {
-    val hits = lectures.mapNotNull { l ->
+// Filters by tag, then by title, subject, folder, tags or lecture text, then groups by
+// folder (or subject when there is no folder), A-Z. A match inside the text shows a snippet.
+private fun groupLectures(
+    lectures: List<Lecture>,
+    query: String,
+    noSubject: String,
+    tag: String?,
+): List<LectureGroup> {
+    val hits = lectures.filter { tag == null || tag in it.tagList() }.mapNotNull { l ->
         when {
             query.isEmpty() -> LectureHit(l, null)
-            l.title.contains(query, true) || l.subject.contains(query, true) -> LectureHit(l, null)
+            l.title.contains(query, true) || l.subject.contains(query, true) ||
+                l.folder.contains(query, true) || l.tags.contains(query, true) -> LectureHit(l, null)
             else -> {
                 val i = l.content.indexOf(query, ignoreCase = true)
                 if (i < 0) {
@@ -75,13 +83,17 @@ private fun groupLectures(lectures: List<Lecture>, query: String, noSubject: Str
         }
     }
     return hits
-        .groupBy { it.lecture.subject.trim().ifEmpty { noSubject } }
+        .groupBy { it.lecture.folder.trim().ifEmpty { it.lecture.subject.trim() }.ifEmpty { noSubject } }
         .toSortedMap(String.CASE_INSENSITIVE_ORDER)
         .map { (name, items) -> LectureGroup(name, items) }
 }
 
 @Composable
-fun LibraryScreen(onOpenLecture: (Long) -> Unit, vm: LibraryViewModel = viewModel()) {
+fun LibraryScreen(
+    onOpenLecture: (Long) -> Unit,
+    onOpenPacks: () -> Unit = {},
+    vm: LibraryViewModel = viewModel(),
+) {
     val lectures by vm.lectures.collectAsState()
     val importFailed by vm.importFailed.collectAsState()
     val importing by vm.importing.collectAsState()
@@ -93,7 +105,9 @@ fun LibraryScreen(onOpenLecture: (Long) -> Unit, vm: LibraryViewModel = viewMode
     var toDelete by remember { mutableStateOf<Lecture?>(null) }
     var query by remember { mutableStateOf("") }
     val noSubject = stringResource(R.string.library_no_subject)
-    val groups = remember(lectures, query, noSubject) { groupLectures(lectures, query.trim(), noSubject) }
+    var tag by remember { mutableStateOf<String?>(null) }
+    val allTags = remember(lectures) { lectures.flatMap { it.tagList() }.distinct().sortedBy { it.lowercase() } }
+    val groups = remember(lectures, query, noSubject, tag) { groupLectures(lectures, query.trim(), noSubject, tag) }
 
     val glass = rememberGlassBackdrop()
     val pill = RoundedCornerShape(28.dp)
@@ -112,6 +126,19 @@ fun LibraryScreen(onOpenLecture: (Long) -> Unit, vm: LibraryViewModel = viewMode
                 contentPadding = PaddingValues(start = Spacing.l, end = Spacing.l, top = 84.dp, bottom = 96.dp),
                 verticalArrangement = Arrangement.spacedBy(Spacing.m),
             ) {
+                if (allTags.isNotEmpty()) {
+                    item(key = "tags") {
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
+                            items(allTags, key = { "t_$it" }) { t ->
+                                FilterChip(
+                                    selected = tag == t,
+                                    onClick = { tag = if (tag == t) null else t },
+                                    label = { Text("#$t") },
+                                )
+                            }
+                        }
+                    }
+                }
                 if (groups.isEmpty()) {
                     item(key = "none") {
                         Text(
@@ -171,6 +198,20 @@ fun LibraryScreen(onOpenLecture: (Long) -> Unit, vm: LibraryViewModel = viewMode
             horizontalAlignment = Alignment.End,
             verticalArrangement = Arrangement.spacedBy(Spacing.m),
         ) {
+            GlassBox(
+                backdrop = glass,
+                shape = pill,
+                onClick = onOpenPacks,
+                modifier = Modifier.height(56.dp),
+            ) {
+                Text(
+                    text = stringResource(R.string.packs_title),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.padding(horizontal = 20.dp),
+                )
+            }
             GlassBox(
                 backdrop = glass,
                 shape = pill,
@@ -268,6 +309,16 @@ private fun LectureItem(lecture: Lecture, snippet: String?, onOpen: () -> Unit, 
                 )
                 if (lecture.subject.isNotBlank()) {
                     Text(text = lecture.subject, style = MaterialTheme.typography.bodyMedium)
+                }
+                val tags = lecture.tagList()
+                if (tags.isNotEmpty()) {
+                    Text(
+                        text = tags.joinToString("  ") { "#$it" },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                 }
                 if (snippet != null) {
                     Text(

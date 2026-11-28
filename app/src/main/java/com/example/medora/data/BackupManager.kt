@@ -9,14 +9,15 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
-// Backup = one .zip with the Room database (lectures, cards, reviews, quizzes)
-// and the note images. API keys are NOT included (they stay on the device).
+// Backup = one .zip with the Room database (lectures, cards, reviews, quizzes, packs),
+// the note images and the original imported files. API keys are NOT included (they stay on the device).
 // Save it to Google Drive from the file picker to move to a new phone.
 // Restore also accepts the old backup (a plain .db file, without images).
 object BackupManager {
     private const val DB_NAME = "medora.db"
     private const val DB_ENTRY = "medora.db"
     private val IMAGE_ENTRY = Regex("""note_images/[A-Za-z0-9._-]+""")
+    private val ORIGINAL_ENTRY = Regex("""originals/[A-Za-z0-9._-]+""")
 
     fun export(context: Context, target: Uri): Boolean {
         return try {
@@ -32,6 +33,14 @@ object BackupManager {
                 }
             }
             NoteImages.deleteUnused(context, used)
+            val originals = mutableSetOf<String>()
+            sql.query("SELECT originalFile FROM lectures").use { c ->
+                while (c.moveToNext()) {
+                    val name = c.getString(0).orEmpty()
+                    if (name.isNotBlank()) originals += name
+                }
+            }
+            OriginalFiles.deleteUnused(context, originals)
             val file = context.getDatabasePath(DB_NAME)
             val out = context.contentResolver.openOutputStream(target, "w") ?: return false
             out.use { o ->
@@ -47,6 +56,15 @@ object BackupManager {
                             zip.closeEntry()
                         }
                     }
+                    originals.sorted().forEach { name ->
+                        val f = OriginalFiles.file(context, name)
+                        val entry = OriginalFiles.DIR + "/" + name
+                        if (f.exists() && ORIGINAL_ENTRY.matches(entry)) {
+                            zip.putNextEntry(ZipEntry(entry))
+                            f.inputStream().use { it.copyTo(zip) }
+                            zip.closeEntry()
+                        }
+                    }
                 }
             }
             true
@@ -58,12 +76,15 @@ object BackupManager {
     fun restore(context: Context, source: Uri): Boolean {
         val temp = File(context.cacheDir, "restore.tmp")
         val stage = File(context.cacheDir, "restore_images")
+        val stageOriginals = File(context.cacheDir, "restore_originals")
         return try {
             stage.deleteRecursively()
+            stageOriginals.deleteRecursively()
             val head = ByteArray(2)
             val n = context.contentResolver.openInputStream(source)?.use { it.read(head) } ?: return false
             val isZip = n == 2 && head[0] == 'P'.code.toByte() && head[1] == 'K'.code.toByte()
             var images = 0
+            var originals = 0
             if (isZip) {
                 var hasDb = false
                 val input = context.contentResolver.openInputStream(source) ?: return false
@@ -83,6 +104,12 @@ object BackupManager {
                                 f.outputStream().use { zip.copyTo(it) }
                                 images++
                             }
+                            ORIGINAL_ENTRY.matches(e.name) -> {
+                                val f = File(stageOriginals, e.name.substringAfter('/'))
+                                f.parentFile?.mkdirs()
+                                f.outputStream().use { zip.copyTo(it) }
+                                originals++
+                            }
                         }
                     }
                 }
@@ -97,7 +124,10 @@ object BackupManager {
             File(dbFile.path + "-wal").delete()
             File(dbFile.path + "-shm").delete()
             temp.copyTo(dbFile, overwrite = true)
-            if (isZip) NoteImages.replaceAll(context, if (images > 0) stage else null)
+            if (isZip) {
+                NoteImages.replaceAll(context, if (images > 0) stage else null)
+                OriginalFiles.replaceAll(context, if (originals > 0) stageOriginals else null)
+            }
             true
         } catch (e: Exception) {
             false
@@ -106,6 +136,7 @@ object BackupManager {
             File(temp.path + "-wal").delete()
             File(temp.path + "-shm").delete()
             stage.deleteRecursively()
+            stageOriginals.deleteRecursively()
         }
     }
 
@@ -120,7 +151,7 @@ object BackupManager {
                     "SELECT name FROM sqlite_master WHERE type='table' AND name='lectures'",
                     null,
                 ).use { it.moveToFirst() }
-                db.version in 1..4 && hasLectures
+                db.version in 1..5 && hasLectures
             }
         } catch (e: Exception) {
             false

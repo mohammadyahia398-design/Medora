@@ -62,6 +62,7 @@ import kotlinx.coroutines.withContext
 import com.example.medora.data.Card
 import com.example.medora.data.NoteImages
 import com.example.medora.domain.CardSuggester
+import com.example.medora.domain.Insights
 import com.example.medora.ui.components.AiBadge
 import com.example.medora.ui.components.MedoraButton
 import com.example.medora.ui.components.MedoraCard
@@ -91,6 +92,11 @@ fun LectureDetailScreen(
     val lines = remember(lecture?.content) { lecture?.content.orEmpty().split("\n") }
     var draft by remember { mutableStateOf<CardDraft?>(null) }
     var suggestions by remember { mutableStateOf<List<CardSuggester.Suggestion>?>(null) }
+    var showOrganize by remember { mutableStateOf(false) }
+    val insights = remember(lecture?.insightsJson) { Insights.parse(lecture?.insightsJson.orEmpty()) }
+    val termsLabel = stringResource(R.string.insights_terms)
+    val tablesLabel = stringResource(R.string.insights_tables)
+    val classesLabel = stringResource(R.string.insights_classes)
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val pdfLabels = PdfLabels(
@@ -104,10 +110,12 @@ fun LectureDetailScreen(
         val l = lecture
         if (uri != null && l != null) {
             val snapshot = cards
+            val extra = insights.toMarkdown(termsLabel, tablesLabel, classesLabel)
+            val summaryText = listOf(l.summary, extra).filter { it.isNotBlank() }.joinToString("\n\n")
             scope.launch {
                 val ok = withContext(Dispatchers.IO) {
                     runCatching {
-                        PdfExporter.write(context, uri, l.title, l.subject, l.summary, l.content, snapshot, pdfLabels)
+                        PdfExporter.write(context, uri, l.title, l.subject, summaryText, l.content, snapshot, pdfLabels)
                     }.isSuccess
                 }
                 Toast.makeText(
@@ -159,12 +167,45 @@ fun LectureDetailScreen(
                         color = MaterialTheme.colorScheme.primary,
                     )
                 }
+                if (current.folder.isNotBlank()) {
+                    Text(
+                        text = stringResource(R.string.folder_label, current.folder),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+                val tagList = current.tagList()
+                if (tagList.isNotEmpty()) {
+                    Text(
+                        text = tagList.joinToString("  ") { "#$it" },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
                 Spacer(Modifier.height(Spacing.l))
                 MedoraButton(
                     text = stringResource(R.string.edit_note),
                     onClick = onEdit,
                     modifier = Modifier.fillMaxWidth(),
                 )
+                Spacer(Modifier.height(Spacing.m))
+                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.m)) {
+                    MedoraButton(
+                        text = stringResource(R.string.organize),
+                        onClick = { showOrganize = true },
+                        modifier = Modifier.weight(1f),
+                    )
+                    if (current.originalFile.isNotBlank()) {
+                        MedoraButton(
+                            text = stringResource(R.string.open_original),
+                            onClick = {
+                                if (!vm.openOriginal(current.originalFile)) {
+                                    Toast.makeText(context, R.string.open_original_failed, Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                }
                 Spacer(Modifier.height(Spacing.m))
                 Row(horizontalArrangement = Arrangement.spacedBy(Spacing.m)) {
                     MedoraButton(
@@ -243,6 +284,10 @@ fun LectureDetailScreen(
                     }
                     Spacer(Modifier.height(Spacing.l))
                 }
+                if (!insights.isEmpty) {
+                    InsightsSection(insights)
+                    Spacer(Modifier.height(Spacing.l))
+                }
             }
         }
 
@@ -306,6 +351,19 @@ fun LectureDetailScreen(
                 )
             }
         }
+    }
+
+    if (showOrganize) {
+        OrganizeDialog(
+            subject = current.subject,
+            folder = current.folder,
+            tags = current.tags,
+            onDismiss = { showOrganize = false },
+            onSave = { s, f, t ->
+                vm.organize(current.id, s, f, t)
+                showOrganize = false
+            },
+        )
     }
 
     draft?.let { d ->

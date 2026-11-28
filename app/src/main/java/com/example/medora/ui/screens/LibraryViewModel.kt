@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.medora.data.Lecture
 import com.example.medora.data.LectureRepository
 import com.example.medora.data.MedoraDatabase
+import com.example.medora.data.OriginalFiles
 import com.example.medora.ocr.OcrReader
 import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
 import com.tom_roush.pdfbox.pdmodel.PDDocument
@@ -56,8 +57,19 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun delete(lecture: Lecture) {
-        viewModelScope.launch { repo.delete(lecture) }
+        viewModelScope.launch {
+            repo.delete(lecture)
+            withContext(Dispatchers.IO) { OriginalFiles.delete(getApplication<Application>(), lecture.originalFile) }
+        }
     }
+
+    // Subject, folder and tags (comma-separated) of one lecture.
+    fun organize(id: Long, subject: String, folder: String, tags: String) {
+        viewModelScope.launch { repo.organize(id, subject, folder, Lecture.splitTags(tags)) }
+    }
+
+    // Opens the kept copy of the imported file. False if it is missing or nothing can open it.
+    fun openOriginal(name: String): Boolean = OriginalFiles.open(getApplication<Application>(), name)
 
     // Reads a UTF-8 text file the user picked and saves it as a lecture.
     fun importText(uri: Uri) {
@@ -73,12 +85,15 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
             if (result == null) {
                 _importFailed.value = true
             } else {
-                repo.add(result.first, "", result.second)
+                val (title, text, ext) = result
+                // Keep a copy of the original file (best effort: the text is saved either way).
+                val kept = withContext(Dispatchers.IO) { OriginalFiles.save(getApplication<Application>(), uri, ext) }
+                repo.add(title, "", text, kept)
             }
         }
     }
 
-    private fun readTextFile(uri: Uri): Pair<String, String>? {
+    private fun readTextFile(uri: Uri): Triple<String, String, String>? {
         return try {
             val resolver = getApplication<Application>().contentResolver
             var name: String? = null
@@ -93,20 +108,21 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
             }
             val fileName = name ?: "Lecture"
             val title = fileName.substringBeforeLast('.').ifBlank { fileName }
+            val ext = fileName.substringAfterLast('.', "")
             val type = resolver.getType(uri).orEmpty()
             val isPdf = type == "application/pdf" ||
                 fileName.endsWith(".pdf", ignoreCase = true)
             if (isPdf) {
                 if (size > MAX_PDF_BYTES) return null
                 val pdfText = readPdf(uri)
-                return if (pdfText == null) null else title to pdfText
+                return if (pdfText == null) null else Triple(title, pdfText, "pdf")
             }
             val isImage = type.startsWith("image/") ||
                 Regex(".*\\.(jpe?g|png|webp|heic)$", RegexOption.IGNORE_CASE).matches(fileName)
             if (isImage) {
                 if (size > MAX_IMAGE_BYTES) return null
                 val imageText = OcrReader.fromImage(getApplication<Application>(), uri)
-                return if (imageText == null) null else title to imageText
+                return if (imageText == null) null else Triple(title, imageText, ext.ifBlank { "jpg" })
             }
             if (size > MAX_BYTES) return null
             val text = resolver.openInputStream(uri)
@@ -114,7 +130,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
                 ?.use { it.readText() }
                 ?.removePrefix("\uFEFF")
                 ?.trim()
-            if (text.isNullOrEmpty()) null else title to text
+            if (text.isNullOrEmpty()) null else Triple(title, text, ext.ifBlank { "txt" })
         } catch (e: Exception) {
             null
         }

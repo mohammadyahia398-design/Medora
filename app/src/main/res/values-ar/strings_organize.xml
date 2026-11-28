@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="organize">تنظيم</string>
+    <string name="organize_subject">المادة</string>
+    <string name="organize_folder">المجلد</string>
+    <string name="organize_tags">الوسوم</string>
+    <string name="organize_tags_hint">افصل بينها بفاصلة، مثل: قلب، امتحان 1</string>
+    <string name="folder_label">المجلد: %1$s</string>
+    <string name="open_original">فتح الملف الأصلي</string>
+    <string name="open_original_failed">تعذّر فتح الملف الأصلي.</string>
+    <string name="insights_terms">المصطلحات والتعريفات</string>
+    <string name="insights_tables">جداول المقارنة</string>
+    <string name="insights_classes">التصنيفات</string>
+    <string name="insights_source">المصدر: %1$s</string>
+    <string name="packs_title">حزم الدراسة</string>
+    <string name="packs_hint">الحزمة تجمع عدة محاضرات (لامتحان واحد مثلاً): الملخصات والمصطلحات والجداول والبطاقات معاً، وتُصدَّر كملف PDF واحد.</string>
+    <string name="packs_new">حزمة جديدة</string>
+    <string name="packs_empty">لا توجد حزم بعد.</string>
+    <string name="packs_name">اسم الحزمة</string>
+    <string name="packs_edit">تعديل الحزمة</string>
+    <string name="packs_delete">حذف الحزمة</string>
+    <string name="packs_delete_confirm">حذف هذه الحزمة؟ المحاضرات نفسها لن تُحذف.</string>
+    <string name="packs_counts">%1$d محاضرة · %2$d بطاقة</string>
+    <string name="packs_contents">محتوى الحزمة</string>
+    <string name="packs_no_lectures">لا توجد محاضرات في هذه الحزمة. اضغط تعديل الحزمة لإضافتها.</string>
+    <string name="packs_lecture_parts">%1$d بطاقة · %2$d مصطلح · %3$d جدول</string>
+    <string name="packs_no_summary">لا يوجد ملخص بعد. افتح المحاضرة واستخدم الذكاء الاصطناعي لإنشائه.</string>
+</resources>

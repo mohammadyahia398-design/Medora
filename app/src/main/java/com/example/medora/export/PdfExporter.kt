@@ -132,7 +132,13 @@ object PdfExporter {
                     gap(gapAfter + 6f)
                 } else {
                     val path = NoteImages.pathOf(all[i])
-                    if (path != null) image(path, gapAfter) else block(plainNote(all[i]), body, gapAfter)
+                    val t = all[i].trimStart()
+                    when {
+                        path != null -> image(path, gapAfter)
+                        // "# Heading" lines (notes and study packs) are printed bold.
+                        t.startsWith("# ") -> block(plainNote(t.removePrefix("# ")), bold, gapAfter + 2f)
+                        else -> block(plainNote(all[i]), body, gapAfter)
+                    }
                     i++
                 }
             }
