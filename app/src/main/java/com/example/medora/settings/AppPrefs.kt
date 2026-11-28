@@ -19,6 +19,7 @@ object AppPrefs {
     private const val KEY_THEME = "theme"
     private const val KEY_LANG = "language"
     private const val KEY_GOAL = "daily_goal"
+    private const val KEY_ONBOARDED = "onboarded"
     const val DEFAULT_GOAL = 20
 
     val theme: MutableState<String> = mutableStateOf(SYSTEM)
@@ -39,6 +40,13 @@ object AppPrefs {
 
     fun setDailyGoal(context: Context, value: Int) {
         prefs(context).edit().putInt(KEY_GOAL, value).apply()
+    }
+
+    // True after the first-run intro (onboarding + goal) is finished.
+    fun onboarded(context: Context): Boolean = prefs(context).getBoolean(KEY_ONBOARDED, false)
+
+    fun setOnboarded(context: Context) {
+        prefs(context).edit().putBoolean(KEY_ONBOARDED, true).apply()
     }
 
     fun language(context: Context): String =

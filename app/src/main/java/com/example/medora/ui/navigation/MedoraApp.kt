@@ -41,7 +41,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import com.example.medora.settings.AppPrefs
+import com.example.medora.ui.screens.GoalSetupScreen
+import com.example.medora.ui.screens.OnboardingScreen
+import com.example.medora.ui.screens.SplashScreen
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
@@ -90,6 +95,9 @@ private const val ROUTE_MISTAKES = "mistakes"
 private const val ROUTE_PRACTICE = "practice/{mode}"
 private const val ROUTE_PACKS = "packs"
 private const val ROUTE_PACK = "pack/{id}"
+private const val ROUTE_SPLASH = "splash"
+private const val ROUTE_ONBOARDING = "onboarding"
+private const val ROUTE_GOAL = "goal"
 
 private enum class Tab(val route: String, @StringRes val label: Int, val icon: ImageVector) {
     Home("home", R.string.tab_home, MedoraIcons.Home),
@@ -115,6 +123,7 @@ fun MedoraApp() {
     val isPractice = route == ROUTE_PRACTICE
     val isMistakes = route == ROUTE_MISTAKES
     val isPacks = route == ROUTE_PACKS || route == ROUTE_PACK
+    val isFlow = route == ROUTE_SPLASH || route == ROUTE_ONBOARDING || route == ROUTE_GOAL
     val isSub = isSettings || isLecture || isReview || isQuiz || isNote || isExam || isSources || isPractice || isMistakes || isPacks
 
     val titleRes = when {
@@ -143,11 +152,28 @@ fun MedoraApp() {
             ) { padding ->
                 NavHost(
                     navController = navController,
-                    startDestination = Tab.Home.route,
+                    startDestination = ROUTE_SPLASH,
                     modifier = Modifier
                         .padding(padding)
-                        .padding(top = Dimens.topBarSpace, bottom = if (tab != null) Dimens.bottomBarSpace else 0.dp),
+                        .padding(top = if (isFlow) 0.dp else Dimens.topBarSpace, bottom = if (tab != null) Dimens.bottomBarSpace else 0.dp),
                 ) {
+                    composable(ROUTE_SPLASH) {
+                        val ctx = LocalContext.current
+                        SplashScreen(onDone = {
+                            val next = if (AppPrefs.onboarded(ctx)) Tab.Home.route else ROUTE_ONBOARDING
+                            navController.navigate(next) { popUpTo(ROUTE_SPLASH) { inclusive = true } }
+                        })
+                    }
+                    composable(ROUTE_ONBOARDING) {
+                        OnboardingScreen(onFinish = { navController.navigate(ROUTE_GOAL) })
+                    }
+                    composable(ROUTE_GOAL) {
+                        GoalSetupScreen(onDone = {
+                            navController.navigate(Tab.Home.route) {
+                                popUpTo(ROUTE_ONBOARDING) { inclusive = true }
+                            }
+                        })
+                    }
                     composable(Tab.Home.route) {
                         HomeScreen(
                             onReview = { navController.navigate(ROUTE_REVIEW) },
@@ -228,7 +254,7 @@ fun MedoraApp() {
                 }
             }
         }
-        MedoraTopBar(
+        if (!isFlow) MedoraTopBar(
             title = stringResource(titleRes),
             modifier = Modifier.align(Alignment.TopCenter),
             startIcon = if (isSub) MedoraIcons.Back else null,

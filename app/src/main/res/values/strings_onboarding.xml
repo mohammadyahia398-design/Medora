@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ob_skip">Skip</string>
+    <string name="ob_next">Next</string>
+    <string name="ob_start">Get started</string>
+    <string name="ob_title_1">Your lectures, in one place</string>
+    <string name="ob_body_1">Import a file or paste text, and keep every lecture organized.</string>
+    <string name="ob_title_2">Turn notes into cards</string>
+    <string name="ob_body_2">Make flashcards and quizzes from your lectures, then review them at the right time.</string>
+    <string name="ob_title_3">See your progress</string>
+    <string name="ob_body_3">A daily goal and a streak keep you on track.</string>
+    <string name="goal_setup_title">Set your daily goal</string>
+    <string name="goal_setup_body">How many cards do you want to review each day? You can change it later.</string>
+    <string name="goal_setup_cards">cards</string>
+    <string name="goal_setup_continue">Continue</string>
+</resources>

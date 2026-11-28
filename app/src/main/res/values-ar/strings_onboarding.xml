@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ob_skip">تخطي</string>
+    <string name="ob_next">التالي</string>
+    <string name="ob_start">ابدأ</string>
+    <string name="ob_title_1">محاضراتك في مكان واحد</string>
+    <string name="ob_body_1">استورد ملفاً أو الصق نصاً، وأبقِ كل محاضرة منظمة.</string>
+    <string name="ob_title_2">حوّل ملاحظاتك إلى بطاقات</string>
+    <string name="ob_body_2">اصنع بطاقات واختبارات من محاضراتك، ثم راجعها في الوقت المناسب.</string>
+    <string name="ob_title_3">تابع تقدمك</string>
+    <string name="ob_body_3">هدف يومي وسلسلة أيام يساعدانك على الاستمرار.</string>
+    <string name="goal_setup_title">حدد هدفك اليومي</string>
+    <string name="goal_setup_body">كم بطاقة تريد مراجعتها كل يوم؟ يمكنك تغييره لاحقاً.</string>
+    <string name="goal_setup_cards">بطاقة</string>
+    <string name="goal_setup_continue">متابعة</string>
+</resources>
