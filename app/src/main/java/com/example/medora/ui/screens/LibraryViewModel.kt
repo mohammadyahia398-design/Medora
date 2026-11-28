@@ -11,6 +11,7 @@ import com.example.medora.data.MedoraDatabase
 import com.example.medora.data.OriginalFiles
 import com.example.medora.ocr.OcrReader
 import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
+import com.tom_roush.pdfbox.io.MemoryUsageSetting
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.text.PDFTextStripper
 import kotlinx.coroutines.Dispatchers
@@ -23,9 +24,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 private const val MAX_BYTES = 5_000_000L
-private const val MAX_PDF_BYTES = 20_000_000L
+private const val MAX_PDF_BYTES = 50_000_000L
 private const val MAX_PDF_CHARS = 2_000_000
-private const val MAX_IMAGE_BYTES = 15_000_000L
+private const val MAX_IMAGE_BYTES = 25_000_000L
 
 class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     private val repo = LectureRepository(MedoraDatabase.get(app).lectureDao())
@@ -146,7 +147,8 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         try {
             PDFBoxResourceLoader.init(app)
             app.contentResolver.openInputStream(uri)?.use { stream ->
-                PDDocument.load(stream).use { doc ->
+                // Big PDFs are buffered in a temp file, not in memory (avoids out-of-memory).
+                PDDocument.load(stream, MemoryUsageSetting.setupTempFileOnly()).use { doc ->
                     pageCount = doc.numberOfPages
                     lastPage = pageCount
                     val stripper = PDFTextStripper()

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="import_file">Import file</string>
-    <string name="import_failed_file">Could not import this file. Use a UTF-8 text file (.txt) under 5 MB, a PDF under 20 MB, or a photo under 15 MB. Scanned pages and photos are read on the phone (English text only).</string>
+    <string name="import_failed_file">Could not import this file. Use a UTF-8 text file (.txt) under 5 MB, a PDF under 50 MB, or a photo under 25 MB. Scanned pages and photos are read on the phone (English text only).</string>
     <string name="import_reading">Reading the file…</string>
     <string name="ocr_progress">Reading scanned pages: %1$d of %2$d</string>
 </resources>

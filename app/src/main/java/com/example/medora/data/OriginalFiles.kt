@@ -12,7 +12,7 @@ import java.util.UUID
 // so the original can be opened again later. Stays on the phone; included in the .zip backup.
 object OriginalFiles {
     const val DIR = "originals"
-    private const val MAX_BYTES = 25_000_000L
+    private const val MAX_BYTES = 50_000_000L
     private val NAME = Regex("""[A-Za-z0-9._-]+""")
 
     fun file(context: Context, name: String): File = File(File(context.filesDir, DIR), name)

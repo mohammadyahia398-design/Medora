@@ -14,7 +14,7 @@ import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 // Reads English/Latin text only; Arabic script is not recognized.
 // All functions block: call them from a background thread (Dispatchers.IO).
 object OcrReader {
-    const val MAX_OCR_PAGES = 80
+    const val MAX_OCR_PAGES = 150
     private const val MAX_SIDE = 2000
 
     // Reads text from a photo (jpg/png/webp). EXIF rotation is handled by ML Kit.

@@ -223,7 +223,7 @@ $content
 """.trim()
 
     companion object {
-        private const val MAX_CHARS = 30_000
+        private const val MAX_CHARS = 80_000
         private const val GEMINI = "Gemini"
         private const val OPENROUTER = "OpenRouter"
 
