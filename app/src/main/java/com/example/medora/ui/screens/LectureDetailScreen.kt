@@ -27,6 +27,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -65,6 +66,7 @@ import com.example.medora.domain.CardSuggester
 import com.example.medora.domain.Insights
 import com.example.medora.ui.components.AiBadge
 import com.example.medora.ui.components.MedoraButton
+import com.example.medora.ui.components.MedoraMoreMenu
 import com.example.medora.ui.components.MedoraCard
 import com.example.medora.ui.components.NoteImage
 import com.example.medora.ui.components.NoteTableRow
@@ -182,89 +184,92 @@ fun LectureDetailScreen(
                     )
                 }
                 Spacer(Modifier.height(Spacing.l))
-                MedoraButton(
-                    text = stringResource(R.string.edit_note),
-                    onClick = onEdit,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                Spacer(Modifier.height(Spacing.m))
-                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.m)) {
+                // One main capsule button; everything else lives in the rounded "more" menu.
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.m),
+                ) {
                     MedoraButton(
-                        text = stringResource(R.string.organize),
-                        onClick = { showOrganize = true },
+                        text = stringResource(R.string.edit_note),
+                        onClick = onEdit,
                         modifier = Modifier.weight(1f),
                     )
-                    if (current.originalFile.isNotBlank()) {
-                        MedoraButton(
-                            text = stringResource(R.string.open_original),
+                    MedoraMoreMenu { close ->
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.organize)) },
                             onClick = {
-                                if (!vm.openOriginal(current.originalFile)) {
-                                    Toast.makeText(context, R.string.open_original_failed, Toast.LENGTH_SHORT).show()
-                                }
+                                close()
+                                showOrganize = true
                             },
-                            modifier = Modifier.weight(1f),
                         )
-                    }
-                }
-                Spacer(Modifier.height(Spacing.m))
-                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.m)) {
-                    MedoraButton(
-                        text = stringResource(R.string.suggest_cards),
-                        onClick = {
-                            val existing = cards.map { it.front }.toSet()
-                            suggestions = CardSuggester.suggest(current.content, existing)
-                        },
-                        modifier = Modifier.weight(1f),
-                    )
-                    MedoraButton(
-                        text = stringResource(R.string.add_card),
-                        onClick = { draft = CardDraft("", "", "") },
-                        modifier = Modifier.weight(1f),
-                    )
-                }
-                if (current.content.isNotBlank()) {
-                    Spacer(Modifier.height(Spacing.m))
-                    if (aiVm.busy) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            CircularProgressIndicator(modifier = Modifier.size(24.dp))
-                            Spacer(Modifier.width(Spacing.m))
-                            Text(stringResource(R.string.ai_working))
+                        if (current.originalFile.isNotBlank()) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.open_original)) },
+                                onClick = {
+                                    close()
+                                    if (!vm.openOriginal(current.originalFile)) {
+                                        Toast.makeText(context, R.string.open_original_failed, Toast.LENGTH_SHORT).show()
+                                    }
+                                },
+                            )
                         }
-                    } else {
-                        MedoraButton(
-                            text = stringResource(R.string.ai_generate),
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.suggest_cards)) },
                             onClick = {
-                                aiVm.generate(
-                                    current.id,
-                                    current.title,
-                                    current.content,
-                                    cards.map { it.front }.toSet(),
-                                )
+                                close()
+                                val existing = cards.map { it.front }.toSet()
+                                suggestions = CardSuggester.suggest(current.content, existing)
                             },
-                            modifier = Modifier.fillMaxWidth(),
                         )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.add_card)) },
+                            onClick = {
+                                close()
+                                draft = CardDraft("", "", "")
+                            },
+                        )
+                        if (current.content.isNotBlank() && !aiVm.busy) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.ai_generate)) },
+                                onClick = {
+                                    close()
+                                    aiVm.generate(
+                                        current.id,
+                                        current.title,
+                                        current.content,
+                                        cards.map { it.front }.toSet(),
+                                    )
+                                },
+                            )
+                        }
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.export_pdf)) },
+                            onClick = {
+                                close()
+                                val name = current.title.replace(Regex("[\\\\/:*?\"<>|]"), "_").take(40).ifBlank { "lecture" }
+                                pdfLauncher.launch("$name.pdf")
+                            },
+                        )
+                        if (current.slidesJson.isNotBlank() || PptxExporter.hasTable(current.content) ||
+                            current.content.lineSequence().any { NoteImages.pathOf(it) != null }) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.export_pptx)) },
+                                onClick = {
+                                    close()
+                                    val name = current.title.replace(Regex("[\\\\/:*?\"<>|]"), "_").take(40).ifBlank { "lecture" }
+                                    pptxLauncher.launch("$name.pptx")
+                                },
+                            )
+                        }
                     }
                 }
-                Spacer(Modifier.height(Spacing.m))
-                MedoraButton(
-                    text = stringResource(R.string.export_pdf),
-                    onClick = {
-                        val name = current.title.replace(Regex("[\\\\/:*?\"<>|]"), "_").take(40).ifBlank { "lecture" }
-                        pdfLauncher.launch("$name.pdf")
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                if (current.slidesJson.isNotBlank() || PptxExporter.hasTable(current.content) ||
-                    current.content.lineSequence().any { NoteImages.pathOf(it) != null }) {
+                if (current.content.isNotBlank() && aiVm.busy) {
                     Spacer(Modifier.height(Spacing.m))
-                    MedoraButton(
-                        text = stringResource(R.string.export_pptx),
-                        onClick = {
-                            val name = current.title.replace(Regex("[\\\\/:*?\"<>|]"), "_").take(40).ifBlank { "lecture" }
-                            pptxLauncher.launch("$name.pptx")
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                        Spacer(Modifier.width(Spacing.m))
+                        Text(stringResource(R.string.ai_working))
+                    }
                 }
                 Spacer(Modifier.height(Spacing.l))
                 if (current.summary.isNotBlank()) {
